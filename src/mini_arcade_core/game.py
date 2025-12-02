@@ -22,6 +22,7 @@ class GameConfig:
     :ivar fps: Target frames per second.
     :ivar background_color: RGB background color.
     """
+
     width: int = 800
     height: int = 600
     title: str = "Mini Arcade Game"

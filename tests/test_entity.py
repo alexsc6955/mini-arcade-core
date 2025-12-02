@@ -4,7 +4,6 @@ from typing import Any
 
 from mini_arcade_core import Entity, SpriteEntity
 
-
 # -------------------------
 # I/O tests
 # -------------------------

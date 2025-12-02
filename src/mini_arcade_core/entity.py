@@ -34,7 +34,7 @@ class SpriteEntity(Entity):
         """
         :param x: X position.
         :type x: float
-        
+
         :param y: Y position.
         :type y: float
 

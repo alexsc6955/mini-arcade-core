@@ -65,6 +65,7 @@ disable = [
 ignore-paths = [
     "^\\.venv",
     "^venv",
+    "^tests",
     "^env",
     "^build",
     "^dist",

@@ -1,3 +1,7 @@
+"""
+Base class for game scenes (states/screens).
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
