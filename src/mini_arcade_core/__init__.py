@@ -5,9 +5,9 @@ Provides access to core classes and a convenience function to run a game.
 
 from __future__ import annotations
 
+from .entity import Entity, SpriteEntity
 from .game import Game, GameConfig
 from .scene import Scene
-from .entity import Entity, SpriteEntity
 
 
 def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):

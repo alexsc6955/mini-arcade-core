@@ -4,7 +4,6 @@ import pytest
 
 from mini_arcade_core import Game, GameConfig, Scene
 
-
 # -------------------------
 # I/O tests
 # -------------------------
