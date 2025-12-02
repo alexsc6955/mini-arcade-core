@@ -242,4 +242,4 @@ pytest
 
 ## License
 
-MIT — feel free to use this as a learning tool, or as a base for your own mini arcade projects.
+![License: MIT License](https://img.shields.io/badge/License-mit-blue.svg) — feel free to use this as a learning tool, or as a base for your own mini arcade projects.
