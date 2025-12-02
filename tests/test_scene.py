@@ -4,7 +4,6 @@ import pytest
 
 from mini_arcade_core import Game, GameConfig, Scene
 
-
 # -------------------------
 # I/O tests
 # -------------------------
@@ -12,6 +11,7 @@ from mini_arcade_core import Game, GameConfig, Scene
 
 def test_scene_stores_game_reference():
     """I/O: Concrete Scene implementations should receive and store Game."""
+
     class ConcreteScene(Scene):
         def on_enter(self) -> None:
             pass

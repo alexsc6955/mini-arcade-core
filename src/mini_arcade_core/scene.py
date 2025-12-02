@@ -1,3 +1,7 @@
+"""
+Base class for game scenes (states/screens).
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -11,6 +15,7 @@ class Scene(ABC):
     def __init__(self, game: Game):
         """
         :param game: Reference to the main Game object.
+        :type game: Game
         """
         self.game = game
 

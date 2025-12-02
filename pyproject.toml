@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "mini-arcade-core"
-version = "0.1.0"
+version = "0.2.0"
 description = "Tiny scene-based game loop core for small arcade games."
 authors = [
     { name = "Santiago Rincon", email = "rincores@gmail.com" },
@@ -65,6 +65,7 @@ disable = [
 ignore-paths = [
     "^\\.venv",
     "^venv",
+    "^tests",
     "^env",
     "^build",
     "^dist",

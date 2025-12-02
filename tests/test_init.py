@@ -3,14 +3,13 @@ from __future__ import annotations
 import pytest
 
 from mini_arcade_core import (
+    Entity,
     Game,
     GameConfig,
     Scene,
-    Entity,
     SpriteEntity,
     run_game,
 )
-
 
 # -------------------------
 # I/O tests
