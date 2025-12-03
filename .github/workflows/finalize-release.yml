@@ -1,13 +1,13 @@
 name: Finalize Release
 
 permissions:
-  contents: write  # allow pushing branches and tags
+  contents: write
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Release version (e.g. 0.2.0)"
+      release_branch_suffix:
+        description: "Release suffix (e.g. 1.0 for branch release/1.0)"
         required: true
         type: string
 
@@ -19,62 +19,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # need full history for merges/tags
+          fetch-depth: 0
 
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge release branch into main and develop, then tag
+      - name: Merge release branch into main and develop
         env:
-          VERSION: ${{ inputs.version }}
+          SUFFIX: ${{ inputs.release_branch_suffix }}
         run: |
           set -e
 
-          RELEASE_BRANCH="release/${VERSION}"
-          TAG="v${VERSION}"
+          RELEASE_BRANCH="release/${SUFFIX}"
 
-          echo "Finalizing release ${VERSION}"
-          echo "Using release branch: ${RELEASE_BRANCH}"
-          echo "Tag to create: ${TAG}"
+          echo "Finalizing release from branch ${RELEASE_BRANCH}"
 
-          # Make sure we have everything
           git fetch origin
 
-          # Sanity check branch exists on origin
+          # Sanity check
           if ! git ls-remote --exit-code --heads origin "${RELEASE_BRANCH}" > /dev/null; then
             echo "ERROR: Branch ${RELEASE_BRANCH} does not exist on origin."
             exit 1
           fi
 
-          # --- Merge release -> main ---
+          # Merge release -> main
           git checkout main
           git pull origin main
-
           echo "Merging ${RELEASE_BRANCH} into main..."
           git merge --no-ff "origin/${RELEASE_BRANCH}" -m "Merge ${RELEASE_BRANCH} into main"
           git push origin main
 
-          # --- Merge release -> develop ---
+          # Merge release -> develop
           git checkout develop
           git pull origin develop
-
           echo "Merging ${RELEASE_BRANCH} into develop..."
           git merge --no-ff "origin/${RELEASE_BRANCH}" -m "Merge ${RELEASE_BRANCH} into develop"
           git push origin develop
 
-          # --- Create and push tag on main ---
-          git checkout main
-          git pull origin main
-
-          if git rev-parse "${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists locally; aborting to avoid double-publish."
-            exit 1
-          fi
-
-          echo "Creating tag ${TAG} on main..."
-          git tag "${TAG}"
-          git push origin "${TAG}"
-
-          echo "Finalize release ${VERSION} completed."
+          echo "Finalize release completed for ${RELEASE_BRANCH}."
