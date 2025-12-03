@@ -1,7 +1,7 @@
 name: Sync develop from main
 
 permissions:
-  contents: write  # needed to push to develop
+  contents: write
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
 
     steps:
       - name: Checkout develop
-      # We check out develop but fetch full history so we can merge origin/main
         uses: actions/checkout@v4
         with:
           ref: develop
@@ -32,7 +31,6 @@ jobs:
       - name: Check if develop is behind main
         id: check_diff
         run: |
-          # Compare develop (HEAD) with origin/main
           if git merge-base --is-ancestor HEAD origin/main; then
             echo "develop is behind or equal to main (safe to merge or noop)."
             echo "needs_merge=true" >> "$GITHUB_OUTPUT"
@@ -47,4 +45,4 @@ jobs:
           set -e
           echo "Merging origin/main into develop..."
           git merge --no-ff origin/main -m "chore: sync develop with main"
-          git push origin develo
+          git push origin develop

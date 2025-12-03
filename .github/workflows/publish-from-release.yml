@@ -1,0 +1,167 @@
+name: Publish from Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Release branch name (e.g. release/1.0)"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Validate release branch name
+        run: |
+          if [[ "${{ inputs.release_branch }}" != release/* ]]; then
+            echo "ERROR: You can only publish from release/* branches."
+            exit 1
+          fi
+
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_branch }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch if needed, update changelog, create tag
+        id: bump_and_tag
+        run: |
+          set -e
+
+          python - << 'PY'
+          from pathlib import Path
+          import subprocess
+          import re
+
+          pyproject = Path("pyproject.toml")
+          text = pyproject.read_text(encoding="utf-8")
+
+          m = re.search(r'^version\s*=\s*"(?P<ver>\d+\.\d+\.\d+)"', text, re.MULTILINE)
+          if not m:
+              raise SystemExit("Could not find version in pyproject.toml")
+
+          current_version = m.group("ver")
+          major, minor, patch = map(int, current_version.split("."))
+          current_tag = f"v{current_version}"
+
+          # Get all tags
+          tags = subprocess.check_output(["git", "tag"], text=True).splitlines()
+
+          if current_tag in tags:
+              # Tag already exists -> bump patch
+              patch += 1
+              new_version = f"{major}.{minor}.{patch}"
+              new_tag = f"v{new_version}"
+
+              print(f"Current version {current_version} already tagged; bumping to {new_version}")
+
+              new_text = re.sub(
+                  r'^version\s*=\s*"\d+\.\d+\.\d+"',
+                  f'version = "{new_version}"',
+                  text,
+                  count=1,
+                  flags=re.MULTILINE,
+              )
+              pyproject.write_text(new_text, encoding="utf-8")
+              version_to_tag = new_version
+          else:
+              # First publish from this branch -> use current version
+              print(f"Using current version {current_version} for first publish.")
+              version_to_tag = current_version
+              new_tag = current_tag
+
+          # --- Generate/update CHANGELOG.md with grouped sections ---
+          changelog = Path("CHANGELOG.md")
+          if changelog.exists():
+              old = changelog.read_text(encoding="utf-8")
+          else:
+              old = "# Changelog\n\n"
+
+          # Try to find previous tag for range
+          try:
+              prev_tag = subprocess.check_output(
+                  ["git", "describe", "--tags", "--abbrev=0", "--match", "v*.*.*", "HEAD^"],
+                  text=True,
+              ).strip()
+          except subprocess.CalledProcessError:
+              prev_tag = None
+
+          if prev_tag:
+              log_range = f"{prev_tag}..HEAD"
+          else:
+              log_range = "HEAD"
+
+          # Get commit subjects (no bullets, we’ll format them)
+          raw_log = subprocess.check_output(
+              ["git", "log", log_range, "--pretty=format:%s"],
+              text=True,
+          )
+
+          lines = [l.strip() for l in raw_log.splitlines() if l.strip()]
+
+          type_to_section = {
+              "feat": "Added",
+              "fix": "Fixed",
+              "refactor": "Changed",
+              "refactore": "Changed", # typo-friendly
+          }
+
+          sections = {
+              "Added": [],
+              "Fixed": [],
+              "Changed": [],
+          }
+          other = []
+
+          for subj in lines:
+              lower = subj.lower()
+              prefix, sep, rest = lower.partition(":")
+
+              if sep:  # we had a "type: message" style
+                  commit_type = prefix.strip()
+                  message = subj.split(":", 1)[1].strip() or subj
+              else:
+                  commit_type = ""
+                  message = subj
+
+              # Ignore chores (e.g. CI tweaks, formatting, etc.)
+              if commit_type == "chore":
+                  continue
+
+              heading = type_to_section.get(commit_type)
+              if heading:
+                  sections[heading].append(f"- {message}")
+              else:
+                  other.append(f"- {subj}")
+
+          # If everything was chore or empty, fall back to a flat list
+          if not any(sections.values()) and not other:
+              # Nothing to log; just skip changelog update
+              new_section = f"## {version_to_tag}\n\n- Internal changes only.\n\n"
+          else:
+              parts = [f"## {version_to_tag}", ""]
+              for heading in ("Added", "Fixed", "Changed"):
+                  items = sections[heading]
+                  if items:
+                      parts.append(f"### {heading}")
+                      parts.extend(items)
+                      parts.append("")
+              if other:
+                  parts.append("### Other")
+                  parts.extend(other)
+                  parts.append("")
+
+              new_section = "\n".join(parts).rstrip() + "\n\n"
+
+          changelog.write_text(old + new_section, encoding="utf-8")
