@@ -62,7 +62,6 @@ jobs:
               # Tag already exists -> bump patch
               patch += 1
               new_version = f"{major}.{minor}.{patch}"
-              new_tag = f"v{new_version}"
 
               print(f"Current version {current_version} already tagged; bumping to {new_version}")
 
@@ -79,7 +78,6 @@ jobs:
               # First publish from this branch -> use current version
               print(f"Using current version {current_version} for first publish.")
               version_to_tag = current_version
-              new_tag = current_tag
 
           # --- Generate/update CHANGELOG.md with grouped sections ---
           changelog = Path("CHANGELOG.md")
@@ -114,7 +112,7 @@ jobs:
               "feat": "Added",
               "fix": "Fixed",
               "refactor": "Changed",
-              "refactore": "Changed", # typo-friendly
+              "refactore": "Changed",  # typo-friendly
           }
 
           sections = {
@@ -147,7 +145,6 @@ jobs:
 
           # If everything was chore or empty, fall back to a flat list
           if not any(sections.values()) and not other:
-              # Nothing to log; just skip changelog update
               new_section = f"## {version_to_tag}\n\n- Internal changes only.\n\n"
           else:
               parts = [f"## {version_to_tag}", ""]
@@ -165,3 +162,35 @@ jobs:
               new_section = "\n".join(parts).rstrip() + "\n\n"
 
           changelog.write_text(old + new_section, encoding="utf-8")
+
+          # Write version to a temp file for the shell
+          Path(".version_to_tag").write_text(version_to_tag, encoding="utf-8")
+          PY
+
+          VERSION_TO_TAG=$(cat .version_to_tag)
+          TAG="v${VERSION_TO_TAG}"
+
+          echo "Version to tag: ${VERSION_TO_TAG}"
+          echo "Tag: ${TAG}"
+
+          git status
+          git add pyproject.toml CHANGELOG.md || true
+
+          # Commit only if there are changes (e.g. patch bump / changelog)
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: release ${VERSION_TO_TAG}"
+            git push origin "${{ inputs.release_branch }}"
+          else
+            echo "No changes to commit."
+          fi
+
+          # Create & push tag
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; aborting."
+            exit 1
+          fi
+
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+          echo "version=${VERSION_TO_TAG}" >> "$GITHUB_OUTPUT"
