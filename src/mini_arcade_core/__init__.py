@@ -48,6 +48,11 @@ def get_version() -> str:
 
         from mini_arcade_core import get_version
         print(get_version())
+
+    :return: The version string of the installed package.
+    :rtype: str
+
+    :raises PackageNotFoundError: If the package is not installed.
     """
     try:
         return version(PACKAGE_NAME)
