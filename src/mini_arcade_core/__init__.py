@@ -5,6 +5,8 @@ Provides access to core classes and a convenience function to run a game.
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from .backend import Backend, Event, EventType
 from .entity import Entity, SpriteEntity
 from .game import Game, GameConfig
@@ -34,3 +36,30 @@ __all__ = [
     "Event",
     "EventType",
 ]
+
+PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
+
+
+def get_version() -> str:
+    """
+    Return the installed package version.
+
+    This is a thin helper around importlib.metadata.version so games can do:
+
+        from mini_arcade_core import get_version
+        print(get_version())
+    """
+    try:
+        return version(PACKAGE_NAME)
+    except PackageNotFoundError:  # if running from source / editable
+        return "0.0.0"
+
+
+try:
+    __version__ = get_version()
+# Justification: We want to ensure that any exception during version retrieval
+# results in a default version being set, rather than crashing the import.
+# pylint: disable=broad-exception-caught
+except Exception:
+    __version__ = "0.0.0"
+# pylint: enable=broad-exception-caught
