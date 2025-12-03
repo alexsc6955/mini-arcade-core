@@ -4,7 +4,6 @@ Game core module defining the Game class and configuration.
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -41,7 +40,6 @@ class Game:
     def __init__(self, config: GameConfig):
         """
         :param config: Game configuration options.
-        :type config: GameConfig
         """
         self.config = config
         self._current_scene: Scene | None = None
@@ -54,13 +52,10 @@ class Game:
         ``on_exit``/``on_enter`` appropriately.
 
         :param scene: The new scene to activate.
-        :type scene: Scene
         """
-        if self._current_scene is not None:
-            self._current_scene.on_exit()
-
-        self._current_scene = scene
-        self._current_scene.on_enter()
+        raise NotImplementedError(
+            "Game.change_scene must be implemented by a concrete backend."
+        )
 
     def quit(self):
         """Request that the main loop stops."""
@@ -74,47 +69,7 @@ class Game:
         or another backend.
 
         :param initial_scene: The scene to start the game with.
-        :type initial_scene: Scene
         """
-        if self.backend is None:
-            raise RuntimeError(
-                "GameConfig.backend must be set before running the game."
-            )
-
-        backend = self.backend
-
-        # Init backend window
-        backend.init(self.config.width, self.config.height, self.config.title)
-
-        # Set the initial scene
-        self.change_scene(initial_scene)
-
-        self._running = True
-
-        target_dt = (
-            1.0 / float(self.config.fps) if self.config.fps > 0 else 0.0
+        raise NotImplementedError(
+            "Game.run must be implemented by a concrete backend."
         )
-        last_time = time.perf_counter()
-
-        while self._running:
-            now = time.perf_counter()
-            dt = now - last_time
-            last_time = now
-
-            # 1) Poll events and pass to scene
-            events = list(backend.poll_events())
-            if self._current_scene is not None:
-                for ev in events:
-                    self._current_scene.handle_event(ev)  # type: ignore[arg-type]
-
-                # 2) Update scene
-                self._current_scene.update(dt)
-
-                # 3) Draw
-                backend.begin_frame()
-                self._current_scene.draw(backend)
-                backend.end_frame()
-
-            # Simple FPS cap
-            if target_dt > 0 and dt < target_dt:
-                time.sleep(target_dt - dt)
