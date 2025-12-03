@@ -21,6 +21,11 @@ jobs:
         with:
           fetch-depth: 0  # need full history for merges/tags
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Merge release branch into main and develop, then tag
         env:
           VERSION: ${{ inputs.version }}
