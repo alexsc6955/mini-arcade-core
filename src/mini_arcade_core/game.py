@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from .backend import Backend
+
 if TYPE_CHECKING:  # avoid runtime circular import
     from .scene import Scene
 
@@ -21,6 +23,7 @@ class GameConfig:
     :ivar title: Title of the game window.
     :ivar fps: Target frames per second.
     :ivar background_color: RGB background color.
+    :ivar backend: Optional backend class to use for rendering and input.
     """
 
     width: int = 800
@@ -28,6 +31,7 @@ class GameConfig:
     title: str = "Mini Arcade Game"
     fps: int = 60
     background_color: tuple[int, int, int] = (0, 0, 0)
+    backend: type[Backend] | None = None
 
 
 class Game:
@@ -40,6 +44,7 @@ class Game:
         self.config = config
         self._current_scene: Scene | None = None
         self._running: bool = False
+        self.backend: Backend | None = config.backend
 
     def change_scene(self, scene: Scene):
         """
@@ -51,6 +56,10 @@ class Game:
         raise NotImplementedError(
             "Game.change_scene must be implemented by a concrete backend."
         )
+
+    def quit(self):
+        """Request that the main loop stops."""
+        self._running = False
 
     def run(self, initial_scene: Scene):
         """
