@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-12-04
+
+### Added
+- implement game loop and scene management in Game class
+
+### Other
+- Merge pull request #4 from alexsc6955/feature/game_loop
+- Merge release/0.5 into develop
+- Merge release/0.5 into main
+
 ## [0.5.3] - 2025-12-04
 
 ### Changed
