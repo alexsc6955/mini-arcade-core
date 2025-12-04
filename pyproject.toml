@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "mini-arcade-core"
-version = "0.4.0"
+version = "0.5.3"
 description = "Tiny scene-based game loop core for small arcade games."
 authors = [
     { name = "Santiago Rincon", email = "rincores@gmail.com" },
@@ -57,6 +57,8 @@ strict = false
 disable = [
     # Justification: Allow classes with few public methods for simplicity.
     "too-few-public-methods",
+    # Justification: f-strings are preferred for logging.
+    "logging-fstring-interpolation",
     # Justification: TODOs are acceptable during development.
     "fixme",
 ]
