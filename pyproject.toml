@@ -57,6 +57,8 @@ strict = false
 disable = [
     # Justification: Allow classes with few public methods for simplicity.
     "too-few-public-methods",
+    # Justification: f-strings are preferred for logging.
+    "logging-fstring-interpolation",
     # Justification: TODOs are acceptable during development.
     "fixme",
 ]

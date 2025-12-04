@@ -5,12 +5,15 @@ Provides access to core classes and a convenience function to run a game.
 
 from __future__ import annotations
 
+import logging
 from importlib.metadata import PackageNotFoundError, version
 
 from .backend import Backend, Event, EventType
 from .entity import Entity, SpriteEntity
 from .game import Game, GameConfig
 from .scene import Scene
+
+logger = logging.getLogger(__name__)
 
 
 def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
@@ -57,7 +60,9 @@ def get_version() -> str:
     try:
         return version(PACKAGE_NAME)
     except PackageNotFoundError:  # if running from source / editable
-        print("Package not found; returning default version 0.0.0")
+        logger.warning(
+            f"Package '{PACKAGE_NAME}' not found. Returning default version '0.0.0'."
+        )
         return "0.0.0"
 
 
