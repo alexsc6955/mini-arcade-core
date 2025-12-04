@@ -15,7 +15,18 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      start_unix: ${{ steps.start.outputs.start_unix }}
+      version: ${{ steps.bump_and_tag.outputs.version }}
+      changelog_section: ${{ steps.bump_and_tag.outputs.changelog_section }}
+
     steps:
+      - name: Mark start time
+        id: start
+        run: |
+          ts=$(date +%s)
+          echo "start_unix=$ts" >> "$GITHUB_OUTPUT"
+
       - name: Validate release branch name
         run: |
           if [[ "${{ inputs.release_branch }}" != release/* ]]; then
@@ -194,8 +205,9 @@ jobs:
 
           changelog.write_text(new_changelog, encoding="utf-8")
 
-          # Write version to a temp file for the shell
+          # Persist values for shell steps
           Path(".version_to_tag").write_text(version_to_tag, encoding="utf-8")
+          Path(".changelog_section").write_text(new_section, encoding="utf-8")
           PY
 
           VERSION_TO_TAG=$(cat .version_to_tag)
@@ -203,6 +215,11 @@ jobs:
 
           echo "Version to tag: ${VERSION_TO_TAG}"
           echo "Tag: ${TAG}"
+
+          # Expose as step outputs (version as plain string, changelog as JSON string)
+          CHANGELOG_SECTION_JSON=$(cat .changelog_section | jq -Rs .)
+          echo "version=${VERSION_TO_TAG}" >> "$GITHUB_OUTPUT"
+          echo "changelog_section=${CHANGELOG_SECTION_JSON}" >> "$GITHUB_OUTPUT"
 
           git status
           git add pyproject.toml CHANGELOG.md || true
@@ -224,8 +241,6 @@ jobs:
           git tag "${TAG}"
           git push origin "${TAG}"
 
-          echo "version=${VERSION_TO_TAG}" >> "$GITHUB_OUTPUT"
-
       # ---- Build & publish to PyPI (inline, after tag push) ----
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -245,3 +260,138 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+
+
+  notify:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      # 1) Duration
+      - name: Calculate pipeline duration
+        id: duration
+        run: |
+          end=$(date +%s)
+          seconds=$((end - ${{ needs.publish.outputs.start_unix }}))
+          if [ "$seconds" -lt 60 ]; then
+            formatted="${seconds}s"
+          elif [ "$seconds" -lt 3600 ]; then
+            minutes=$((seconds / 60)); secs=$((seconds % 60))
+            formatted="${minutes}m"; [ "$secs" -ne 0 ] && formatted="${formatted} ${secs}s"
+          else
+            hours=$((seconds / 3600)); minutes=$(((seconds % 3600) / 60))
+            formatted="${hours}h"; [ "$minutes" -ne 0 ] && formatted="${formatted} ${minutes}m"
+          fi
+          echo "time=${formatted}" >> "$GITHUB_OUTPUT"
+
+      # 2) Icon & status word based on publish result
+      - name: Set pipeline status icon
+        id: icon
+        run: |
+          if [[ "${{ needs.publish.result }}" != "success" ]]; then
+            echo "icon=x" >> "$GITHUB_OUTPUT"
+          else
+            echo "icon=white_check_mark" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set pipeline status word
+        id: word
+        run: |
+          if [[ "${{ needs.publish.result }}" != "success" ]]; then
+            echo "word=failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "word=passed" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 3) Get GitHub user full name
+      - name: Get GitHub user full name
+        id: ghname
+        run: |
+          name=$(curl -s https://api.github.com/users/${{ github.actor }} | jq -r .name)
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+
+      # 4) Build payload JSON (show version + changelog)
+      - name: Build payload JSON
+        id: payload
+        env:
+          SERVER_URL:   ${{ github.server_url }}
+          REPO:         ${{ github.repository }}
+          RUN_ID:       ${{ github.run_id }}
+          ACTOR:        ${{ github.actor }}
+          BRANCH:       ${{ github.head_ref || github.ref_name }}
+          COMMIT:       ${{ github.sha }}
+          COMMIT_MSG:   ${{ github.event.head_commit.message || github.event.pull_request.title || 'Commit message not available' }}
+          DURATION:     ${{ steps.duration.outputs.time }}
+          ICON:         ${{ steps.icon.outputs.icon }}
+          WORD:         ${{ steps.word.outputs.word }}
+          NAME:         ${{ steps.ghname.outputs.name }}
+          VERSION:      ${{ needs.publish.outputs.version }}
+          CHANGELOG_SECTION_JSON: ${{ needs.publish.outputs.changelog_section }}
+        run: |
+          # Decode the changelog section JSON string back to text
+          CHANGELOG_SECTION=$(printf '%s' "$CHANGELOG_SECTION_JSON" | jq -r .)
+
+          blocks=$(jq -cn \
+            --arg icon   "$ICON" \
+            --arg name   "$NAME" \
+            --arg server "$SERVER_URL" \
+            --arg repo   "$REPO" \
+            --arg runid  "$RUN_ID" \
+            --arg actor  "$ACTOR" \
+            --arg branch "$BRANCH" \
+            --arg commit "$COMMIT" \
+            --arg cmsg   "$COMMIT_MSG" \
+            --arg dur    "$DURATION" \
+            --arg word   "$WORD" \
+            --arg version "$VERSION" \
+            --arg chlog "$CHANGELOG_SECTION" '
+            [
+              {
+                "type":"section",
+                "text":{
+                  "type":"mrkdwn",
+                  "text": (":\($icon): *Release pipeline \((if ($name|length)>0 then $name else $actor end))* " +
+                          "(<\($server)/\($actor)|@\($actor)>)\n" +
+                          "Pipeline <\($server)/\($repo)/actions/runs/\($runid)|#\($runid)> has *\($word)* in `\($dur)`.")
+                }
+              },
+              {
+                "type":"section",
+                "fields":[
+                  { "type":"mrkdwn", "text":"*Branch:*\n<\($server)/\($repo)/tree/\($branch)|`\($branch)`>" },
+                  { "type":"mrkdwn", "text":"*Commit:*\n<\($server)/\($repo)/commit/\($commit)|`\($commit)`> - `\($cmsg)`" }
+                ]
+              },
+              {
+                "type":"section",
+                "text":{
+                  "type":"mrkdwn",
+                  "text":"*Release:* `v\($version)`\n\n\($chlog)"
+                }
+              }
+            ]')
+
+          payload=$(jq -cn \
+            --arg icon "$ICON" \
+            --arg server "$SERVER_URL" \
+            --arg repo "$REPO" \
+            --arg runid "$RUN_ID" \
+            --arg word "$WORD" \
+            --arg dur "$DURATION" \
+            --argjson blocks "$blocks" '
+            {
+              "text": (":\($icon): Release pipeline <\($server)/\($repo)/actions/runs/\($runid)|#\($runid)> has *\($word)* in `\($dur)`."),
+              "blocks": $blocks
+            }')
+
+          echo "payload=$(echo "$payload" | jq -c .)" >> "$GITHUB_OUTPUT"
+
+      # 5) Send Slack
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASE }}
+          payload: ${{ steps.payload.outputs.payload }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
