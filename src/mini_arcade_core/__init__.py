@@ -57,6 +57,7 @@ def get_version() -> str:
     try:
         return version(PACKAGE_NAME)
     except PackageNotFoundError:  # if running from source / editable
+        print("Package not found; returning default version 0.0.0")
         return "0.0.0"
 
 
