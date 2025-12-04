@@ -225,3 +225,23 @@ jobs:
           git push origin "${TAG}"
 
           echo "version=${VERSION_TO_TAG}" >> "$GITHUB_OUTPUT"
+
+      # ---- Build & publish to PyPI (inline, after tag push) ----
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install "poetry>=2.0.0"
+
+      - name: Build distributions
+        run: poetry build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
