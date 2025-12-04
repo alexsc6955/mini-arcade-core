@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-12-04
+
+### Fixed
+- add print statement to indicate package not found in get_version function
+
 ## [0.5.0] - 2025-12-03
 
 ### Added
