@@ -4,6 +4,34 @@ import pytest
 
 from mini_arcade_core import Game, GameConfig, Scene
 
+
+class _DummyBackend:
+    """Minimal backend implementation for tests."""
+
+    def __init__(self) -> None:
+        self.inited = False
+        self.init_args = None
+        self.begin_called = 0
+        self.end_called = 0
+        self.rects = []
+
+    def init(self, width: int, height: int, title: str) -> None:
+        self.inited = True
+        self.init_args = (width, height, title)
+
+    def poll_events(self):
+        return []  # no events by default
+
+    def begin_frame(self) -> None:
+        self.begin_called += 1
+
+    def end_frame(self) -> None:
+        self.end_called += 1
+
+    def draw_rect(self, x: int, y: int, w: int, h: int) -> None:
+        self.rects.append((x, y, w, h))
+
+
 # -------------------------
 # I/O tests
 # -------------------------
@@ -37,11 +65,13 @@ def test_game_config_custom_values():
 
 def test_game_initial_state():
     """I/O: Game should store config and initialize internal state."""
-    cfg = GameConfig(width=640, height=480, title="InitTest")
+    backend = _DummyBackend()
+    cfg = GameConfig(width=640, height=480, title="InitTest", backend=backend)
     game = Game(cfg)
     assert game.config is cfg
     assert game._current_scene is None  # type: ignore[attr-defined]
     assert game._running is False  # type: ignore[attr-defined]
+    assert game.backend is backend  # type: ignore[attr-defined]
 
 
 # -------------------------
@@ -49,43 +79,81 @@ def test_game_initial_state():
 # -------------------------
 
 
+def test_game_requires_backend_instance():
+    """Edge case: Game must be constructed with a backend instance."""
+    cfg = GameConfig()
+    with pytest.raises(ValueError) as excinfo:
+        Game(cfg)
+
+    assert "backend" in str(excinfo.value)
+
+
 class _DummyScene(Scene):
     def on_enter(self) -> None:
-        pass
+        self.entered = True  # type: ignore[attr-defined]
 
     def on_exit(self) -> None:
-        pass
+        self.exited = True  # type: ignore[attr-defined]
 
     def handle_event(self, event: object) -> None:
         pass
 
     def update(self, dt: float) -> None:
-        pass
+        # For tests that call Game.run, we quit on first update to avoid an infinite loop.
+        self.updated_frames = getattr(self, "updated_frames", 0) + 1  # type: ignore[attr-defined]
+        self.game.quit()
 
     def draw(self, surface: object) -> None:
         pass
 
 
-def test_game_change_scene_not_implemented():
-    """Edge case: default Game.change_scene must raise NotImplementedError."""
-    game = Game(GameConfig())
+def test_game_change_scene_switches_current_scene_and_calls_hooks():
+    """I/O: Game.change_scene should swap _current_scene and call on_exit/on_enter."""
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+
+    scene1 = _DummyScene(game)
+    scene2 = _DummyScene(game)
+
+    # first scene
+    game.change_scene(scene1)
+    assert game._current_scene is scene1  # type: ignore[attr-defined]
+    assert getattr(scene1, "entered", False) is True
+    assert getattr(scene1, "exited", False) is False
+
+    # switch to second scene
+    game.change_scene(scene2)
+    assert game._current_scene is scene2  # type: ignore[attr-defined]
+    assert getattr(scene1, "exited", False) is True
+    assert getattr(scene2, "entered", False) is True
+
+
+def test_game_run_executes_basic_loop_and_uses_backend():
+    """
+    Side effect: Game.run should call backend.init, poll_events, and scene hooks
+    at least once. We use _DummyScene.update to call game.quit() to exit quickly.
+    """
+    backend = _DummyBackend()
+    cfg = GameConfig(
+        width=320, height=240, title="LoopTest", fps=60, backend=backend
+    )
+    game = Game(cfg)
     scene = _DummyScene(game)
 
-    with pytest.raises(NotImplementedError) as excinfo:
-        game.change_scene(scene)
+    game.run(scene)
 
-    assert "Game.change_scene must be implemented" in str(excinfo.value)
+    # backend was inited with config
+    assert backend.inited is True
+    assert backend.init_args == (320, 240, "LoopTest")
 
+    # at least one frame was rendered
+    assert backend.begin_called >= 1
+    assert backend.end_called >= 1
 
-def test_game_run_not_implemented():
-    """Edge case: default Game.run must raise NotImplementedError."""
-    game = Game(GameConfig())
-    scene = _DummyScene(game)
-
-    with pytest.raises(NotImplementedError) as excinfo:
-        game.run(scene)
-
-    assert "Game.run must be implemented" in str(excinfo.value)
+    # scene lifecycle happened
+    assert getattr(scene, "entered", False) is True
+    assert getattr(scene, "updated_frames", 0) >= 1
+    assert getattr(scene, "exited", False) is True
 
 
 # -------------------------
@@ -106,12 +174,13 @@ def test_custom_game_change_scene_updates_state():
             self._current_scene = scene
             self._current_scene.on_enter()
 
+        # We still can provide our own run implementation if we want for tests
         def run(self, initial_scene: Scene) -> None:  # type: ignore[override]
-            # minimal fake loop: just set current scene
             self.change_scene(initial_scene)
             self._running = False
 
-    game = ConcreteGame(GameConfig())
+    backend = _DummyBackend()
+    game = ConcreteGame(GameConfig(backend=backend))
     scene = _DummyScene(game)
 
     assert game._current_scene is None  # type: ignore[attr-defined]
