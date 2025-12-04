@@ -41,9 +41,11 @@ jobs:
 
           python - << 'PY'
           from pathlib import Path
+          from datetime import date
           import subprocess
           import re
 
+          # --- Version bump logic ---
           pyproject = Path("pyproject.toml")
           text = pyproject.read_text(encoding="utf-8")
 
@@ -79,14 +81,19 @@ jobs:
               print(f"Using current version {current_version} for first publish.")
               version_to_tag = current_version
 
-          # --- Generate/update CHANGELOG.md with grouped sections ---
+          # --- Prepare / read existing CHANGELOG.md ---
           changelog = Path("CHANGELOG.md")
           if changelog.exists():
               old = changelog.read_text(encoding="utf-8")
           else:
-              old = "# Changelog\n\n"
+              old = (
+                  "# Changelog\n\n"
+                  "All notable changes to this project will be documented in this file.\n\n"
+                  "This project adheres to [Semantic Versioning](https://semver.org/).\n\n"
+                  "## [Unreleased]\n\n"
+              )
 
-          # Try to find previous tag for range
+          # --- Compute git log range ---
           try:
               prev_tag = subprocess.check_output(
                   ["git", "describe", "--tags", "--abbrev=0", "--match", "v*.*.*", "HEAD^"],
@@ -105,9 +112,9 @@ jobs:
               ["git", "log", log_range, "--pretty=format:%s"],
               text=True,
           )
-
           lines = [l.strip() for l in raw_log.splitlines() if l.strip()]
 
+          # --- Group commits by type ---
           type_to_section = {
               "feat": "Added",
               "fix": "Fixed",
@@ -126,14 +133,14 @@ jobs:
               lower = subj.lower()
               prefix, sep, rest = lower.partition(":")
 
-              if sep:  # we had a "type: message" style
+              if sep:  # "type: message"
                   commit_type = prefix.strip()
                   message = subj.split(":", 1)[1].strip() or subj
               else:
                   commit_type = ""
                   message = subj
 
-              # Ignore chores (e.g. CI tweaks, formatting, etc.)
+              # Ignore chores (CI tweaks, formatting, etc.)
               if commit_type == "chore":
                   continue
 
@@ -143,11 +150,13 @@ jobs:
               else:
                   other.append(f"- {subj}")
 
-          # If everything was chore or empty, fall back to a flat list
+          today = date.today().isoformat()
+          header = f"## [{version_to_tag}] - {today}"
+
           if not any(sections.values()) and not other:
-              new_section = f"## {version_to_tag}\n\n- Internal changes only.\n\n"
+              body = "- Internal changes only."
           else:
-              parts = [f"## {version_to_tag}", ""]
+              parts = []
               for heading in ("Added", "Fixed", "Changed"):
                   items = sections[heading]
                   if items:
@@ -158,10 +167,32 @@ jobs:
                   parts.append("### Other")
                   parts.extend(other)
                   parts.append("")
+              body = "\n".join(parts).strip()
 
-              new_section = "\n".join(parts).rstrip() + "\n\n"
+          new_section = f"{header}\n\n{body}\n\n"
 
-          changelog.write_text(old + new_section, encoding="utf-8")
+          text = old
+
+          # --- Insert new section under [Unreleased], controlling blank lines ---
+          unreleased_match = re.search(r"^## \[Unreleased\].*$", text, flags=re.MULTILINE)
+          if unreleased_match:
+              start_after_unrel = unreleased_match.end()
+              rest = text[start_after_unrel:]
+              # Find the next "## [" header after Unreleased; insert before that
+              next_header = re.search(r"^## \[.*\]", rest, flags=re.MULTILINE)
+              if next_header:
+                  insert_pos = start_after_unrel + next_header.start()
+              else:
+                  insert_pos = len(text)
+          else:
+              # No [Unreleased] header, append at end
+              insert_pos = len(text.rstrip())
+
+          before = text[:insert_pos].rstrip("\n")
+          after = text[insert_pos:].lstrip("\n")
+          new_changelog = before + "\n\n" + new_section + after
+
+          changelog.write_text(new_changelog, encoding="utf-8")
 
           # Write version to a temp file for the shell
           Path(".version_to_tag").write_text(version_to_tag, encoding="utf-8")
