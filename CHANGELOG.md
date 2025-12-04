@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.3] - 2025-12-04
+
+### Changed
+- simplify version retrieval logic in __init__.py
+
+### Other
+- Merge branch 'release/0.5' of https://github.com/alexsc6955/mini-arcade-core into release/0.5
+
 ## [0.5.2] - 2025-12-04
 
 ### Changed
