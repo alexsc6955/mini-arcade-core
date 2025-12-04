@@ -66,11 +66,4 @@ def get_version() -> str:
         return "0.0.0"
 
 
-try:
-    __version__ = get_version()
-# Justification: We want to ensure that any exception during version retrieval
-# results in a default version being set, rather than crashing the import.
-# pylint: disable=broad-exception-caught
-except Exception:
-    __version__ = "0.0.0"
-# pylint: enable=broad-exception-caught
+__version__ = get_version()
