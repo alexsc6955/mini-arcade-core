@@ -140,8 +140,11 @@ class Game:
             img = Image.open(bmp_path)
             img.save(out_path)  # Pillow chooses format from extension
             return True
+        # Justification: Pillow can raise various exceptions on failure
+        # pylint: disable=broad-exception-caught
         except Exception:
             return False
+        # pylint: enable=broad-exception-caught
 
     def screenshot(
         self, label: str | None = None, directory: str = "screenshots"
