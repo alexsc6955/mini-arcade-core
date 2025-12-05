@@ -124,6 +124,15 @@ class Game:
     ) -> str | None:
         """
         Ask backend to save a screenshot. Returns the file path or None.
+
+        :param label: Optional label to include in the filename.
+        :type label: str | None
+
+        :param directory: Directory to save screenshots in.
+        :type directory: str
+
+        :return: The file path of the saved screenshot, or None on failure.
+        :rtype: str | None
         """
         os.makedirs(directory, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
