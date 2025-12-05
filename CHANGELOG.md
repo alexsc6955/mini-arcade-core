@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.2] - 2025-12-05
+
+### Added
+- implement overlay management methods in Scene class
+
 ## [0.7.1] - 2025-12-05
 
 ### Added
