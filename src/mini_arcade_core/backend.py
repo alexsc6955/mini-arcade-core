@@ -73,3 +73,17 @@ class Backend(Protocol):
 
         We'll keep this minimal for now; later we can extend with colors/sprites.
         """
+
+    def draw_text(
+        self,
+        x: int,
+        y: int,
+        text: str,
+        color: tuple[int, int, int] = (255, 255, 255),
+    ) -> None:
+        """
+        Draw text at the given position in a default font and color.
+
+        Backends may ignore advanced styling for now; this is just to render
+        simple labels like menu items, scores, etc.
+        """
