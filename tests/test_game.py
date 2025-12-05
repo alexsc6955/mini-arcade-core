@@ -31,6 +31,9 @@ class _DummyBackend:
     def draw_rect(self, x: int, y: int, w: int, h: int) -> None:
         self.rects.append((x, y, w, h))
 
+    def set_clear_color(self, r: int, g: int, b: int) -> None:
+        pass
+
 
 # -------------------------
 # I/O tests
