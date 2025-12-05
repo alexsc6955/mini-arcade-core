@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] - 2025-12-05
+
+### Fixed
+- handle exceptions in image saving process in Game class
+
 ## [0.7.4] - 2025-12-05
 
 ### Added
