@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] - 2025-12-05
+
+### Added
+- add capture_frame method to Backend protocol and implement screenshot method in Game class
+
 ## [0.7.0] - 2025-12-05
 
 ### Added
