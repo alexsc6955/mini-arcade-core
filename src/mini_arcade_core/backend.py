@@ -57,6 +57,11 @@ class Backend(Protocol):
         Concrete backends will translate their native events into core Event objects.
         """
 
+    def set_clear_color(self, r: int, g: int, b: int) -> None:
+        """
+        Set the background/clear color used by begin_frame.
+        """
+
     def begin_frame(self) -> None:
         """
         Prepare for drawing a new frame (e.g. clear screen).
@@ -67,7 +72,14 @@ class Backend(Protocol):
         Present the frame to the user (swap buffers).
         """
 
-    def draw_rect(self, x: int, y: int, w: int, h: int) -> None:
+    def draw_rect(
+        self,
+        x: int,
+        y: int,
+        w: int,
+        h: int,
+        color: tuple[int, int, int] = (255, 255, 255),
+    ) -> None:
         """
         Draw a filled rectangle in some default color.
 

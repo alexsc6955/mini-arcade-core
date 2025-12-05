@@ -32,7 +32,7 @@ class GameConfig:
     title: str = "Mini Arcade Game"
     fps: int = 60
     background_color: tuple[int, int, int] = (0, 0, 0)
-    backend: type[Backend] | None = None
+    backend: Backend | None = None
 
 
 class Game:
@@ -83,6 +83,9 @@ class Game:
         """
         backend = self.backend
         backend.init(self.config.width, self.config.height, self.config.title)
+
+        br, bg, bb = self.config.background_color
+        backend.set_clear_color(br, bg, bb)
 
         self.change_scene(initial_scene)
 
