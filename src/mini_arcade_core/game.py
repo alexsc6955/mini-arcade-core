@@ -4,7 +4,9 @@ Game core module defining the Game class and configuration.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from datetime import datetime
 from time import perf_counter, sleep
 from typing import TYPE_CHECKING
 
@@ -116,3 +118,19 @@ class Game:
 
         if self._current_scene is not None:
             self._current_scene.on_exit()
+
+    def screenshot(
+        self, label: str | None = None, directory: str = "screenshots"
+    ) -> str | None:
+        """
+        Ask backend to save a screenshot. Returns the file path or None.
+        """
+        os.makedirs(directory, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        label = label or "shot"
+        filename = f"{stamp}_{label}.png"
+        path = os.path.join(directory, filename)
+
+        if self.backend.capture_frame(path):
+            return path
+        return None

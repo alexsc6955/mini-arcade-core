@@ -103,3 +103,11 @@ class Backend(Protocol):
         Backends may ignore advanced styling for now; this is just to render
         simple labels like menu items, scores, etc.
         """
+
+    def capture_frame(self, path: str | None = None) -> bytes | None:
+        """
+        Capture the current frame.
+        If `path` is provided, save to that file (e.g. PNG).
+        Returns raw bytes (PNG) or None if unsupported.
+        """
+        raise NotImplementedError
