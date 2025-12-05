@@ -7,8 +7,11 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from time import perf_counter, sleep
 from typing import TYPE_CHECKING
+
+from PIL import Image  # type: ignore[import]
 
 from .backend import Backend
 
@@ -119,6 +122,27 @@ class Game:
         if self._current_scene is not None:
             self._current_scene.on_exit()
 
+    @staticmethod
+    def _convert_bmp_to_image(bmp_path: str, out_path: str) -> bool:
+        """
+        Convert a BMP file to another image format using Pillow.
+
+        :param bmp_path: Path to the input BMP file.
+        :type bmp_path: str
+
+        :param out_path: Path to the output image file.
+        :type out_path: str
+
+        :return: True if conversion was successful, False otherwise.
+        :rtype: bool
+        """
+        try:
+            img = Image.open(bmp_path)
+            img.save(out_path)  # Pillow chooses format from extension
+            return True
+        except Exception:
+            return False
+
     def screenshot(
         self, label: str | None = None, directory: str = "screenshots"
     ) -> str | None:
@@ -137,9 +161,11 @@ class Game:
         os.makedirs(directory, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         label = label or "shot"
-        filename = f"{stamp}_{label}.png"
-        path = os.path.join(directory, filename)
+        filename = f"{stamp}_{label}"
+        bmp_path = os.path.join(directory, f"{filename}.bmp")
 
-        if self.backend.capture_frame(path):
-            return path
+        if self.backend.capture_frame(bmp_path):
+            out_path = Path(directory) / f"{filename}.png"
+            self._convert_bmp_to_image(bmp_path, str(out_path))
+            return str(out_path)
         return None

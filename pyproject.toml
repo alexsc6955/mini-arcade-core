@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9,<3.12"
-dependencies = []
+dependencies = ["pillow (<12)"]
 
 [project.optional-dependencies]
 dev = [
