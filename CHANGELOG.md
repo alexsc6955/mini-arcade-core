@@ -6,6 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-05
+
+### Added
+- add set_clear_color method to Backend protocol and update Game to use background_color
+- add draw_text method to Backend protocol for rendering text
+
+### Other
+- Merge pull request #6 from alexsc6955/develop
+- Merge pull request #5 from alexsc6955/feature/text_support
+- Merge release/0.6 into develop
+
 ## [0.6.1] - 2025-12-04
 
 ### Added
