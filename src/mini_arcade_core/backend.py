@@ -72,6 +72,8 @@ class Backend(Protocol):
         Present the frame to the user (swap buffers).
         """
 
+    # Justification: Simple drawing API for now
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def draw_rect(
         self,
         x: int,
@@ -85,6 +87,8 @@ class Backend(Protocol):
 
         We'll keep this minimal for now; later we can extend with colors/sprites.
         """
+
+    # pylint: enable=too-many-arguments,too-many-positional-arguments
 
     def draw_text(
         self,
