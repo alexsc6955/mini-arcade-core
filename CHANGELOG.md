@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.4] - 2025-12-05
+
+### Added
+- add BMP to image conversion method in Game class and update dependencies
+- enhance documentation with type hints and parameter descriptions across multiple modules
+
+### Other
+- Merge branch 'release/0.7' of https://github.com/alexsc6955/mini-arcade-core into release/0.7
+- Merge branch 'release/0.7' of https://github.com/alexsc6955/mini-arcade-core into release/0.7
+
 ## [0.7.3] - 2025-12-05
 
 ### Added
