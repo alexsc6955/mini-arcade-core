@@ -21,7 +21,10 @@ def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
     Convenience helper to bootstrap and run a game with a single scene.
 
     :param initial_scene_cls: The Scene subclass to instantiate as the initial scene.
+    :type initial_scene_cls: type[Scene]
+
     :param config: Optional GameConfig to customize game settings.
+    :type config: GameConfig | None
     """
     game = Game(config or GameConfig())
     scene = initial_scene_cls(game)

@@ -4,9 +4,14 @@ Game core module defining the Game class and configuration.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from time import perf_counter, sleep
 from typing import TYPE_CHECKING
+
+from PIL import Image  # type: ignore[import]
 
 from .backend import Backend
 
@@ -32,7 +37,7 @@ class GameConfig:
     title: str = "Mini Arcade Game"
     fps: int = 60
     background_color: tuple[int, int, int] = (0, 0, 0)
-    backend: type[Backend] | None = None
+    backend: Backend | None = None
 
 
 class Game:
@@ -84,6 +89,9 @@ class Game:
         backend = self.backend
         backend.init(self.config.width, self.config.height, self.config.title)
 
+        br, bg, bb = self.config.background_color
+        backend.set_clear_color(br, bg, bb)
+
         self.change_scene(initial_scene)
 
         self._running = True
@@ -113,3 +121,54 @@ class Game:
 
         if self._current_scene is not None:
             self._current_scene.on_exit()
+
+    @staticmethod
+    def _convert_bmp_to_image(bmp_path: str, out_path: str) -> bool:
+        """
+        Convert a BMP file to another image format using Pillow.
+
+        :param bmp_path: Path to the input BMP file.
+        :type bmp_path: str
+
+        :param out_path: Path to the output image file.
+        :type out_path: str
+
+        :return: True if conversion was successful, False otherwise.
+        :rtype: bool
+        """
+        try:
+            img = Image.open(bmp_path)
+            img.save(out_path)  # Pillow chooses format from extension
+            return True
+        # Justification: Pillow can raise various exceptions on failure
+        # pylint: disable=broad-exception-caught
+        except Exception:
+            return False
+        # pylint: enable=broad-exception-caught
+
+    def screenshot(
+        self, label: str | None = None, directory: str = "screenshots"
+    ) -> str | None:
+        """
+        Ask backend to save a screenshot. Returns the file path or None.
+
+        :param label: Optional label to include in the filename.
+        :type label: str | None
+
+        :param directory: Directory to save screenshots in.
+        :type directory: str
+
+        :return: The file path of the saved screenshot, or None on failure.
+        :rtype: str | None
+        """
+        os.makedirs(directory, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        label = label or "shot"
+        filename = f"{stamp}_{label}"
+        bmp_path = os.path.join(directory, f"{filename}.bmp")
+
+        if self.backend.capture_frame(bmp_path):
+            out_path = Path(directory) / f"{filename}.png"
+            self._convert_bmp_to_image(bmp_path, str(out_path))
+            return str(out_path)
+        return None

@@ -6,6 +6,50 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] - 2025-12-05
+
+### Fixed
+- handle exceptions in image saving process in Game class
+
+## [0.7.4] - 2025-12-05
+
+### Added
+- add BMP to image conversion method in Game class and update dependencies
+- enhance documentation with type hints and parameter descriptions across multiple modules
+
+### Other
+- Merge branch 'release/0.7' of https://github.com/alexsc6955/mini-arcade-core into release/0.7
+- Merge branch 'release/0.7' of https://github.com/alexsc6955/mini-arcade-core into release/0.7
+
+## [0.7.3] - 2025-12-05
+
+### Added
+- enhance documentation with type hints and parameter descriptions across multiple modules
+
+### Other
+- Merge branch 'release/0.7' of https://github.com/alexsc6955/mini-arcade-core into release/0.7
+
+## [0.7.2] - 2025-12-05
+
+### Added
+- implement overlay management methods in Scene class
+
+## [0.7.1] - 2025-12-05
+
+### Added
+- add capture_frame method to Backend protocol and implement screenshot method in Game class
+
+## [0.7.0] - 2025-12-05
+
+### Added
+- add set_clear_color method to Backend protocol and update Game to use background_color
+- add draw_text method to Backend protocol for rendering text
+
+### Other
+- Merge pull request #6 from alexsc6955/develop
+- Merge pull request #5 from alexsc6955/feature/text_support
+- Merge release/0.6 into develop
+
 ## [0.6.1] - 2025-12-04
 
 ### Added
