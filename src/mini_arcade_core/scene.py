@@ -19,18 +19,39 @@ OverlayFunc = Callable[[Backend], None]
 class Scene(ABC):
     """Base class for game scenes (states/screens)."""
 
-    entities: List[Entity]  # all entities in the scene
-    size: Size2D  # size of the scene (width, height)
-
     def __init__(self, game: Game):
         """
         :param game: Reference to the main Game object.
         :type game: Game
         """
         self.game = game
-        self.size = Size2D(game.config.width, game.config.height)
+        self.entities: List[Entity] = []
+        self.size: Size2D = Size2D(game.config.width, game.config.height)
         # overlays drawn on top of the scene
         self._overlays: List[OverlayFunc] = []
+
+    def add_entity(self, *entities: Entity) -> None:
+        """Register one or more entities in this scene."""
+        self.entities.extend(entities)
+
+    def remove_entity(self, entity: Entity) -> None:
+        """Unregister a single entity, if present."""
+        if entity in self.entities:
+            self.entities.remove(entity)
+
+    def clear_entities(self) -> None:
+        """Remove all entities from the scene."""
+        self.entities.clear()
+
+    def update_entities(self, dt: float) -> None:
+        """Default update loop for all entities."""
+        for ent in self.entities:
+            ent.update(dt)
+
+    def draw_entities(self, surface: Backend) -> None:
+        """Default draw loop for all entities."""
+        for ent in self.entities:
+            ent.draw(surface)
 
     def add_overlay(self, overlay: OverlayFunc) -> None:
         """
