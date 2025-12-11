@@ -9,6 +9,7 @@ import logging
 from importlib.metadata import PackageNotFoundError, version
 
 from .backend import Backend, Event, EventType
+from .collision2d import RectCollider
 from .entity import Entity, KinematicEntity, SpriteEntity
 from .game import Game, GameConfig
 from .geometry2d import Position2D, Size2D
@@ -49,6 +50,7 @@ __all__ = [
     "Size2D",
     "KinematicEntity",
     "KinematicData",
+    "RectCollider",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml

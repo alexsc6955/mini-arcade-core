@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from mini_arcade_core.collision2d import RectCollider
 from mini_arcade_core.geometry2d import Position2D, Size2D
 from mini_arcade_core.kinematics2d import KinematicData
 from mini_arcade_core.physics2d import Velocity2D
@@ -50,6 +51,7 @@ class SpriteEntity(Entity):
         """
         self.position = Position2D(float(position.x), float(position.y))
         self.size = Size2D(int(size.width), int(size.height))
+        self.collider = RectCollider(self.position, self.size)
 
 
 class KinematicEntity(SpriteEntity):
