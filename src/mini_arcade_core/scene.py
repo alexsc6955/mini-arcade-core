@@ -7,11 +7,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, List
 
-from mini_arcade_core.backend import Backend
-from mini_arcade_core.entity import Entity
-from mini_arcade_core.geometry2d import Size2D
-
+from .backend import Backend, Event
+from .entity import Entity
 from .game import Game
+from .geometry2d import Size2D
 
 OverlayFunc = Callable[[Backend], None]
 
@@ -95,12 +94,12 @@ class Scene(ABC):
         """Called when the scene is replaced."""
 
     @abstractmethod
-    def handle_event(self, event: object):
+    def handle_event(self, event: Event):
         """
         Handle input / events (e.g. pygame.Event).
 
         :param event: The event to handle.
-        :type event: object
+        :type event: Event
         """
 
     @abstractmethod
@@ -113,10 +112,10 @@ class Scene(ABC):
         """
 
     @abstractmethod
-    def draw(self, surface: object):
+    def draw(self, surface: Backend):
         """
         Render to the main surface.
 
         :param surface: The backend surface to draw on.
-        :type surface: object
+        :type surface: Backend
         """

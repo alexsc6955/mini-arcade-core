@@ -1,5 +1,5 @@
 """
-Entity base classes for mini_arcade_core.
+Kinematic helpers for mini_arcade_core (position + size + velocity).
 """
 
 from __future__ import annotations
@@ -7,9 +7,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from mini_arcade_core.backend import Color
-from mini_arcade_core.geometry2d import Position2D, Size2D
-from mini_arcade_core.physics2d import Velocity2D
+from .backend import Color
+from .geometry2d import Position2D, Size2D
+from .physics2d import Velocity2D
 
 
 @dataclass

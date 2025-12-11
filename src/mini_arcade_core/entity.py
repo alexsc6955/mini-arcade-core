@@ -6,10 +6,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from mini_arcade_core.collision2d import RectCollider
-from mini_arcade_core.geometry2d import Position2D, Size2D
-from mini_arcade_core.kinematics2d import KinematicData
-from mini_arcade_core.physics2d import Velocity2D
+from .collision2d import RectCollider
+from .geometry2d import Position2D, Size2D
+from .kinematics2d import KinematicData
 
 
 class Entity:
@@ -37,17 +36,11 @@ class SpriteEntity(Entity):
 
     def __init__(self, position: Position2D, size: Size2D):
         """
-        :param x: X position.
-        :type x: float
+        :param position: Top-left position of the entity.
+        :type position: Position2D
 
-        :param y: Y position.
-        :type y: float
-
-        :param width: Width of the entity.
-        :type width: int
-
-        :param height: Height of the entity.
-        :type height: int
+        :param size: Size of the entity.
+        :type size: Size2D
         """
         self.position = Position2D(float(position.x), float(position.y))
         self.size = Size2D(int(size.width), int(size.height))
@@ -63,10 +56,7 @@ class KinematicEntity(SpriteEntity):
             size=kinematic_data.size,
         )
 
-        self.velocity = Velocity2D(
-            vx=kinematic_data.velocity.vx,
-            vy=kinematic_data.velocity.vy,
-        )
+        self.velocity = kinematic_data.velocity
 
     def update(self, dt: float) -> None:
         self.position.x, self.position.y = self.velocity.advance(

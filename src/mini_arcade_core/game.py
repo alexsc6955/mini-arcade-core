@@ -29,7 +29,7 @@ class GameConfig:
     :ivar title: Title of the game window.
     :ivar fps: Target frames per second.
     :ivar background_color: RGB background color.
-    :ivar backend: Optional backend class to use for rendering and input.
+    :ivar backend: Optional Backend instance to use for rendering and input.
     """
 
     width: int = 800
@@ -51,7 +51,6 @@ class Game:
         self.config = config
         self._current_scene: Scene | None = None
         self._running: bool = False
-        self.backend: Backend | None = config.backend
 
         if config.backend is None:
             raise ValueError(

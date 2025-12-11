@@ -171,4 +171,3 @@ class Backend(Protocol):
         :rtype: bytes | None
         """
         raise NotImplementedError
-        raise NotImplementedError

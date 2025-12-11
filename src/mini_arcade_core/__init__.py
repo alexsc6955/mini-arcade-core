@@ -9,7 +9,12 @@ import logging
 from importlib.metadata import PackageNotFoundError, version
 
 from .backend import Backend, Event, EventType
-from .boundaries2d import RectSprite, VerticalBounce, VerticalWrap
+from .boundaries2d import (
+    RectKinematic,
+    RectSprite,
+    VerticalBounce,
+    VerticalWrap,
+)
 from .collision2d import RectCollider
 from .entity import Entity, KinematicEntity, SpriteEntity
 from .game import Game, GameConfig
@@ -61,6 +66,7 @@ __all__ = [
     "Bounds2D",
     "VerticalWrap",
     "RectSprite",
+    "RectKinematic",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
