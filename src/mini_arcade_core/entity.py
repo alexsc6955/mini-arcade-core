@@ -51,39 +51,6 @@ class SpriteEntity(Entity):
         self.position = Position2D(float(position.x), float(position.y))
         self.size = Size2D(int(size.width), int(size.height))
 
-    # TODO: Remove compatibility layer in future versions
-    @property
-    def x(self) -> float:
-        return self.position.x
-
-    @x.setter
-    def x(self, value: float) -> None:
-        self.position.x = float(value)
-
-    @property
-    def y(self) -> float:
-        return self.position.y
-
-    @y.setter
-    def y(self, value: float) -> None:
-        self.position.y = float(value)
-
-    @property
-    def width(self) -> int:
-        return self.size.width
-
-    @width.setter
-    def width(self, value: int) -> None:
-        self.size.width = int(value)
-
-    @property
-    def height(self) -> int:
-        return self.size.height
-
-    @height.setter
-    def height(self, value: int) -> None:
-        self.size.height = int(value)
-
 
 class KinematicEntity(SpriteEntity):
     """SpriteEntity with velocity-based movement."""
@@ -99,22 +66,7 @@ class KinematicEntity(SpriteEntity):
             vy=kinematic_data.velocity.vy,
         )
 
-    # optional compatibility layer: vx / vy properties
-    @property
-    def vx(self) -> float:
-        return self.velocity.vx
-
-    @vx.setter
-    def vx(self, value: float) -> None:
-        self.velocity.vx = value
-
-    @property
-    def vy(self) -> float:
-        return self.velocity.vy
-
-    @vy.setter
-    def vy(self, value: float) -> None:
-        self.velocity.vy = value
-
     def update(self, dt: float) -> None:
-        self.x, self.y = self.velocity.advance(self.x, self.y, dt)
+        self.position.x, self.position.y = self.velocity.advance(
+            self.position.x, self.position.y, dt
+        )
