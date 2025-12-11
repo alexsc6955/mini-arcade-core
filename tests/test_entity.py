@@ -2,7 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
-from mini_arcade_core import Entity, SpriteEntity
+import pytest
+
+from mini_arcade_core import (
+    Entity,
+    SpriteEntity,
+    KinematicEntity,
+    Position2D,
+    Size2D,
+    KinematicData,
+    Velocity2D,
+)
+
 
 # -------------------------
 # I/O tests
@@ -11,11 +22,15 @@ from mini_arcade_core import Entity, SpriteEntity
 
 def test_sprite_entity_initialization():
     """I/O: SpriteEntity should correctly store position and size."""
-    sprite = SpriteEntity(x=10.5, y=20.25, width=32, height=16)
-    assert sprite.x == 10.5
-    assert sprite.y == 20.25
-    assert sprite.width == 32
-    assert sprite.height == 16
+    pos = Position2D(10.5, 20.25)
+    size = Size2D(32, 16)
+
+    sprite = SpriteEntity(position=pos, size=size)
+
+    assert sprite.position.x == 10.5
+    assert sprite.position.y == 20.25
+    assert sprite.size.width == 32
+    assert sprite.size.height == 16
 
 
 def test_entity_has_update_and_draw():
@@ -43,15 +58,19 @@ def test_sprite_entity_accepts_negative_or_zero_values():
     Edge case: SpriteEntity currently does not validate width/height/position.
     Construction with unusual values should still succeed.
     """
-    sprite = SpriteEntity(x=-5.0, y=0.0, width=0, height=-10)
-    assert sprite.x == -5.0
-    assert sprite.y == 0.0
-    assert sprite.width == 0
-    assert sprite.height == -10
+    pos = Position2D(-5.0, 0.0)
+    size = Size2D(0, -10)
+
+    sprite = SpriteEntity(position=pos, size=size)
+
+    assert sprite.position.x == -5.0
+    assert sprite.position.y == 0.0
+    assert sprite.size.width == 0
+    assert sprite.size.height == -10
 
 
 # -------------------------
-# Side effects
+# Side effects for generic Entity
 # -------------------------
 
 
@@ -87,3 +106,54 @@ def test_custom_entity_can_apply_side_effects_on_update_and_draw():
     assert ent.x == 5.0
     assert ent.y == 5.0
     assert surface.draw_calls == [(5.0, 5.0)]
+
+
+# -------------------------
+# KinematicEntity tests
+# -------------------------
+
+
+def test_kinematic_entity_uses_velocity_to_advance_position():
+    """
+    I/O: KinematicEntity.update should move according to its velocity.
+    """
+    data = KinematicData.rect(
+        x=0.0,
+        y=0.0,
+        width=10,
+        height=10,
+        vx=10.0,
+        vy=5.0,
+    )
+    ent = KinematicEntity(data)
+
+    ent.update(0.5)  # half a second
+
+    assert ent.position.x == pytest.approx(5.0)
+    assert ent.position.y == pytest.approx(2.5)
+
+
+def test_kinematic_entity_shares_velocity_object_from_kinematic_data():
+    """
+    Side effect: KinematicEntity should reference the same Velocity2D
+    object held in KinematicData, so external changes are reflected.
+    """
+    vel = Velocity2D(vx=0.0, vy=0.0)
+    data = KinematicData(
+        position=Position2D(0.0, 0.0),
+        size=Size2D(10, 10),
+        velocity=vel,
+    )
+
+    ent = KinematicEntity(data)
+
+    # Same object
+    assert ent.velocity is vel
+
+    # Change velocity after construction and update
+    vel.vx = 20.0
+    vel.vy = 0.0
+
+    ent.update(0.5)
+    assert ent.position.x == pytest.approx(10.0)
+    assert ent.position.y == pytest.approx(0.0)

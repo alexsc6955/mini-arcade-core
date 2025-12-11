@@ -1,44 +1,85 @@
+# tests/test_scene.py
 from __future__ import annotations
 
-import pytest
+from typing import Any, List
 
-from mini_arcade_core import (
-    Entity,
-    Game,
-    GameConfig,
-    Scene,
-    SpriteEntity,
-    run_game,
-)
+from mini_arcade_core import Entity, Game, GameConfig, Scene
 
 
 class _DummyBackend:
-    """Minimal backend for run_game tests."""
+    """Minimal backend for Scene/Game tests."""
 
     def __init__(self):
         self.inited = False
         self.init_args = None
-        self.begin_called = 0
-        self.end_called = 0
 
-    def init(self, width: int, height: int, title: str):
+    def init(self, width: int, height: int, title: str) -> None:
         self.inited = True
         self.init_args = (width, height, title)
 
     def poll_events(self):
         return []
 
-    def begin_frame(self):
-        self.begin_called += 1
-
-    def end_frame(self):
-        self.end_called += 1
-
-    def draw_rect(self, x: int, y: int, w: int, h: int):
+    def set_clear_color(self, r: int, g: int, b: int) -> None:
         pass
 
-    def set_clear_color(self, r: int, g: int, b: int):
+    def begin_frame(self) -> None:
         pass
+
+    def end_frame(self) -> None:
+        pass
+
+    def draw_rect(self, x: int, y: int, w: int, h: int, color=(255, 255, 255)):
+        pass
+
+    def draw_text(self, x: int, y: int, text: str, color=(255, 255, 255)):
+        pass
+
+    def capture_frame(self, path: str | None = None) -> bytes | None:
+        return None
+
+
+class _DummyEntity(Entity):
+    """Test double that records update/draw calls."""
+
+    def __init__(self):
+        self.updated_with: List[float] = []
+        self.drawn_on: List[Any] = []
+
+    def update(self, dt: float) -> None:  # type: ignore[override]
+        self.updated_with.append(dt)
+
+    def draw(self, surface: Any) -> None:  # type: ignore[override]
+        self.drawn_on.append(surface)
+
+
+class _DummyScene(Scene):
+    """Concrete Scene implementation for testing helpers."""
+
+    def __init__(self, game: Game):
+        super().__init__(game)
+        self.entered = False
+        self.exited = False
+        self.handled_events: list[Any] = []
+        self.updated_with: list[float] = []
+        self.drawn_on: list[Any] = []
+
+    def on_enter(self) -> None:  # type: ignore[override]
+        self.entered = True
+
+    def on_exit(self) -> None:  # type: ignore[override]
+        self.exited = True
+
+    def handle_event(self, event: object) -> None:  # type: ignore[override]
+        self.handled_events.append(event)
+
+    def update(self, dt: float) -> None:  # type: ignore[override]
+        self.updated_with.append(dt)
+        # Typically you’d call self.update_entities(dt) here in a real scene
+
+    def draw(self, surface: Any) -> None:  # type: ignore[override]
+        self.drawn_on.append(surface)
+        # Typically you’d call self.draw_entities(surface) and self.draw_overlays(surface)
 
 
 # -------------------------
@@ -46,123 +87,128 @@ class _DummyBackend:
 # -------------------------
 
 
-def test_public_api_exports():
-    """I/O: __all__ should expose the main types."""
-    # Just importing above will fail if __all__ or exports are wrong.
-    assert Game is not None
-    assert GameConfig is not None
-    assert Scene is not None
-    assert Entity is not None
-    assert SpriteEntity is not None
-    assert callable(run_game)
-
-
-class _DummyScene(Scene):
-    constructed = False
-
-    def __init__(self, game: Game):
-        super().__init__(game)
-        _DummyScene.constructed = True
-        self.entered = False
-        self.exited = False
-        self.updated = 0
-
-    def on_enter(self):
-        self.entered = True
-
-    def on_exit(self):
-        self.exited = True
-
-    def handle_event(self, event: object):
-        pass
-
-    def update(self, dt: float):
-        self.updated += 1
-        # Quit immediately so run_game() returns quickly.
-        self.game.quit()
-
-    def draw(self, surface: object):
-        pass
-
-
-def test_run_game_instantiates_scene_and_runs_with_backend():
-    """
-    I/O: run_game should construct the scene class with a Game instance and
-    execute at least one frame using the provided backend.
-    """
+def test_scene_initializes_size_and_empty_entity_list():
+    """I/O: Scene should derive size from GameConfig and start with no entities."""
     backend = _DummyBackend()
-    cfg = GameConfig(
-        width=400, height=300, title="RunGameTest", backend=backend
-    )
-    _DummyScene.constructed = False
+    cfg = GameConfig(width=640, height=480, backend=backend)
+    game = Game(cfg)
 
-    run_game(_DummyScene, cfg)
+    scene = _DummyScene(game)
 
-    assert _DummyScene.constructed is True
-    assert backend.inited is True
-    assert backend.begin_called >= 1
-    assert backend.end_called >= 1
+    assert scene.size.width == 640
+    assert scene.size.height == 480
+    assert scene.entities == []
 
 
-def test_run_game_accepts_custom_config():
-    """
-    I/O: run_game should accept a custom GameConfig object and propagate it
-    to the backend via Game.
-    """
+def test_add_remove_and_clear_entities():
+    """I/O: add_entity/remove_entity/clear_entities should manage the entity list."""
     backend = _DummyBackend()
-    cfg = GameConfig(width=1024, height=768, title="Custom", backend=backend)
+    game = Game(GameConfig(backend=backend))
+    scene = _DummyScene(game)
 
-    run_game(_DummyScene, cfg)
+    e1 = _DummyEntity()
+    e2 = _DummyEntity()
 
-    assert backend.inited is True
-    assert backend.init_args == (1024, 768, "Custom")
+    # add multiple in one call
+    scene.add_entity(e1, e2)
+    assert e1 in scene.entities
+    assert e2 in scene.entities
+
+    # remove single entity
+    scene.remove_entity(e1)
+    assert e1 not in scene.entities
+    assert e2 in scene.entities
+
+    # clear all
+    scene.clear_entities()
+    assert scene.entities == []
+
+
+def test_update_entities_calls_update_on_all():
+    """Side effect: update_entities should call update(dt) on each entity."""
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+    scene = _DummyScene(game)
+
+    e1 = _DummyEntity()
+    e2 = _DummyEntity()
+    scene.add_entity(e1, e2)
+
+    scene.update_entities(0.5)
+
+    assert e1.updated_with == [0.5]
+    assert e2.updated_with == [0.5]
+
+
+def test_draw_entities_calls_draw_on_all():
+    """Side effect: draw_entities should call draw(surface) on each entity."""
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+    scene = _DummyScene(game)
+
+    e1 = _DummyEntity()
+    e2 = _DummyEntity()
+    scene.add_entity(e1, e2)
+
+    surface = object()
+    scene.draw_entities(surface)  # type: ignore[arg-type]
+
+    assert e1.drawn_on == [surface]
+    assert e2.drawn_on == [surface]
 
 
 # -------------------------
-# Edge cases
+# Overlays
 # -------------------------
 
 
-def test_run_game_without_backend_raises_value_error():
-    """
-    Edge case: run_game with a config that has no backend should fail fast.
-    """
-    cfg = GameConfig()
-    with pytest.raises(ValueError):
-        run_game(_DummyScene, cfg)
+def test_add_remove_and_clear_overlays():
+    """I/O: add_overlay/remove_overlay/clear_overlays should manage overlay list."""
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+    scene = _DummyScene(game)
+
+    calls = []
+
+    def ov1(surface):
+        calls.append(("ov1", surface))
+
+    def ov2(surface):
+        calls.append(("ov2", surface))
+
+    # add overlays
+    scene.add_overlay(ov1)
+    scene.add_overlay(ov2)
+    assert len(scene._overlays) == 2  # type: ignore[attr-defined]
+
+    # remove one
+    scene.remove_overlay(ov1)
+    assert ov1 not in scene._overlays  # type: ignore[attr-defined]
+    assert ov2 in scene._overlays  # type: ignore[attr-defined]
+
+    # clear them all
+    scene.clear_overlays()
+    assert scene._overlays == []  # type: ignore[attr-defined]
 
 
-# -------------------------
-# Side effects
-# -------------------------
+def test_draw_overlays_calls_all_registered_overlays():
+    """Side effect: draw_overlays should invoke each overlay with the surface."""
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+    scene = _DummyScene(game)
 
+    calls = []
 
-def test_run_game_calls_game_run(monkeypatch):
-    """
-    Side effect: ensure that Game.run is actually called by run_game.
-    We monkeypatch Game to a test double that records the call.
-    """
-    called = {"run": False}
+    def ov1(surface):
+        calls.append(("ov1", surface))
 
-    class TestGame(Game):
-        def run(self, initial_scene: Scene):  # type: ignore[override]
-            called["run"] = True
+    def ov2(surface):
+        calls.append(("ov2", surface))
 
-        def change_scene(self, scene: Scene):  # type: ignore[override]
-            # For this test we don't care about scene lifecycle.
-            self._current_scene = scene  # type: ignore[attr-defined]
+    scene.add_overlay(ov1)
+    scene.add_overlay(ov2)
 
-    # Patch the Game symbol inside the mini_arcade_core package
-    import mini_arcade_core
+    surface = object()
+    scene.draw_overlays(surface)  # type: ignore[arg-type]
 
-    original_game_cls = mini_arcade_core.Game
-    mini_arcade_core.Game = TestGame  # type: ignore[assignment]
-
-    try:
-        backend = _DummyBackend()
-        cfg = GameConfig(backend=backend)
-        run_game(_DummyScene, cfg)
-    finally:
-        mini_arcade_core.Game = original_game_cls  # restore
-
-    assert called["run"] is True
+    assert calls == [("ov1", surface), ("ov2", surface)]
