@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Callable, List
 
 from mini_arcade_core.backend import Backend
+from mini_arcade_core.entity import Entity
 
 from .game import Game
 
@@ -16,6 +17,8 @@ OverlayFunc = Callable[[Backend], None]
 
 class Scene(ABC):
     """Base class for game scenes (states/screens)."""
+
+    entities: List[Entity]  # all entities in the scene
 
     def __init__(self, game: Game):
         """
