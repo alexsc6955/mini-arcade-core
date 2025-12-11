@@ -9,6 +9,7 @@ from typing import Callable, List
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.entity import Entity
+from mini_arcade_core.geometry2d import Size2D
 
 from .game import Game
 
@@ -19,6 +20,7 @@ class Scene(ABC):
     """Base class for game scenes (states/screens)."""
 
     entities: List[Entity]  # all entities in the scene
+    size: Size2D  # size of the scene (width, height)
 
     def __init__(self, game: Game):
         """
@@ -26,6 +28,7 @@ class Scene(ABC):
         :type game: Game
         """
         self.game = game
+        self.size = Size2D(game.config.width, game.config.height)
         # overlays drawn on top of the scene
         self._overlays: List[OverlayFunc] = []
 
