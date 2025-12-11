@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterable, Protocol
+from typing import Iterable, Protocol, Tuple, Union
+
+Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
 
 
 class EventType(Enum):
@@ -106,7 +108,7 @@ class Backend(Protocol):
         y: int,
         w: int,
         h: int,
-        color: tuple[int, int, int] = (255, 255, 255),
+        color: Color = (255, 255, 255),
     ) -> None:
         """
         Draw a filled rectangle in some default color.
@@ -168,4 +170,5 @@ class Backend(Protocol):
         :return: Raw image bytes if no path given, else None.
         :rtype: bytes | None
         """
+        raise NotImplementedError
         raise NotImplementedError
