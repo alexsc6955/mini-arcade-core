@@ -51,6 +51,10 @@ class KinematicEntity(SpriteEntity):
     """SpriteEntity with velocity-based movement."""
 
     def __init__(self, kinematic_data: KinematicData):
+        """
+        :param kinematic_data: Kinematic data for the entity.
+        :type kinematic_data: KinematicData
+        """
         super().__init__(
             position=kinematic_data.position,
             size=kinematic_data.size,
@@ -58,7 +62,7 @@ class KinematicEntity(SpriteEntity):
 
         self.velocity = kinematic_data.velocity
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         self.position.x, self.position.y = self.velocity.advance(
             self.position.x, self.position.y, dt
         )

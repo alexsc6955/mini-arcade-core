@@ -47,6 +47,8 @@ class Game:
         """
         :param config: Game configuration options.
         :type config: GameConfig
+
+        :raises ValueError: If the provided config does not have a valid Backend.
         """
         self.config = config
         self._current_scene: Scene | None = None

@@ -35,6 +35,8 @@ def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
 
     :param config: Optional GameConfig to customize game settings.
     :type config: GameConfig | None
+
+    :raises ValueError: If the provided config does not have a valid Backend.
     """
     cfg = config or GameConfig()
     if config.backend is None:

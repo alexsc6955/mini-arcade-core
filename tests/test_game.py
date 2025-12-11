@@ -8,30 +8,30 @@ from mini_arcade_core import Game, GameConfig, Scene
 class _DummyBackend:
     """Minimal backend implementation for tests."""
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.inited = False
         self.init_args = None
         self.begin_called = 0
         self.end_called = 0
         self.rects = []
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         self.inited = True
         self.init_args = (width, height, title)
 
     def poll_events(self):
         return []  # no events by default
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         self.begin_called += 1
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         self.end_called += 1
 
-    def draw_rect(self, x: int, y: int, w: int, h: int) -> None:
+    def draw_rect(self, x: int, y: int, w: int, h: int):
         self.rects.append((x, y, w, h))
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         pass
 
 
@@ -92,21 +92,21 @@ def test_game_requires_backend_instance():
 
 
 class _DummyScene(Scene):
-    def on_enter(self) -> None:
+    def on_enter(self):
         self.entered = True  # type: ignore[attr-defined]
 
-    def on_exit(self) -> None:
+    def on_exit(self):
         self.exited = True  # type: ignore[attr-defined]
 
-    def handle_event(self, event: object) -> None:
+    def handle_event(self, event: object):
         pass
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         # For tests that call Game.run, we quit on first update to avoid an infinite loop.
         self.updated_frames = getattr(self, "updated_frames", 0) + 1  # type: ignore[attr-defined]
         self.game.quit()
 
-    def draw(self, surface: object) -> None:
+    def draw(self, surface: object):
         pass
 
 
@@ -171,14 +171,14 @@ def test_custom_game_change_scene_updates_state():
     """
 
     class ConcreteGame(Game):
-        def change_scene(self, scene: Scene) -> None:  # type: ignore[override]
+        def change_scene(self, scene: Scene):  # type: ignore[override]
             if self._current_scene is not None:
                 self._current_scene.on_exit()
             self._current_scene = scene
             self._current_scene.on_enter()
 
         # We still can provide our own run implementation if we want for tests
-        def run(self, initial_scene: Scene) -> None:  # type: ignore[override]
+        def run(self, initial_scene: Scene):  # type: ignore[override]
             self.change_scene(initial_scene)
             self._running = False
 

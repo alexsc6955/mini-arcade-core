@@ -23,7 +23,7 @@ def test_entity_has_update_and_draw():
     ent = Entity()
 
     class DummySurface:
-        def __init__(self) -> None:
+        def __init__(self):
             self.draw_calls: list[Any] = []
 
     surface = DummySurface()
@@ -62,20 +62,20 @@ def test_custom_entity_can_apply_side_effects_on_update_and_draw():
     """
 
     class DummySurface:
-        def __init__(self) -> None:
+        def __init__(self):
             self.draw_calls: list[tuple[float, float]] = []
 
     class MovingEntity(Entity):
-        def __init__(self) -> None:
+        def __init__(self):
             self.x = 0.0
             self.y = 0.0
             self.speed = 10.0
 
-        def update(self, dt: float) -> None:
+        def update(self, dt: float):
             self.x += self.speed * dt
             self.y += self.speed * dt
 
-        def draw(self, surface: DummySurface) -> None:  # type: ignore[override]
+        def draw(self, surface: DummySurface):  # type: ignore[override]
             surface.draw_calls.append((self.x, self.y))
 
     surface = DummySurface()

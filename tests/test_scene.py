@@ -15,29 +15,29 @@ from mini_arcade_core import (
 class _DummyBackend:
     """Minimal backend for run_game tests."""
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.inited = False
         self.init_args = None
         self.begin_called = 0
         self.end_called = 0
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         self.inited = True
         self.init_args = (width, height, title)
 
     def poll_events(self):
         return []
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         self.begin_called += 1
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         self.end_called += 1
 
-    def draw_rect(self, x: int, y: int, w: int, h: int) -> None:
+    def draw_rect(self, x: int, y: int, w: int, h: int):
         pass
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         pass
 
 
@@ -67,21 +67,21 @@ class _DummyScene(Scene):
         self.exited = False
         self.updated = 0
 
-    def on_enter(self) -> None:
+    def on_enter(self):
         self.entered = True
 
-    def on_exit(self) -> None:
+    def on_exit(self):
         self.exited = True
 
-    def handle_event(self, event: object) -> None:
+    def handle_event(self, event: object):
         pass
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         self.updated += 1
         # Quit immediately so run_game() returns quickly.
         self.game.quit()
 
-    def draw(self, surface: object) -> None:
+    def draw(self, surface: object):
         pass
 
 
@@ -145,10 +145,10 @@ def test_run_game_calls_game_run(monkeypatch):
     called = {"run": False}
 
     class TestGame(Game):
-        def run(self, initial_scene: Scene) -> None:  # type: ignore[override]
+        def run(self, initial_scene: Scene):  # type: ignore[override]
             called["run"] = True
 
-        def change_scene(self, scene: Scene) -> None:  # type: ignore[override]
+        def change_scene(self, scene: Scene):  # type: ignore[override]
             # For this test we don't care about scene lifecycle.
             self._current_scene = scene  # type: ignore[attr-defined]
 
