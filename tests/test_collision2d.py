@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from mini_arcade_core.collision2d import RectCollider, _rects_intersect
 from mini_arcade_core.geometry2d import Position2D, Size2D
-from mini_arcade_core.collision2d import _rects_intersect, RectCollider
-
 
 # -------------------------
 # I/O tests for _rects_intersect

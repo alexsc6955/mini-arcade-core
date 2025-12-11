@@ -6,14 +6,13 @@ import pytest
 
 from mini_arcade_core import (
     Entity,
-    SpriteEntity,
+    KinematicData,
     KinematicEntity,
     Position2D,
     Size2D,
-    KinematicData,
+    SpriteEntity,
     Velocity2D,
 )
-
 
 # -------------------------
 # I/O tests

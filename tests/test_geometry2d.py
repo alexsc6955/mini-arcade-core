@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from mini_arcade_core.geometry2d import Bounds2D, Position2D, Size2D
 
-
 # -------------------------
 # I/O tests
 # -------------------------

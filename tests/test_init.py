@@ -22,9 +22,9 @@ from mini_arcade_core import (
     Velocity2D,
     VerticalBounce,
     VerticalWrap,
+    __version__,
     get_version,
     run_game,
-    __version__,
 )
 
 

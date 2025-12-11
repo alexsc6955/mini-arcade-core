@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from mini_arcade_core import Velocity2D
 
-
 # -------------------------
 # I/O tests
 # -------------------------

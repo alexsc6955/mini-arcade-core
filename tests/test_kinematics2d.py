@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from mini_arcade_core import KinematicData, Position2D, Size2D, Velocity2D
 
-
 # -------------------------
 # I/O tests
 # -------------------------
