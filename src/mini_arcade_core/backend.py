@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterable, Protocol, Tuple, Union, Optional
+from typing import Iterable, Optional, Protocol, Tuple, Union
 
 Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
 
@@ -45,6 +45,8 @@ class EventType(Enum):
     TEXTINPUT = auto()
 
 
+# Justification: Simple data container for now
+# pylint: disable=too-many-instance-attributes
 @dataclass(frozen=True)
 class Event:
     """
@@ -90,6 +92,9 @@ class Event:
 
     # Text input (optional)
     text: Optional[str] = None
+
+
+# pylint: enable=too-many-instance-attributes
 
 
 class Backend(Protocol):
