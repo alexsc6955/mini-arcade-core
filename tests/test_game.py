@@ -94,8 +94,9 @@ def test_game_initial_state():
     backend = _DummyBackend()
     cfg = GameConfig(width=640, height=480, title="InitTest", backend=backend)
     game = Game(cfg)
+
     assert game.config is cfg
-    assert game._current_scene is None  # type: ignore[attr-defined]
+    assert game.current_scene() is None
     assert game._running is False  # type: ignore[attr-defined]
     assert game.backend is backend  # type: ignore[attr-defined]
 
@@ -123,6 +124,12 @@ class _DummyScene(Scene):
     def on_exit(self) -> None:  # type: ignore[override]
         self.exited = True  # type: ignore[attr-defined]
 
+    def on_pause(self) -> None:  # type: ignore[override]
+        self.paused = True  # type: ignore[attr-defined]
+
+    def on_resume(self) -> None:  # type: ignore[override]
+        self.resumed = True  # type: ignore[attr-defined]
+
     def handle_event(self, event: object) -> None:  # type: ignore[override]
         # For these tests we don't care about events.
         pass
@@ -146,17 +153,44 @@ def test_game_change_scene_switches_current_scene_and_calls_hooks():
     scene1 = _DummyScene(game)
     scene2 = _DummyScene(game)
 
-    # first scene
     game.change_scene(scene1)
-    assert game._current_scene is scene1  # type: ignore[attr-defined]
+
+    # stack should contain only scene1
+    assert game.current_scene() is scene1
     assert getattr(scene1, "entered", False) is True
     assert getattr(scene1, "exited", False) is False
 
-    # switch to second scene
     game.change_scene(scene2)
-    assert game._current_scene is scene2  # type: ignore[attr-defined]
+
+    # scene1 exited, scene2 entered, stack replaced
     assert getattr(scene1, "exited", False) is True
+    assert game.current_scene() is scene2
     assert getattr(scene2, "entered", False) is True
+
+
+def test_game_push_pop_scene_calls_pause_resume_and_exit():
+    backend = _DummyBackend()
+    game = Game(GameConfig(backend=backend))
+
+    base = _DummyScene(game)
+    overlay = _DummyScene(game)
+
+    game.change_scene(base)
+    assert game.current_scene() is base
+
+    game.push_scene(overlay, as_overlay=True)
+
+    # pushing pauses base and enters overlay
+    assert getattr(base, "paused", False) is True
+    assert getattr(overlay, "entered", False) is True
+    assert game.current_scene() is overlay
+
+    game.pop_scene()
+
+    # popping exits overlay and resumes base
+    assert getattr(overlay, "exited", False) is True
+    assert getattr(base, "resumed", False) is True
+    assert game.current_scene() is base
 
 
 def test_game_run_executes_basic_loop_and_uses_backend():
