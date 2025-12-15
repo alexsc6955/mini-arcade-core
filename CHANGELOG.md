@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2025-12-15
+
+### Added
+- Add docstring to current_scene method for clarity on active scene retrieval
+- Enhance menu system with detailed docstrings for better clarity
+- Implement scene stack management and menu system with pause/resume functionality
+
 ## [0.8.0] - 2025-12-12
 
 ### Added
