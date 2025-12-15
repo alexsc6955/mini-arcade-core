@@ -6,6 +6,36 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2025-12-15
+
+### Added
+- Add docstring to current_scene method for clarity on active scene retrieval
+- Enhance menu system with detailed docstrings for better clarity
+- Implement scene stack management and menu system with pause/resume functionality
+
+## [0.8.0] - 2025-12-12
+
+### Added
+- Add docstring, format code and solve pylint warnings
+- update imports and improve type annotations across multiple modules
+- refactor color type handling in backend and kinematics2d modules
+- enhance game configuration validation and update imports in __init__.py
+- add VerticalBounce class for vertical collision handling and integrate Bounds2D
+- add movement control methods to Velocity2D class
+- add RectCollider class for 2D collision detection and integrate into entity system
+- implement entity management methods in Scene class
+- add Size2D import and define scene size in Scene class
+- add Entity import and define entities list in Scene class
+- add 2D geometry, physics, and kinematics classes for improved entity handling
+
+### Changed
+- clean up import statements in test files
+- remove deprecated properties from SpriteEntity and KinematicEntity
+
+### Other
+- Refactor tests and implement new test cases for game backend, scene management, and 2D physics
+- Merge release/0.7 into develop
+
 ## [0.7.5] - 2025-12-05
 
 ### Fixed

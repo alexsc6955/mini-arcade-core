@@ -1,3 +1,7 @@
+"""
+Boundary behaviors for 2D rectangular objects.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,6 +17,10 @@ class RectKinematic(Protocol):
     - position: Position2D
     - size: Size2D
     - velocity: Velocity2D
+
+    :ivar position (Position2D): Top-left position of the object.
+    :ivar size (Size2D): Size of the object.
+    :ivar velocity (Velocity2D): Velocity of the object.
     """
 
     position: Position2D
@@ -25,11 +33,19 @@ class VerticalBounce:
     """
     Bounce an object off the top/bottom bounds by inverting vy
     and clamping its position inside the bounds.
+
+    :ivar bounds (Bounds2D): The boundary rectangle.
     """
 
     bounds: Bounds2D
 
-    def apply(self, obj: RectKinematic) -> None:
+    def apply(self, obj: RectKinematic):
+        """
+        Apply vertical bounce to the given object.
+
+        :param obj: The object to apply the bounce to.
+        :type obj: RectKinematic
+        """
         top = self.bounds.top
         bottom = self.bounds.bottom
 
@@ -50,6 +66,9 @@ class RectSprite(Protocol):
     - position: Position2D
     - size: Size2D
     (no velocity required)
+
+    :ivar position (Position2D): Top-left position of the object.
+    :ivar size (Size2D): Size of the object.
     """
 
     position: Position2D
@@ -63,11 +82,19 @@ class VerticalWrap:
 
     If it leaves above the top, it reappears at the bottom.
     If it leaves below the bottom, it reappears at the top.
+
+    :ivar bounds (Bounds2D): The boundary rectangle.
     """
 
     bounds: Bounds2D
 
-    def apply(self, obj: RectSprite) -> None:
+    def apply(self, obj: RectSprite):
+        """
+        Apply vertical wrap to the given object.
+
+        :param obj: The object to apply the wrap to.
+        :type obj: RectSprite
+        """
         top = self.bounds.top
         bottom = self.bounds.bottom
 

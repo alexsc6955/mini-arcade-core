@@ -81,21 +81,21 @@ Represents one state of your game (menu, gameplay, pause, etc.):
 from mini_arcade_core import Scene, Game
 
 class MyScene(Scene):
-    def on_enter(self) -> None:
+    def on_enter(self):
         print("Scene entered")
 
-    def on_exit(self) -> None:
+    def on_exit(self):
         print("Scene exited")
 
-    def handle_event(self, event: object) -> None:
+    def handle_event(self, event: object):
         # Handle input / events from your backend
         pass
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         # Game logic
         pass
 
-    def draw(self, surface: object) -> None:
+    def draw(self, surface: object):
         # Rendering via your backend
         pass
 ```
@@ -108,17 +108,17 @@ Lightweight game object primitives:
 from mini_arcade_core import Entity, SpriteEntity
 
 class Ball(Entity):
-    def __init__(self) -> None:
+    def __init__(self):
         self.x = 100.0
         self.y = 100.0
         self.vx = 200.0
         self.vy = 150.0
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         self.x += self.vx * dt
         self.y += self.vy * dt
 
-    def draw(self, surface: object) -> None:
+    def draw(self, surface: object):
         # Use your backend to draw the ball on `surface`
         pass
 
@@ -140,7 +140,7 @@ from mini_arcade_core import Game, GameConfig, Scene
 
 
 class PygameGame(Game):
-    def __init__(self, config: GameConfig) -> None:
+    def __init__(self, config: GameConfig):
         super().__init__(config)
         pygame.init()
         self._screen = pygame.display.set_mode(
@@ -149,13 +149,13 @@ class PygameGame(Game):
         pygame.display.set_caption(config.title)
         self._clock = pygame.time.Clock()
 
-    def change_scene(self, scene: Scene) -> None:
+    def change_scene(self, scene: Scene):
         if self._current_scene is not None:
             self._current_scene.on_exit()
         self._current_scene = scene
         self._current_scene.on_enter()
 
-    def run(self, initial_scene: Scene) -> None:
+    def run(self, initial_scene: Scene):
         self.change_scene(initial_scene)
         self._running = True
 
@@ -178,7 +178,7 @@ class PygameGame(Game):
 
 
 class PongScene(Scene):
-    def __init__(self, game: Game) -> None:
+    def __init__(self, game: Game):
         super().__init__(game)
         self.x = 100.0
         self.y = 100.0
@@ -186,17 +186,17 @@ class PongScene(Scene):
         self.vy = 150.0
         self.radius = 10
 
-    def on_enter(self) -> None:
+    def on_enter(self):
         print("Pong started")
 
-    def on_exit(self) -> None:
+    def on_exit(self):
         print("Pong finished")
 
-    def handle_event(self, event: object) -> None:
+    def handle_event(self, event: object):
         # no input yet
         pass
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float):
         self.x += self.vx * dt
         self.y += self.vy * dt
 
@@ -208,7 +208,7 @@ class PongScene(Scene):
         if self.y < self.radius or self.y > height - self.radius:
             self.vy *= -1
 
-    def draw(self, surface: pygame.Surface) -> None:  # type: ignore[override]
+    def draw(self, surface: pygame.Surface):  # type: ignore[override]
         pygame.draw.circle(
             surface, (255, 255, 255), (int(self.x), int(self.y)), self.radius
         )
