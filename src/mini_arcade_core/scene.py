@@ -139,3 +139,9 @@ class Scene(ABC):
         :param surface: The backend surface to draw on.
         :type surface: Backend
         """
+
+    def on_pause(self):
+        """Called when the game is paused."""
+
+    def on_resume(self):
+        """Called when the game is resumed."""
