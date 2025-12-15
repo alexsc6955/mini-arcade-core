@@ -68,6 +68,12 @@ class Game:
         self._scene_stack: list[_StackEntry] = []
 
     def current_scene(self) -> "Scene | None":
+        """
+        Get the currently active scene.
+
+        :return: The active Scene instance, or None if no scene is active.
+        :rtype: Scene | None
+        """
         return self._scene_stack[-1].scene if self._scene_stack else None
 
     def change_scene(self, scene: Scene):
