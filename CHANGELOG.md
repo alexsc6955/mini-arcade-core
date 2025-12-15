@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-12-15
+
+### Added
+- Enhance Event and EventType classes with additional event types and optional attributes
+
+### Other
+- Merge release/0.8 into develop
+
 ## [0.8.1] - 2025-12-15
 
 ### Added
