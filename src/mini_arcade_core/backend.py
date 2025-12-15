@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Iterable, Protocol
+from typing import Iterable, Protocol, Tuple, Union
+
+Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
 
 
 class EventType(Enum):
@@ -50,7 +52,7 @@ class Backend(Protocol):
     mini-arcade-core only talks to this protocol, never to SDL/pygame directly.
     """
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         """
         Initialize the backend and open a window.
         Should be called once before the main loop.
@@ -74,7 +76,7 @@ class Backend(Protocol):
         :rtype: Iterable[Event]
         """
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         """
         Set the background/clear color used by begin_frame.
 
@@ -88,12 +90,12 @@ class Backend(Protocol):
         :type b: int
         """
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         """
         Prepare for drawing a new frame (e.g. clear screen).
         """
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         """
         Present the frame to the user (swap buffers).
         """
@@ -106,8 +108,8 @@ class Backend(Protocol):
         y: int,
         w: int,
         h: int,
-        color: tuple[int, int, int] = (255, 255, 255),
-    ) -> None:
+        color: Color = (255, 255, 255),
+    ):
         """
         Draw a filled rectangle in some default color.
         We'll keep this minimal for now; later we can extend with colors/sprites.
@@ -125,7 +127,7 @@ class Backend(Protocol):
         :type h: int
 
         :param color: RGB color tuple.
-        :type color: tuple[int, int, int]
+        :type color: Color
         """
 
     # pylint: enable=too-many-arguments,too-many-positional-arguments
@@ -135,8 +137,8 @@ class Backend(Protocol):
         x: int,
         y: int,
         text: str,
-        color: tuple[int, int, int] = (255, 255, 255),
-    ) -> None:
+        color: Color = (255, 255, 255),
+    ):
         """
         Draw text at the given position in a default font and color.
 
@@ -153,7 +155,7 @@ class Backend(Protocol):
         :type text: str
 
         :param color: RGB color tuple.
-        :type color: tuple[int, int, int]
+        :type color: Color
         """
 
     def capture_frame(self, path: str | None = None) -> bytes | None:

@@ -9,8 +9,18 @@ import logging
 from importlib.metadata import PackageNotFoundError, version
 
 from .backend import Backend, Event, EventType
-from .entity import Entity, SpriteEntity
+from .boundaries2d import (
+    RectKinematic,
+    RectSprite,
+    VerticalBounce,
+    VerticalWrap,
+)
+from .collision2d import RectCollider
+from .entity import Entity, KinematicEntity, SpriteEntity
 from .game import Game, GameConfig
+from .geometry2d import Bounds2D, Position2D, Size2D
+from .kinematics2d import KinematicData
+from .physics2d import Velocity2D
 from .scene import Scene
 
 logger = logging.getLogger(__name__)
@@ -25,8 +35,15 @@ def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
 
     :param config: Optional GameConfig to customize game settings.
     :type config: GameConfig | None
+
+    :raises ValueError: If the provided config does not have a valid Backend.
     """
-    game = Game(config or GameConfig())
+    cfg = config or GameConfig()
+    if config.backend is None:
+        raise ValueError(
+            "GameConfig.backend must be set to a Backend instance"
+        )
+    game = Game(cfg)
     scene = initial_scene_cls(game)
     game.run(scene)
 
@@ -41,6 +58,17 @@ __all__ = [
     "Backend",
     "Event",
     "EventType",
+    "Velocity2D",
+    "Position2D",
+    "Size2D",
+    "KinematicEntity",
+    "KinematicData",
+    "RectCollider",
+    "VerticalBounce",
+    "Bounds2D",
+    "VerticalWrap",
+    "RectSprite",
+    "RectKinematic",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml

@@ -29,7 +29,7 @@ class GameConfig:
     :ivar title: Title of the game window.
     :ivar fps: Target frames per second.
     :ivar background_color: RGB background color.
-    :ivar backend: Optional backend class to use for rendering and input.
+    :ivar backend: Optional Backend instance to use for rendering and input.
     """
 
     width: int = 800
@@ -40,6 +40,12 @@ class GameConfig:
     backend: Backend | None = None
 
 
+@dataclass
+class _StackEntry:
+    scene: "Scene"
+    as_overlay: bool = False
+
+
 class Game:
     """Core game object responsible for managing the main loop and active scene."""
 
@@ -47,17 +53,28 @@ class Game:
         """
         :param config: Game configuration options.
         :type config: GameConfig
+
+        :raises ValueError: If the provided config does not have a valid Backend.
         """
         self.config = config
         self._current_scene: Scene | None = None
         self._running: bool = False
-        self.backend: Backend | None = config.backend
 
         if config.backend is None:
             raise ValueError(
                 "GameConfig.backend must be set to a Backend instance"
             )
         self.backend: Backend = config.backend
+        self._scene_stack: list[_StackEntry] = []
+
+    def current_scene(self) -> "Scene | None":
+        """
+        Get the currently active scene.
+
+        :return: The active Scene instance, or None if no scene is active.
+        :rtype: Scene | None
+        """
+        return self._scene_stack[-1].scene if self._scene_stack else None
 
     def change_scene(self, scene: Scene):
         """
@@ -67,10 +84,59 @@ class Game:
         :param scene: The new scene to activate.
         :type scene: Scene
         """
-        if self._current_scene is not None:
-            self._current_scene.on_exit()
-        self._current_scene = scene
-        self._current_scene.on_enter()
+        while self._scene_stack:
+            entry = self._scene_stack.pop()
+            entry.scene.on_exit()
+
+        self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
+        scene.on_enter()
+
+    def push_scene(self, scene: "Scene", as_overlay: bool = False):
+        """
+        Push a scene on top of the current one.
+        If as_overlay=True, underlying scene(s) may still be drawn but never updated.
+        """
+        top = self.current_scene()
+        if top is not None:
+            top.on_pause()
+
+        self._scene_stack.append(
+            _StackEntry(scene=scene, as_overlay=as_overlay)
+        )
+        scene.on_enter()
+
+    def pop_scene(self) -> "Scene | None":
+        """Pop the top scene. If stack becomes empty, quit."""
+        if not self._scene_stack:
+            return None
+
+        popped = self._scene_stack.pop()
+        popped.scene.on_exit()
+
+        top = self.current_scene()
+        if top is None:
+            self.quit()
+            return popped.scene
+
+        top.on_resume()
+        return popped.scene
+
+    def _visible_stack(self) -> list["Scene"]:
+        """
+        Return the list of scenes that should be drawn (base + overlays).
+        We draw from the top-most non-overlay scene upward.
+        """
+        if not self._scene_stack:
+            return []
+
+        # find top-most base scene (as_overlay=False)
+        base_idx = 0
+        for i in range(len(self._scene_stack) - 1, -1, -1):
+            if not self._scene_stack[i].as_overlay:
+                base_idx = i
+                break
+
+        return [e.scene for e in self._scene_stack[base_idx:]]
 
     def quit(self):
         """Request that the main loop stops."""
@@ -103,24 +169,27 @@ class Game:
             dt = now - last_time
             last_time = now
 
-            scene = self._current_scene
-            if scene is None:
+            top = self.current_scene()
+            if top is None:
                 break
 
             for ev in backend.poll_events():
-                scene.handle_event(ev)
+                top.handle_event(ev)
 
-            scene.update(dt)
+            top.update(dt)
 
             backend.begin_frame()
-            scene.draw(backend)
+            for scene in self._visible_stack():
+                scene.draw(backend)
             backend.end_frame()
 
             if target_dt > 0 and dt < target_dt:
                 sleep(target_dt - dt)
 
-        if self._current_scene is not None:
-            self._current_scene.on_exit()
+        # exit remaining scenes
+        while self._scene_stack:
+            entry = self._scene_stack.pop()
+            entry.scene.on_exit()
 
     @staticmethod
     def _convert_bmp_to_image(bmp_path: str, out_path: str) -> bool:

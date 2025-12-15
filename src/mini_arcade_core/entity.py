@@ -6,6 +6,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from .collision2d import RectCollider
+from .geometry2d import Position2D, Size2D
+from .kinematics2d import KinematicData
+
 
 class Entity:
     """Entity base class for game objects."""
@@ -30,22 +34,35 @@ class Entity:
 class SpriteEntity(Entity):
     """Entity with position and size."""
 
-    def __init__(self, x: float, y: float, width: int, height: int):
+    def __init__(self, position: Position2D, size: Size2D):
         """
-        :param x: X position.
-        :type x: float
+        :param position: Top-left position of the entity.
+        :type position: Position2D
 
-        :param y: Y position.
-        :type y: float
-
-        :param width: Width of the entity.
-        :type width: int
-
-        :param height: Height of the entity.
-        :type height: int
+        :param size: Size of the entity.
+        :type size: Size2D
         """
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        # TODO: velocity, color, etc.
+        self.position = Position2D(float(position.x), float(position.y))
+        self.size = Size2D(int(size.width), int(size.height))
+        self.collider = RectCollider(self.position, self.size)
+
+
+class KinematicEntity(SpriteEntity):
+    """SpriteEntity with velocity-based movement."""
+
+    def __init__(self, kinematic_data: KinematicData):
+        """
+        :param kinematic_data: Kinematic data for the entity.
+        :type kinematic_data: KinematicData
+        """
+        super().__init__(
+            position=kinematic_data.position,
+            size=kinematic_data.size,
+        )
+
+        self.velocity = kinematic_data.velocity
+
+    def update(self, dt: float):
+        self.position.x, self.position.y = self.velocity.advance(
+            self.position.x, self.position.y, dt
+        )

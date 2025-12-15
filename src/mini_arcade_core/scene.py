@@ -7,9 +7,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, List
 
-from mini_arcade_core.backend import Backend
-
+from .backend import Backend, Event
+from .entity import Entity
 from .game import Game
+from .geometry2d import Size2D
 
 OverlayFunc = Callable[[Backend], None]
 
@@ -23,10 +24,55 @@ class Scene(ABC):
         :type game: Game
         """
         self.game = game
+        self.entities: List[Entity] = []
+        self.size: Size2D = Size2D(game.config.width, game.config.height)
         # overlays drawn on top of the scene
         self._overlays: List[OverlayFunc] = []
 
-    def add_overlay(self, overlay: OverlayFunc) -> None:
+    def add_entity(self, *entities: Entity):
+        """
+        Register one or more entities in this scene.
+
+        :param entities: One or more Entity instances to add.
+        :type entities: Entity
+        """
+        self.entities.extend(entities)
+
+    def remove_entity(self, entity: Entity):
+        """
+        Unregister a single entity, if present.
+
+        :param entity: The Entity instance to remove.
+        :type entity: Entity
+        """
+        if entity in self.entities:
+            self.entities.remove(entity)
+
+    def clear_entities(self):
+        """Remove all entities from the scene."""
+        self.entities.clear()
+
+    def update_entities(self, dt: float):
+        """
+        Default update loop for all entities.
+
+        :param dt: Time delta in seconds.
+        :type dt: float
+        """
+        for ent in self.entities:
+            ent.update(dt)
+
+    def draw_entities(self, surface: Backend):
+        """
+        Default draw loop for all entities.
+
+        :param surface: The backend surface to draw on.
+        :type surface: Backend
+        """
+        for ent in self.entities:
+            ent.draw(surface)
+
+    def add_overlay(self, overlay: OverlayFunc):
         """
         Register an overlay (drawn every frame, after entities).
 
@@ -35,7 +81,7 @@ class Scene(ABC):
         """
         self._overlays.append(overlay)
 
-    def remove_overlay(self, overlay: OverlayFunc) -> None:
+    def remove_overlay(self, overlay: OverlayFunc):
         """
         Unregister a previously added overlay.
 
@@ -45,11 +91,11 @@ class Scene(ABC):
         if overlay in self._overlays:
             self._overlays.remove(overlay)
 
-    def clear_overlays(self) -> None:
+    def clear_overlays(self):
         """Clear all registered overlays."""
         self._overlays.clear()
 
-    def draw_overlays(self, surface: Backend) -> None:
+    def draw_overlays(self, surface: Backend):
         """
         Call all overlays. Scenes should call this at the end of draw().
 
@@ -68,12 +114,12 @@ class Scene(ABC):
         """Called when the scene is replaced."""
 
     @abstractmethod
-    def handle_event(self, event: object):
+    def handle_event(self, event: Event):
         """
         Handle input / events (e.g. pygame.Event).
 
         :param event: The event to handle.
-        :type event: object
+        :type event: Event
         """
 
     @abstractmethod
@@ -86,10 +132,16 @@ class Scene(ABC):
         """
 
     @abstractmethod
-    def draw(self, surface: object):
+    def draw(self, surface: Backend):
         """
         Render to the main surface.
 
         :param surface: The backend surface to draw on.
-        :type surface: object
+        :type surface: Backend
         """
+
+    def on_pause(self):
+        """Called when the game is paused."""
+
+    def on_resume(self):
+        """Called when the game is resumed."""
