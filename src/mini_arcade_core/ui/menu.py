@@ -26,6 +26,9 @@ class MenuItem:
     on_select: MenuAction
 
 
+# Justification: Data container for styling options needs
+# some attributes.
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class MenuStyle:
     """
@@ -71,6 +74,9 @@ class MenuStyle:
     hint: str | None = None
     hint_color: Color = (200, 200, 200)
     hint_margin_bottom: int = 50
+
+
+# pylint: enable=too-many-instance-attributes
 
 
 class Menu:
@@ -264,6 +270,8 @@ class Menu:
                 color=color,
             )
 
+    # Justification: Local variables for layout calculations
+    # pylint: disable=too-many-locals
     def _draw_buttons(
         self, surface: Backend, x_center: int, cursor_y: int
     ) -> None:
@@ -303,6 +311,8 @@ class Menu:
             tx = x + (bw - tw) // 2
             ty = y + (bh - th) // 2
             surface.draw_text(tx, ty, item.label, color=text_color)
+
+    # pylint: enable=too-many-locals
 
     def _measure_content(self, surface: Backend) -> tuple[int, int, int]:
         # If button mode: content height differs (button_height + gaps)
