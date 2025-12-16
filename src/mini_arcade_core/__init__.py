@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 from importlib.metadata import PackageNotFoundError, version
 
+from .autoreg import register_scene
 from .backend import Backend, Event, EventType
 from .boundaries2d import (
     RectKinematic,
@@ -78,6 +79,7 @@ __all__ = [
     "Key",
     "keymap",
     "SceneRegistry",
+    "register_scene",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
