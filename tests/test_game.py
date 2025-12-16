@@ -20,17 +20,17 @@ class _DummyBackend:
         self.clear_color = None
         self.captured_paths: list[str] = []
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         self.inited = True
         self.init_args = (width, height, title)
 
     def poll_events(self):
         return []  # no events by default
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         self.begin_called += 1
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         self.end_called += 1
 
     def draw_rect(self, x: int, y: int, w: int, h: int, color=(255, 255, 255)):
@@ -40,7 +40,7 @@ class _DummyBackend:
         # Not needed for these tests, but present to match Backend protocol
         pass
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         self.clear_color = (r, g, b)
 
     def capture_frame(self, path: str | None = None) -> bytes | None:
@@ -118,29 +118,29 @@ def test_game_requires_backend_instance():
 class _DummyScene(Scene):
     """Concrete Scene implementation for exercising Game behavior."""
 
-    def on_enter(self) -> None:  # type: ignore[override]
+    def on_enter(self):  # type: ignore[override]
         self.entered = True  # type: ignore[attr-defined]
 
-    def on_exit(self) -> None:  # type: ignore[override]
+    def on_exit(self):  # type: ignore[override]
         self.exited = True  # type: ignore[attr-defined]
 
-    def on_pause(self) -> None:  # type: ignore[override]
+    def on_pause(self):  # type: ignore[override]
         self.paused = True  # type: ignore[attr-defined]
 
-    def on_resume(self) -> None:  # type: ignore[override]
+    def on_resume(self):  # type: ignore[override]
         self.resumed = True  # type: ignore[attr-defined]
 
-    def handle_event(self, event: object) -> None:  # type: ignore[override]
+    def handle_event(self, event: object):  # type: ignore[override]
         # For these tests we don't care about events.
         pass
 
-    def update(self, dt: float) -> None:  # type: ignore[override]
+    def update(self, dt: float):  # type: ignore[override]
         # For tests that call Game.run, we quit on first update
         # to avoid an infinite loop.
         self.updated_frames = getattr(self, "updated_frames", 0) + 1  # type: ignore[attr-defined]
         self.game.quit()
 
-    def draw(self, surface) -> None:  # type: ignore[override]
+    def draw(self, surface):  # type: ignore[override]
         # No-op for these tests.
         pass
 

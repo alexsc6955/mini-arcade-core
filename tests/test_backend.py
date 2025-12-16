@@ -19,7 +19,7 @@ class DummyBackend:
     It records calls so we can assert on side effects.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.inited = False
         self.init_args: tuple[int, int, str] | None = None
 
@@ -36,7 +36,7 @@ class DummyBackend:
 
     # --- Backend API ---
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         self.inited = True
         self.init_args = (width, height, title)
 
@@ -44,13 +44,13 @@ class DummyBackend:
         # Just return whatever has been queued
         return list(self._events)
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         self.clear_color = (r, g, b)
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         self.begin_called += 1
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         self.end_called += 1
 
     def draw_rect(
@@ -60,7 +60,7 @@ class DummyBackend:
         w: int,
         h: int,
         color: Color = (255, 255, 255),
-    ) -> None:
+    ):
         self.rect_calls.append((x, y, w, h, color))
 
     def draw_text(
@@ -69,7 +69,7 @@ class DummyBackend:
         y: int,
         text: str,
         color: Color = (255, 255, 255),
-    ) -> None:
+    ):
         self.text_calls.append((x, y, text, color))
 
     def capture_frame(self, path: str | None = None) -> bytes | None:
@@ -80,7 +80,7 @@ class DummyBackend:
 
     # --- Test-only helpers ---
 
-    def queue_event(self, event: Event) -> None:
+    def queue_event(self, event: Event):
         """Utility to queue an event that poll_events will return."""
         self._events.append(event)
 
@@ -118,7 +118,7 @@ def test_dummy_backend_behaves_like_backend_protocol():
     is expected and record calls appropriately.
     """
 
-    def use_backend(backend: Backend) -> None:
+    def use_backend(backend: Backend):
         backend.init(800, 600, "Test")
         list(backend.poll_events())  # just to exercise the method
         backend.set_clear_color(10, 20, 30)

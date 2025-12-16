@@ -33,7 +33,7 @@ class SceneRegistry:
 
     _factories: Dict[str, SceneFactory]
 
-    def register(self, scene_id: str, factory: SceneFactory) -> None:
+    def register(self, scene_id: str, factory: SceneFactory):
         """
         Register a scene factory under a given scene ID.
 
@@ -45,7 +45,7 @@ class SceneRegistry:
         """
         self._factories[scene_id] = factory
 
-    def register_cls(self, scene_id: str, scene_cls: type["Scene"]) -> None:
+    def register_cls(self, scene_id: str, scene_cls: type["Scene"]):
         """
         Register a Scene class under a given scene ID.
 
@@ -81,7 +81,7 @@ class SceneRegistry:
         except KeyError as e:
             raise KeyError(f"Unknown scene_id={scene_id!r}") from e
 
-    def load_catalog(self, catalog: Dict[str, type["Scene"]]) -> None:
+    def load_catalog(self, catalog: Dict[str, type["Scene"]]):
         """
         Load a catalog of Scene classes into the registry.
 

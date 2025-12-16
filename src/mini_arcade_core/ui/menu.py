@@ -253,9 +253,7 @@ class Menu:
                 color=self.style.hint_color,
             )
 
-    def _draw_text_items(
-        self, surface: Backend, x_center: int, cursor_y: int
-    ) -> None:
+    def _draw_text_items(self, surface: Backend, x_center: int, cursor_y: int):
         for i, item in enumerate(self.items):
             color = (
                 self.style.selected
@@ -272,9 +270,7 @@ class Menu:
 
     # Justification: Local variables for layout calculations
     # pylint: disable=too-many-locals
-    def _draw_buttons(
-        self, surface: Backend, x_center: int, cursor_y: int
-    ) -> None:
+    def _draw_buttons(self, surface: Backend, x_center: int, cursor_y: int):
         # Determine button width: fixed or auto-fit
         if self.style.button_width is not None:
             bw = self.style.button_width
@@ -366,6 +362,6 @@ class Menu:
         text: str,
         *,
         color: Color,
-    ) -> None:
+    ):
         w, _ = surface.measure_text(text)
         surface.draw_text(x_center - (w // 2), y, text, color=color)

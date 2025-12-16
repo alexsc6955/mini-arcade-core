@@ -13,20 +13,20 @@ class _DummyBackend:
         self.inited = False
         self.init_args = None
 
-    def init(self, width: int, height: int, title: str) -> None:
+    def init(self, width: int, height: int, title: str):
         self.inited = True
         self.init_args = (width, height, title)
 
     def poll_events(self):
         return []
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         pass
 
-    def begin_frame(self) -> None:
+    def begin_frame(self):
         pass
 
-    def end_frame(self) -> None:
+    def end_frame(self):
         pass
 
     def draw_rect(self, x: int, y: int, w: int, h: int, color=(255, 255, 255)):
@@ -46,10 +46,10 @@ class _DummyEntity(Entity):
         self.updated_with: List[float] = []
         self.drawn_on: List[Any] = []
 
-    def update(self, dt: float) -> None:  # type: ignore[override]
+    def update(self, dt: float):  # type: ignore[override]
         self.updated_with.append(dt)
 
-    def draw(self, surface: Any) -> None:  # type: ignore[override]
+    def draw(self, surface: Any):  # type: ignore[override]
         self.drawn_on.append(surface)
 
 
@@ -64,20 +64,20 @@ class _DummyScene(Scene):
         self.updated_with: list[float] = []
         self.drawn_on: list[Any] = []
 
-    def on_enter(self) -> None:  # type: ignore[override]
+    def on_enter(self):  # type: ignore[override]
         self.entered = True
 
-    def on_exit(self) -> None:  # type: ignore[override]
+    def on_exit(self):  # type: ignore[override]
         self.exited = True
 
-    def handle_event(self, event: object) -> None:  # type: ignore[override]
+    def handle_event(self, event: object):  # type: ignore[override]
         self.handled_events.append(event)
 
-    def update(self, dt: float) -> None:  # type: ignore[override]
+    def update(self, dt: float):  # type: ignore[override]
         self.updated_with.append(dt)
         # Typically you’d call self.update_entities(dt) here in a real scene
 
-    def draw(self, surface: Any) -> None:  # type: ignore[override]
+    def draw(self, surface: Any):  # type: ignore[override]
         self.drawn_on.append(surface)
         # Typically you’d call self.draw_entities(surface) and self.draw_overlays(surface)
 
