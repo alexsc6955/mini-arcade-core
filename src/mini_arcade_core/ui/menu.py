@@ -373,6 +373,8 @@ class Menu:
 
         return max_w, content_h, title_h
 
+    # Justification: Many arguments for text drawing utility
+    # pylint: disable=too-many-arguments
     @staticmethod
     def _draw_text_center_x(
         surface: Backend,
@@ -387,3 +389,5 @@ class Menu:
         surface.draw_text(
             x_center - (w // 2), y, text, color=color, font_size=font_size
         )
+
+    # pylint: enable=too-many-arguments
