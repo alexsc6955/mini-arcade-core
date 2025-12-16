@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.5] - 2025-12-16
+
+### Added
+- Enhance MenuStyle with font size attributes and update text rendering
+
 ## [0.9.4] - 2025-12-16
 
 ### Added
