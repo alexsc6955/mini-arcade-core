@@ -46,6 +46,7 @@ class MenuStyle:
     line_height: int = 28
     title_color: Color = (255, 255, 255)
     title_spacing: int = 18
+    title_margin_bottom: int = 20
 
     # Scene background (solid)
     background_color: Color | None = None  # e.g. BACKGROUND
@@ -74,6 +75,11 @@ class MenuStyle:
     hint: str | None = None
     hint_color: Color = (200, 200, 200)
     hint_margin_bottom: int = 50
+
+    # Font sizes (not used directly here, but for reference)
+    title_font_size = 44
+    hint_font_size = 14
+    item_font_size = 24
 
 
 # pylint: enable=too-many-instance-attributes
@@ -165,13 +171,15 @@ class Menu:
         title_h = 0
 
         if self.title:
-            tw, th = surface.measure_text(self.title)
+            tw, th = surface.measure_text(
+                self.title, self.style.title_font_size
+            )
             max_w = max(max_w, tw)
             title_h = th
 
         # Items
         for it in self.items:
-            w, _ = surface.measure_text(it.label)
+            w, _ = surface.measure_text(it.label, self.style.item_font_size)
             max_w = max(max_w, w)
 
         items_h = len(self.items) * self.style.line_height
@@ -235,8 +243,13 @@ class Menu:
                 cursor_y,
                 self.title,
                 color=self.style.title_color,
+                font_size=self.style.title_font_size,
             )
-            cursor_y += title_h + self.style.title_spacing
+            cursor_y += (
+                title_h
+                + self.style.title_spacing
+                + self.style.title_margin_bottom
+            )
 
         if self.style.button_enabled:
             self._draw_buttons(surface, x_center, cursor_y)
@@ -251,6 +264,7 @@ class Menu:
                 vh - self.style.hint_margin_bottom,
                 self.style.hint,
                 color=self.style.hint_color,
+                font_size=self.style.hint_font_size,
             )
 
     def _draw_text_items(self, surface: Backend, x_center: int, cursor_y: int):
@@ -266,6 +280,7 @@ class Menu:
                 cursor_y + i * self.style.line_height,
                 item.label,
                 color=color,
+                font_size=self.style.item_font_size,
             )
 
     # Justification: Local variables for layout calculations
@@ -350,7 +365,11 @@ class Menu:
 
         content_h = items_h
         if self.title:
-            content_h += title_h + self.style.title_spacing
+            content_h += (
+                title_h
+                + self.style.title_spacing
+                + self.style.title_margin_bottom
+            )
 
         return max_w, content_h, title_h
 
@@ -362,6 +381,9 @@ class Menu:
         text: str,
         *,
         color: Color,
+        font_size: int | None = None,
     ):
-        w, _ = surface.measure_text(text)
-        surface.draw_text(x_center - (w // 2), y, text, color=color)
+        w, _ = surface.measure_text(text, font_size=font_size)
+        surface.draw_text(
+            x_center - (w // 2), y, text, color=color, font_size=font_size
+        )
