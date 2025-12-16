@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.3] - 2025-12-16
+
+### Added
+- Add SceneRegistry for managing scene creation and registration
+
 ## [0.9.2] - 2025-12-16
 
 ### Added
