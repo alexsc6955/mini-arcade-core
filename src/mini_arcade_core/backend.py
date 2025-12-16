@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Iterable, Optional, Protocol, Tuple, Union
 
+from .keys import Key
+
 Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
 
 
@@ -57,7 +59,8 @@ class Event:
     - key: integer key code (e.g. ESC = 27), or None if not applicable
 
     :ivar type (EventType): The type of event.
-    :ivar key (int | None): The key code associated with the event, if any.
+    :ivar key (Key | None): The key associated with the event, if any.
+    :ivar key_code (int | None): The key code associated with the event, if any.
     :ivar scancode (int | None): The hardware scancode of the key, if any.
     :ivar mod (int | None): Modifier keys bitmask, if any.
     :ivar repeat (bool | None): Whether this key event is a repeat, if any.
@@ -72,7 +75,8 @@ class Event:
     """
 
     type: EventType
-    key: Optional[int] = None
+    key: Key | None = None  # Use Key enum for better clarity
+    key_code: Optional[int] = None
 
     # Keyboard extras (optional)
     scancode: Optional[int] = None

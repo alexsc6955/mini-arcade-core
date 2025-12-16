@@ -19,6 +19,7 @@ from .collision2d import RectCollider
 from .entity import Entity, KinematicEntity, SpriteEntity
 from .game import Game, GameConfig
 from .geometry2d import Bounds2D, Position2D, Size2D
+from .keys import Key, keymap
 from .kinematics2d import KinematicData
 from .physics2d import Velocity2D
 from .scene import Scene
@@ -69,6 +70,8 @@ __all__ = [
     "VerticalWrap",
     "RectSprite",
     "RectKinematic",
+    "Key",
+    "keymap",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
