@@ -9,14 +9,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter, sleep
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from PIL import Image  # type: ignore[import]
 
 from .backend import Backend
+from .registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
     from .scene import Scene
+
+SceneOrId = Union["Scene", str]
 
 
 @dataclass
@@ -49,7 +52,9 @@ class _StackEntry:
 class Game:
     """Core game object responsible for managing the main loop and active scene."""
 
-    def __init__(self, config: GameConfig):
+    def __init__(
+        self, config: GameConfig, registry: SceneRegistry | None = None
+    ):
         """
         :param config: Game configuration options.
         :type config: GameConfig
@@ -65,6 +70,7 @@ class Game:
                 "GameConfig.backend must be set to a Backend instance"
             )
         self.backend: Backend = config.backend
+        self.registry = registry or SceneRegistry(_factories={})
         self._scene_stack: list[_StackEntry] = []
 
     def current_scene(self) -> "Scene | None":
@@ -76,7 +82,7 @@ class Game:
         """
         return self._scene_stack[-1].scene if self._scene_stack else None
 
-    def change_scene(self, scene: Scene):
+    def change_scene(self, scene: SceneOrId):
         """
         Swap the active scene. Concrete implementations should call
         ``on_exit``/``on_enter`` appropriately.
@@ -84,6 +90,8 @@ class Game:
         :param scene: The new scene to activate.
         :type scene: Scene
         """
+        scene = self._resolve_scene(scene)
+
         while self._scene_stack:
             entry = self._scene_stack.pop()
             entry.scene.on_exit()
@@ -91,11 +99,13 @@ class Game:
         self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
         scene.on_enter()
 
-    def push_scene(self, scene: "Scene", as_overlay: bool = False):
+    def push_scene(self, scene: SceneOrId, as_overlay: bool = False):
         """
         Push a scene on top of the current one.
         If as_overlay=True, underlying scene(s) may still be drawn but never updated.
         """
+        scene = self._resolve_scene(scene)
+
         top = self.current_scene()
         if top is not None:
             top.on_pause()
@@ -142,7 +152,7 @@ class Game:
         """Request that the main loop stops."""
         self._running = False
 
-    def run(self, initial_scene: Scene):
+    def run(self, initial_scene: SceneOrId):
         """
         Run the main loop starting with the given scene.
 
@@ -241,3 +251,8 @@ class Game:
             self._convert_bmp_to_image(bmp_path, str(out_path))
             return str(out_path)
         return None
+
+    def _resolve_scene(self, scene: SceneOrId) -> "Scene":
+        if isinstance(scene, str):
+            return self.registry.create(scene, self)
+        return scene

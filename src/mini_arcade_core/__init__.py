@@ -22,12 +22,17 @@ from .geometry2d import Bounds2D, Position2D, Size2D
 from .keys import Key, keymap
 from .kinematics2d import KinematicData
 from .physics2d import Velocity2D
+from .registry import SceneRegistry
 from .scene import Scene
 
 logger = logging.getLogger(__name__)
 
 
-def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
+def run_game(
+    initial_scene_cls: type[Scene],
+    config: GameConfig | None = None,
+    registry: SceneRegistry | None = None,
+):
     """
     Convenience helper to bootstrap and run a game with a single scene.
 
@@ -44,7 +49,7 @@ def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
         raise ValueError(
             "GameConfig.backend must be set to a Backend instance"
         )
-    game = Game(cfg)
+    game = Game(cfg, registry=registry)
     scene = initial_scene_cls(game)
     game.run(scene)
 
@@ -72,6 +77,7 @@ __all__ = [
     "RectKinematic",
     "Key",
     "keymap",
+    "SceneRegistry",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
