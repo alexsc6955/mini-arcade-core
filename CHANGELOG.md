@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.2] - 2025-12-16
+
+### Added
+- Enhance MenuStyle with additional attributes for improved styling options
+- Add text measurement functionality and enhance menu styling options
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
 ## [0.9.1] - 2025-12-16
 
 ### Added
