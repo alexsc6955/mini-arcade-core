@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.4] - 2025-12-16
+
+### Added
+- Implement scene registration and discovery utilities
+
+### Changed
+- Remove redundant return types from method signatures in registry, menu, and test files
+
 ## [0.9.3] - 2025-12-16
 
 ### Added
