@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-12-16
+
+### Added
+- Add key definitions and SDL keymap for improved input handling
+
 ## [0.9.0] - 2025-12-15
 
 ### Added
