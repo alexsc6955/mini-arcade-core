@@ -214,6 +214,18 @@ class Backend(Protocol):
         :type color: Color
         """
 
+    def measure_text(self, text: str) -> tuple[int, int]:
+        """
+        Measure the width and height of the given text string in pixels.
+
+        :param text: The text string to measure.
+        :type text: str
+
+        :return: A tuple (width, height) in pixels.
+        :rtype: tuple[int, int]
+        """
+        raise NotImplementedError
+
     def capture_frame(self, path: str | None = None) -> bytes | None:
         """
         Capture the current frame.

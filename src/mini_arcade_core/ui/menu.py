@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Sequence
 
 from mini_arcade_core.backend import Backend, Color, Event, EventType
+from mini_arcade_core.geometry2d import Size2D
 
 MenuAction = Callable[[], None]
 
@@ -37,7 +38,39 @@ class MenuStyle:
 
     normal: Color = (220, 220, 220)
     selected: Color = (255, 255, 0)
+
+    # Layout
     line_height: int = 28
+    title_color: Color = (255, 255, 255)
+    title_spacing: int = 18
+
+    # Scene background (solid)
+    background_color: Color | None = None  # e.g. BACKGROUND
+
+    # Optional full-screen overlay (dim)
+    overlay_color: Color | None = None  # e.g. (0,0,0,0.5) for pause
+
+    # Panel behind content (optional)
+    panel_color: Color | None = None
+    panel_padding_x: int = 24
+    panel_padding_y: int = 18
+
+    # Button rendering (optional)
+    button_enabled: bool = False
+    button_fill: Color = (30, 30, 30, 1.0)
+    button_border: Color = (120, 120, 120, 1.0)
+    button_selected_border: Color = (255, 255, 0, 1.0)
+    button_width: int | None = (
+        None  # if None -> auto-fit to longest label + padding
+    )
+    button_height: int = 40
+    button_gap: int = 20
+    button_padding_x: int = 20  # used for auto-fit + text centering
+
+    # Hint footer (optional)
+    hint: str | None = None
+    hint_color: Color = (200, 200, 200)
+    hint_margin_bottom: int = 50
 
 
 class Menu:
@@ -47,8 +80,8 @@ class Menu:
         self,
         items: Sequence[MenuItem],
         *,
-        x: int = 40,
-        y: int = 40,
+        viewport: Size2D | None = None,
+        title: str | None = None,
         style: MenuStyle | None = None,
     ):
         """
@@ -62,8 +95,8 @@ class Menu:
         :type style: MenuStyle | None
         """
         self.items = list(items)
-        self.x = x
-        self.y = y
+        self.viewport = viewport
+        self.title = title
         self.style = style or MenuStyle()
         self.selected_index = 0
 
@@ -114,6 +147,36 @@ class Menu:
         elif event.key == select_key:
             self.select()
 
+    def _measure_content(self, surface: Backend) -> tuple[int, int, int]:
+        """
+        Returns (content_width, content_height, title_height)
+        where content is items-only (no padding).
+        """
+        if not self.items and not self.title:
+            return 0, 0, 0
+
+        max_w = 0
+        title_h = 0
+
+        if self.title:
+            tw, th = surface.measure_text(self.title)
+            max_w = max(max_w, tw)
+            title_h = th
+
+        # Items
+        for it in self.items:
+            w, _ = surface.measure_text(it.label)
+            max_w = max(max_w, w)
+
+        items_h = len(self.items) * self.style.line_height
+
+        # Total content height includes title block if present
+        content_h = items_h
+        if self.title:
+            content_h += title_h + self.style.title_spacing
+
+        return max_w, content_h, title_h
+
     def draw(self, surface: Backend):
         """
         Draw the menu onto the given backend surface.
@@ -121,15 +184,178 @@ class Menu:
         :param surface: The backend surface to draw on.
         :type surface: Backend
         """
+        if self.viewport is None:
+            raise ValueError(
+                "Menu requires viewport=Size2D for centering/layout"
+            )
+
+        vw, vh = self.viewport.width, self.viewport.height
+
+        # 0) Solid background (for main menus)
+        if self.style.background_color is not None:
+            surface.draw_rect(0, 0, vw, vh, color=self.style.background_color)
+
+        # 1) Overlay (for pause, etc.)
+        if self.style.overlay_color is not None:
+            surface.draw_rect(0, 0, vw, vh, color=self.style.overlay_color)
+
+        # 2) Compute menu content bounds (panel area)
+        content_w, content_h, title_h = self._measure_content(surface)
+
+        pad_x, pad_y = self.style.panel_padding_x, self.style.panel_padding_y
+        panel_w = content_w + pad_x * 2
+        panel_h = content_h + pad_y * 2
+
+        x0 = (vw - panel_w) // 2
+        y0 = (vh - panel_h) // 2
+
+        # Optional vertical offset if you add it later:
+        # y0 += self.style.center_offset_y
+
+        # 3) Panel (optional)
+        if self.style.panel_color is not None:
+            surface.draw_rect(
+                x0, y0, panel_w, panel_h, color=self.style.panel_color
+            )
+
+        # 4) Draw title + items
+        cursor_y = y0 + pad_y
+        x_center = x0 + (panel_w // 2)
+
+        if self.title:
+            self._draw_text_center_x(
+                surface,
+                x_center,
+                cursor_y,
+                self.title,
+                color=self.style.title_color,
+            )
+            cursor_y += title_h + self.style.title_spacing
+
+        if self.style.button_enabled:
+            self._draw_buttons(surface, x_center, cursor_y)
+        else:
+            self._draw_text_items(surface, x_center, cursor_y)
+
+        # 5) Hint footer (optional)
+        if self.style.hint:
+            self._draw_text_center_x(
+                surface,
+                vw // 2,
+                vh - self.style.hint_margin_bottom,
+                self.style.hint,
+                color=self.style.hint_color,
+            )
+
+    def _draw_text_items(
+        self, surface: Backend, x_center: int, cursor_y: int
+    ) -> None:
         for i, item in enumerate(self.items):
             color = (
                 self.style.selected
                 if i == self.selected_index
                 else self.style.normal
             )
-            surface.draw_text(
-                self.x,
-                self.y + i * self.style.line_height,
+            self._draw_text_center_x(
+                surface,
+                x_center,
+                cursor_y + i * self.style.line_height,
                 item.label,
                 color=color,
             )
+
+    def _draw_buttons(
+        self, surface: Backend, x_center: int, cursor_y: int
+    ) -> None:
+        # Determine button width: fixed or auto-fit
+        if self.style.button_width is not None:
+            bw = self.style.button_width
+        else:
+            max_label_w = 0
+            for it in self.items:
+                w, _ = surface.measure_text(it.label)
+                max_label_w = max(max_label_w, w)
+            bw = max_label_w + self.style.button_padding_x * 2
+
+        bh = self.style.button_height
+        gap = self.style.button_gap
+
+        # We treat cursor_y as “top of first button”
+        for i, item in enumerate(self.items):
+            y = cursor_y + i * (bh + gap)
+            x = x_center - bw // 2
+
+            selected = i == self.selected_index
+            border = (
+                self.style.button_selected_border
+                if selected
+                else self.style.button_border
+            )
+
+            # Border rect
+            surface.draw_rect(x - 4, y - 4, bw + 8, bh + 8, color=border)
+            # Fill rect
+            surface.draw_rect(x, y, bw, bh, color=self.style.button_fill)
+
+            # Label color
+            text_color = self.style.selected if selected else self.style.normal
+            tw, th = surface.measure_text(item.label)
+            tx = x + (bw - tw) // 2
+            ty = y + (bh - th) // 2
+            surface.draw_text(tx, ty, item.label, color=text_color)
+
+    def _measure_content(self, surface: Backend) -> tuple[int, int, int]:
+        # If button mode: content height differs (button_height + gaps)
+        max_w = 0
+        title_h = 0
+
+        if self.title:
+            tw, th = surface.measure_text(self.title)
+            max_w = max(max_w, tw)
+            title_h = th
+
+        if not self.items:
+            content_h = 0
+            if self.title:
+                content_h = title_h
+            return max_w, content_h, title_h
+
+        if self.style.button_enabled:
+            # width: either fixed or auto-fit
+            if self.style.button_width is not None:
+                items_w = self.style.button_width
+            else:
+                max_label_w = 0
+                for it in self.items:
+                    w, _ = surface.measure_text(it.label)
+                    max_label_w = max(max_label_w, w)
+                items_w = max_label_w + self.style.button_padding_x * 2
+
+            max_w = max(max_w, items_w)
+
+            bh = self.style.button_height
+            gap = self.style.button_gap
+            items_h = len(self.items) * bh + (len(self.items) - 1) * gap
+        else:
+            for it in self.items:
+                w, _ = surface.measure_text(it.label)
+                max_w = max(max_w, w)
+            items_h = len(self.items) * self.style.line_height
+
+        content_h = items_h
+        if self.title:
+            content_h += title_h + self.style.title_spacing
+
+        return max_w, content_h, title_h
+
+    @staticmethod
+    def _draw_text_center_x(
+        surface: Backend,
+        x_center: int,
+        y: int,
+        text: str,
+        *,
+        color: Color,
+    ) -> None:
+        w, _ = surface.measure_text(text)
+        surface.draw_text(x_center - (w // 2), y, text, color=color)
