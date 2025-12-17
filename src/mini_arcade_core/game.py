@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter, sleep
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Literal, Union
 
 from PIL import Image  # type: ignore[import]
 
@@ -43,6 +43,20 @@ class GameConfig:
     backend: Backend | None = None
 
 
+Difficulty = Literal["easy", "normal", "hard", "insane"]
+
+
+@dataclass
+class GameSettings:
+    """
+    Game settings that can be modified during gameplay.
+
+    :ivar difficulty: Current game difficulty level.
+    """
+
+    difficulty: Difficulty = "normal"
+
+
 @dataclass
 class _StackEntry:
     scene: "Scene"
@@ -72,6 +86,7 @@ class Game:
         self.backend: Backend = config.backend
         self.registry = registry or SceneRegistry(_factories={})
         self._scene_stack: list[_StackEntry] = []
+        self.settings = GameSettings()
 
     def current_scene(self) -> "Scene | None":
         """
