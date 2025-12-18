@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.6] - 2025-12-18
+
+### Added
+- Add GameSettings dataclass for adjustable gameplay difficulty
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
 ## [0.9.5] - 2025-12-16
 
 ### Added
