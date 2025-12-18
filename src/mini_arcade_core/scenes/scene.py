@@ -5,12 +5,14 @@ Base class for game scenes (states/screens).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import TYPE_CHECKING, Callable, List
 
-from .backend import Backend, Event
-from .entity import Entity
-from .game import Game
-from .geometry2d import Size2D
+from mini_arcade_core.backend import Backend, Event
+from mini_arcade_core.entity import Entity
+from mini_arcade_core.two_d import Size2D
+
+if TYPE_CHECKING:
+    from mini_arcade_core.game import Game
 
 OverlayFunc = Callable[[Backend], None]
 

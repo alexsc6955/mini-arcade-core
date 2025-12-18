@@ -13,11 +13,11 @@ from typing import TYPE_CHECKING, Literal, Union
 
 from PIL import Image  # type: ignore[import]
 
-from .backend import Backend
-from .registry import SceneRegistry
+from mini_arcade_core.backend import Backend
+from mini_arcade_core.scenes import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
-    from .scene import Scene
+    from mini_arcade_core.scenes import Scene
 
 SceneOrId = Union["Scene", str]
 
@@ -73,6 +73,9 @@ class Game:
         :param config: Game configuration options.
         :type config: GameConfig
 
+        :param registry: Optional SceneRegistry for scene management.
+        :type registry: SceneRegistry | None
+
         :raises ValueError: If the provided config does not have a valid Backend.
         """
         self.config = config
@@ -103,7 +106,7 @@ class Game:
         ``on_exit``/``on_enter`` appropriately.
 
         :param scene: The new scene to activate.
-        :type scene: Scene
+        :type scene: SceneOrId
         """
         scene = self._resolve_scene(scene)
 
@@ -118,6 +121,12 @@ class Game:
         """
         Push a scene on top of the current one.
         If as_overlay=True, underlying scene(s) may still be drawn but never updated.
+
+        :param scene: The scene to push onto the stack.
+        :type scene: SceneOrId
+
+        :param as_overlay: Whether to treat the scene as an overlay.
+        :type as_overlay: bool
         """
         scene = self._resolve_scene(scene)
 
@@ -131,7 +140,12 @@ class Game:
         scene.on_enter()
 
     def pop_scene(self) -> "Scene | None":
-        """Pop the top scene. If stack becomes empty, quit."""
+        """
+        Pop the top scene. If stack becomes empty, quit.
+
+        :return: The popped Scene instance, or None if the stack is now empty.
+        :rtype: Scene | None
+        """
         if not self._scene_stack:
             return None
 
@@ -175,7 +189,7 @@ class Game:
         or another backend.
 
         :param initial_scene: The scene to start the game with.
-        :type initial_scene: Scene
+        :type initial_scene: SceneOrId
         """
         backend = self.backend
         backend.init(self.config.width, self.config.height, self.config.title)

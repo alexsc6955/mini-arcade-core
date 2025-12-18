@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Sequence
 
 from mini_arcade_core.backend import Backend, Color, Event, EventType
-from mini_arcade_core.geometry2d import Size2D
+from mini_arcade_core.two_d import Size2D
 
 MenuAction = Callable[[], None]
 
@@ -37,6 +37,28 @@ class MenuStyle:
     :ivar normal (Color): Color for unselected items.
     :ivar selected (Color): Color for the selected item.
     :ivar line_height (int): Vertical spacing between items.
+    :ivar title_color (Color): Color for the title text.
+    :ivar title_spacing (int): Vertical space between title and first item.
+    :ivar title_margin_bottom (int): Additional margin below the title.
+    :ivar background_color (Color | None): Solid background color for the menu.
+    :ivar overlay_color (Color | None): Full-screen overlay color.
+    :ivar panel_color (Color | None): Color for the panel behind content.
+    :ivar panel_padding_x (int): Horizontal padding inside the panel.
+    :ivar panel_padding_y (int): Vertical padding inside the panel.
+    :ivar button_enabled (bool): Whether to render items as buttons.
+    :ivar button_fill (Color): Fill color for buttons.
+    :ivar button_border (Color): Border color for buttons.
+    :ivar button_selected_border (Color): Border color for the selected button.
+    :ivar button_width (int | None): Fixed width for buttons, or None for auto-fit.
+    :ivar button_height (int): Fixed height for buttons.
+    :ivar button_gap (int): Vertical gap between buttons.
+    :ivar button_padding_x (int): Horizontal padding inside buttons.
+    :ivar hint (str | None): Optional hint text to display at the bottom.
+    :ivar hint_color (Color): Color for the hint text.
+    :ivar hint_margin_bottom (int): Additional margin below the hint text.
+    :ivar title_font_size (int): Font size for the title text.
+    :ivar hint_font_size (int): Font size for the hint text.
+    :ivar item_font_size (int): Font size for the menu items.
     """
 
     normal: Color = (220, 220, 220)
@@ -98,10 +120,13 @@ class Menu:
     ):
         """
         :param items: Sequence of MenuItem instances to display.
-        type items: Sequence[MenuItem]
+        :type items: Sequence[MenuItem]
 
-        :param x: X coordinate for the menu's top-left corner.
-        :param y: Y coordinate for the menu's top-left corner.
+        :param viewport: Viewport size for the menu's layout and centering.
+        :type viewport: Size2D | None
+
+        :param title: Optional title text for the menu.
+        :type title: str | None
 
         :param style: Optional MenuStyle for customizing appearance.
         :type style: MenuStyle | None
@@ -160,10 +185,8 @@ class Menu:
             self.select()
 
     def _measure_content(self, surface: Backend) -> tuple[int, int, int]:
-        """
-        Returns (content_width, content_height, title_height)
-        where content is items-only (no padding).
-        """
+        # Returns (content_width, content_height, title_height)
+        # where content is items-only (no padding)
         if not self.items and not self.title:
             return 0, 0, 0
 

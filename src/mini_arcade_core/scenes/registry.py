@@ -14,7 +14,7 @@ from .autoreg import snapshot
 
 if TYPE_CHECKING:
     from mini_arcade_core.game import Game
-    from mini_arcade_core.scene import Scene
+    from mini_arcade_core.scenes import Scene
 
 
 class SceneFactory(Protocol):

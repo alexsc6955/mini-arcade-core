@@ -6,9 +6,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from .collision2d import RectCollider
-from .geometry2d import Position2D, Size2D
-from .kinematics2d import KinematicData
+from mini_arcade_core.two_d import (
+    KinematicData,
+    Position2D,
+    RectCollider,
+    Size2D,
+)
 
 
 class Entity:
