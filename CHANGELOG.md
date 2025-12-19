@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.7] - 2025-12-19
+
+### Changed
+- Refactor run_game function to support flexible scene initialization and improve documentation
+
 ## [0.9.6] - 2025-12-18
 
 ### Added
