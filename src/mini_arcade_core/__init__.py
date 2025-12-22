@@ -14,7 +14,12 @@ from mini_arcade_core.cheats import CheatCode, CheatManager
 from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
 from mini_arcade_core.game import Game, GameConfig
 from mini_arcade_core.keymaps.keys import Key, keymap
-from mini_arcade_core.scenes import Scene, SceneRegistry, register_scene
+from mini_arcade_core.scenes import (
+    Scene,
+    SceneRegistry,
+    SceneServices,
+    register_scene,
+)
 from mini_arcade_core.two_d import (
     Bounds2D,
     KinematicData,
@@ -108,6 +113,7 @@ __all__ = [
     "register_scene",
     "CheatManager",
     "CheatCode",
+    "SceneServices",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml

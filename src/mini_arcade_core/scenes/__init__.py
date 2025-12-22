@@ -7,6 +7,6 @@ from __future__ import annotations
 
 from .autoreg import register_scene
 from .registry import SceneRegistry
-from .scene import Scene
+from .scene import Scene, SceneServices
 
-__all__ = ["Scene", "register_scene", "SceneRegistry"]
+__all__ = ["Scene", "register_scene", "SceneRegistry", "SceneServices"]
