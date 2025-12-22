@@ -5,13 +5,10 @@ Provides cheat codes and related functionality.
 
 from __future__ import annotations
 
-import logging
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Deque, Dict, Optional, Sequence, TypeVar
-
-logger = logging.getLogger(__name__)
 
 # Justification: We want to keep the type variable name simple here.
 # pylint: disable=invalid-name
@@ -146,16 +143,11 @@ class CheatManager:
         :param context: Context object passed to cheat callbacks.
         :type context: TContext
         """
-        logger.warning(f"Processing event: {event}")
         if not self.enabled:
-            logger.error("CheatManager is disabled.")
             return []
         key = self._key_getter(event)
-        logger.warning(f"Extracted key: {key}")
         if not key:
-            logger.error("No key extracted from event.")
             return []
-        logger.warning(f"Processing key: {key}")
         return self.process_key(key, context)
 
     def process_key(self, key: str, context: TContext) -> list[str]:
@@ -171,20 +163,15 @@ class CheatManager:
         :return: List of cheat names matched.
         :rtype: list[str]
         """
-        logger.warning(f"Processing key: {key}")
         if not self.enabled:
-            logger.error("CheatManager is disabled.")
             return []
 
         k = self._normalize(key)
-        logger.warning(f"Normalized key: {k}")
         if not k:
-            logger.error("Normalized key is empty.")
             return []
 
         self._buffer.append(k)
         buf = tuple(self._buffer)
-        logger.warning(f"Current buffer: {buf}")
 
         matched: list[str] = []
         # Check if buffer ends with any cheat sequence
@@ -201,7 +188,6 @@ class CheatManager:
                     self.clear_buffer()
                     break  # buffer changed; stop early
 
-        logger.critical(f"Matched cheats: {matched} - codes: {self._codes}")
         return matched
 
     @staticmethod
