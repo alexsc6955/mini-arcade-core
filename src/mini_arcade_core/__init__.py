@@ -10,6 +10,7 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Type, Union
 
 from mini_arcade_core.backend import Backend, Event, EventType
+from mini_arcade_core.cheats import CheatCode, CheatManager
 from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
 from mini_arcade_core.game import Game, GameConfig
 from mini_arcade_core.keymaps.keys import Key, keymap
@@ -105,6 +106,8 @@ __all__ = [
     "keymap",
     "SceneRegistry",
     "register_scene",
+    "CheatManager",
+    "CheatCode",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
