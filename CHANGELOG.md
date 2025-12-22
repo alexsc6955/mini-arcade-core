@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.8] - 2025-12-22
+
+### Added
+- Add cheats module with CheatCode and CheatManager classes
+
+### Changed
+- Remove logging statements from CheatManager for cleaner code
+
 ## [0.9.7] - 2025-12-19
 
 ### Changed
