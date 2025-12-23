@@ -14,6 +14,32 @@ T = TypeVar("T")
 OverlayFunc = Callable[[Backend], None]
 
 
+class Overlay(Protocol):
+    """
+    Defines an overlay function.
+
+    :ivar enabled (bool): Whether the overlay is enabled.
+    """
+
+    enabled: bool
+
+    def update(self, dt: float):
+        """
+        Update the overlay state.
+
+        :param dt: Time delta in seconds.
+        :type dt: float
+        """
+
+    def draw(self, surface: "Backend"):
+        """
+        Draw the overlay on the given surface.
+
+        :param surface: The backend surface to draw on.
+        :type surface: Backend
+        """
+
+
 class Drawable(Protocol):
     """Defines a drawable entity."""
 
