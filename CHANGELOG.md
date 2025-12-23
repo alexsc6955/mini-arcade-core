@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.9] - 2025-12-22
+
+### Added
+- Implement scene services and managers for enhanced entity and overlay handling
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
 ## [0.9.8] - 2025-12-22
 
 ### Added
