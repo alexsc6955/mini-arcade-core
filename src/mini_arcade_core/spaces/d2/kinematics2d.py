@@ -7,7 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from .backend import Color
+from mini_arcade_core.backend import Color
+
 from .geometry2d import Position2D, Size2D
 from .physics2d import Velocity2D
 
@@ -26,6 +27,7 @@ class KinematicData:
     position: Position2D
     size: Size2D
     velocity: Velocity2D
+    time_scale: float = 1.0
     color: Optional[Color] = None  # future use
 
     # Justification: Convenience factory with many params.
@@ -39,6 +41,7 @@ class KinematicData:
         height: int,
         vx: float = 0.0,
         vy: float = 0.0,
+        time_scale: float = 1.0,
         color: Optional[Color] = None,
     ) -> "KinematicData":
         """
@@ -72,6 +75,7 @@ class KinematicData:
             position=Position2D(float(x), float(y)),
             size=Size2D(int(width), int(height)),
             velocity=Velocity2D(float(vx), float(vy)),
+            time_scale=time_scale,
             color=color,
         )
 

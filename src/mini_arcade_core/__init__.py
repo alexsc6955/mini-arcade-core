@@ -7,68 +7,94 @@ from __future__ import annotations
 
 import logging
 from importlib.metadata import PackageNotFoundError, version
+from typing import Callable, Type, Union
 
-from .backend import Backend, Event, EventType
-from .boundaries2d import (
-    RectKinematic,
-    RectSprite,
-    VerticalBounce,
-    VerticalWrap,
+from mini_arcade_core import backend  # noqa: F401
+from mini_arcade_core import keymaps  # noqa: F401
+from mini_arcade_core import managers  # noqa: F401
+from mini_arcade_core import spaces  # noqa: F401
+from mini_arcade_core import ui  # noqa: F401
+from mini_arcade_core.bus import event_bus
+from mini_arcade_core.commands import (
+    BaseCommand,
+    BaseGameCommand,
+    BaseSceneCommand,
+    QuitGameCommand,
 )
-from .collision2d import RectCollider
-from .entity import Entity, KinematicEntity, SpriteEntity
-from .game import Game, GameConfig
-from .geometry2d import Bounds2D, Position2D, Size2D
-from .kinematics2d import KinematicData
-from .physics2d import Velocity2D
-from .scene import Scene
+from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
+from mini_arcade_core.game import Game, GameConfig
+from mini_arcade_core.scenes import Scene, SceneRegistry
+
+SceneFactoryLike = Union[Type[Scene], Callable[[Game], Scene]]
 
 logger = logging.getLogger(__name__)
 
 
-def run_game(initial_scene_cls: type[Scene], config: GameConfig | None = None):
+def run_game(
+    scene: SceneFactoryLike | None = None,
+    config: GameConfig | None = None,
+    registry: SceneRegistry | None = None,
+    initial_scene: str = "main",
+):
     """
     Convenience helper to bootstrap and run a game with a single scene.
 
-    :param initial_scene_cls: The Scene subclass to instantiate as the initial scene.
-    :type initial_scene_cls: type[Scene]
+    Supports both:
+      - run_game(SceneClass, cfg)            # legacy
+      - run_game(config=cfg, initial_scene="main", registry=...)  # registry-based
+      - run_game(cfg)                       # config-only
+
+    :param initial_scene: The Scene ID to start the game with.
+    :type initial_scene: str
 
     :param config: Optional GameConfig to customize game settings.
     :type config: GameConfig | None
 
+    :param registry: Optional SceneRegistry for scene management.
+    :type registry: SceneRegistry | None
+
     :raises ValueError: If the provided config does not have a valid Backend.
     """
+    # Handle run_game(cfg) where the first arg is actually a GameConfig
+    if isinstance(scene, GameConfig) and config is None:
+        config = scene
+        scene = None
+
     cfg = config or GameConfig()
-    if config.backend is None:
+    if cfg.backend is None:
         raise ValueError(
             "GameConfig.backend must be set to a Backend instance"
         )
-    game = Game(cfg)
-    scene = initial_scene_cls(game)
-    game.run(scene)
+
+    # If user provided a Scene factory/class, ensure it's registered
+    if scene is not None:
+        if registry is None:
+            registry = SceneRegistry(_factories={})
+        registry.register(
+            initial_scene, scene
+        )  # Scene class is callable(game) -> Scene
+
+    game = Game(cfg, registry=registry)
+    game.run(initial_scene)
 
 
 __all__ = [
     "Game",
     "GameConfig",
-    "Scene",
     "Entity",
     "SpriteEntity",
-    "run_game",
-    "Backend",
-    "Event",
-    "EventType",
-    "Velocity2D",
-    "Position2D",
-    "Size2D",
     "KinematicEntity",
-    "KinematicData",
-    "RectCollider",
-    "VerticalBounce",
-    "Bounds2D",
-    "VerticalWrap",
-    "RectSprite",
-    "RectKinematic",
+    "BaseCommand",
+    "BaseGameCommand",
+    "BaseSceneCommand",
+    "QuitGameCommand",
+    "event_bus",
+    "run_game",
+    "backend",
+    "keymaps",
+    "managers",
+    "spaces",
+    "ui",
 ]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml

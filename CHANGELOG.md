@@ -6,6 +6,75 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.9] - 2025-12-22
+
+### Added
+- Implement scene services and managers for enhanced entity and overlay handling
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
+## [0.9.8] - 2025-12-22
+
+### Added
+- Add cheats module with CheatCode and CheatManager classes
+
+### Changed
+- Remove logging statements from CheatManager for cleaner code
+
+## [0.9.7] - 2025-12-19
+
+### Changed
+- Refactor run_game function to support flexible scene initialization and improve documentation
+
+## [0.9.6] - 2025-12-18
+
+### Added
+- Add GameSettings dataclass for adjustable gameplay difficulty
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
+## [0.9.5] - 2025-12-16
+
+### Added
+- Enhance MenuStyle with font size attributes and update text rendering
+
+## [0.9.4] - 2025-12-16
+
+### Added
+- Implement scene registration and discovery utilities
+
+### Changed
+- Remove redundant return types from method signatures in registry, menu, and test files
+
+## [0.9.3] - 2025-12-16
+
+### Added
+- Add SceneRegistry for managing scene creation and registration
+
+## [0.9.2] - 2025-12-16
+
+### Added
+- Enhance MenuStyle with additional attributes for improved styling options
+- Add text measurement functionality and enhance menu styling options
+
+### Other
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
+## [0.9.1] - 2025-12-16
+
+### Added
+- Add key definitions and SDL keymap for improved input handling
+
+## [0.9.0] - 2025-12-15
+
+### Added
+- Enhance Event and EventType classes with additional event types and optional attributes
+
+### Other
+- Merge release/0.8 into develop
+
 ## [0.8.1] - 2025-12-15
 
 ### Added

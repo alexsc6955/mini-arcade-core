@@ -5,44 +5,10 @@ This is the only part of the code that talks to SDL/pygame directly.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Iterable, Protocol, Tuple, Union
+from typing import Iterable, Protocol
 
-Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
-
-
-class EventType(Enum):
-    """
-    High-level event types understood by the core.
-
-    :cvar UNKNOWN: Unknown/unhandled event.
-    :cvar QUIT: User requested to quit the game.
-    :cvar KEYDOWN: A key was pressed.
-    :cvar KEYUP: A key was released.
-    """
-
-    UNKNOWN = auto()
-    QUIT = auto()
-    KEYDOWN = auto()
-    KEYUP = auto()
-
-
-@dataclass(frozen=True)
-class Event:
-    """
-    Core event type.
-
-    For now we only care about:
-    - type: what happened
-    - key: integer key code (e.g. ESC = 27), or None if not applicable
-
-    :ivar type (EventType): The type of event.
-    :ivar key (int | None): The key code associated with the event, if any.
-    """
-
-    type: EventType
-    key: int | None = None
+from .events import Event
+from .types import Color
 
 
 class Backend(Protocol):
@@ -157,6 +123,18 @@ class Backend(Protocol):
         :param color: RGB color tuple.
         :type color: Color
         """
+
+    def measure_text(self, text: str) -> tuple[int, int]:
+        """
+        Measure the width and height of the given text string in pixels.
+
+        :param text: The text string to measure.
+        :type text: str
+
+        :return: A tuple (width, height) in pixels.
+        :rtype: tuple[int, int]
+        """
+        raise NotImplementedError
 
     def capture_frame(self, path: str | None = None) -> bytes | None:
         """

@@ -46,7 +46,7 @@ class RectCollider:
     """
     OOP collision helper that wraps a Position2D + Size2D pair.
 
-    It does NOT own the data – it just points to them. If the
+    It does NOT own the data - it just points to them. If the
     entity moves (position changes), the collider “sees” it.
 
     :ivar position (Position2D): Top-left position of the rectangle.
