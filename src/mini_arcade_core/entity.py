@@ -6,9 +6,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from .collision2d import RectCollider
-from .geometry2d import Position2D, Size2D
-from .kinematics2d import KinematicData
+from mini_arcade_core.spaces.d2 import (
+    KinematicData,
+    Position2D,
+    RectCollider,
+    Size2D,
+)
 
 
 class Entity:
@@ -60,9 +63,10 @@ class KinematicEntity(SpriteEntity):
             size=kinematic_data.size,
         )
 
+        self.time_scale = kinematic_data.time_scale
         self.velocity = kinematic_data.velocity
 
     def update(self, dt: float):
         self.position.x, self.position.y = self.velocity.advance(
-            self.position.x, self.position.y, dt
+            self.position.x, self.position.y, dt * self.time_scale
         )

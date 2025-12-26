@@ -26,4 +26,22 @@
     "python.analysis.autoImportCompletions": true,
     "black-formatter.importStrategy": "fromEnvironment",
     "isort.importStrategy": "fromEnvironment",
+    "cSpell.words": [
+        "AABB",
+        "autoreg",
+        "Autoregistration",
+        "bitmask",
+        "ivar",
+        "Keymaps",
+        "KEYUP",
+        "MOUSEBUTTONDOWN",
+        "MOUSEBUTTONUP",
+        "MOUSEMOTION",
+        "pyglet",
+        "rects",
+        "rtype",
+        "scancode",
+        "SDLK",
+        "WINDOWRESIZED"
+    ],
 }
