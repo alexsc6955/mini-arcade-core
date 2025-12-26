@@ -106,6 +106,21 @@ class ListManager(Generic[T]):
         if item in self.items:
             self.items.remove(item)
 
+    def get(self, item: T) -> T | None:
+        """
+        Get an item from the manager.
+
+        :param item: The item to get.
+        :type item: T
+
+        :return: The item if found, else None.
+        :rtype: T | None
+        """
+        for it in self.items:
+            if it == item:
+                return it
+        return None
+
     def clear(self):
         """Clear all items from the manager."""
         self.items.clear()

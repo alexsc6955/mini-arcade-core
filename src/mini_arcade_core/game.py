@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal, Union
 from PIL import Image  # type: ignore[import]
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.scenes import SceneRegistry
+from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
     from mini_arcade_core.scenes import Scene

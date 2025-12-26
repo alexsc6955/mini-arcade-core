@@ -5,12 +5,14 @@ Menu system for mini arcade core.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
 from mini_arcade_core.backend import Backend, Color, Event, EventType
-from mini_arcade_core.two_d import Size2D
-
-MenuAction = Callable[[], None]
+from mini_arcade_core.commands import BaseCommand, QuitGameCommand
+from mini_arcade_core.game import Game
+from mini_arcade_core.keymaps import Key
+from mini_arcade_core.scenes import BaseSceneSystem, Scene, SceneModel
+from mini_arcade_core.spaces.d2 import Size2D
 
 
 @dataclass(frozen=True)
@@ -19,11 +21,25 @@ class MenuItem:
     Represents a single item in a menu.
 
     :ivar label (str): The text label of the menu item.
-    :ivar on_select (MenuAction): The action to perform when the item is selected.
+    :ivar on_select (BaseCommand): The action to perform when the item is selected.
     """
 
+    id: str
     label: str
-    on_select: MenuAction
+    on_select: BaseCommand
+    label_fn: Optional[Callable[[Game], str]] = None
+
+    def resolved_label(self, game: Game) -> str:
+        """
+        Get the resolved label for this menu item.
+
+        :param game: The current game instance.
+        :type game: Game
+
+        :return: The resolved label string.
+        :rtype: str
+        """
+        return self.label_fn(game) if self.label_fn else self.label
 
 
 # Justification: Data container for styling options needs
@@ -104,12 +120,11 @@ class MenuStyle:
     item_font_size = 24
 
 
-# pylint: enable=too-many-instance-attributes
-
-
 class Menu:
     """A simple text-based menu system."""
 
+    # Justification: Multiple attributes for menu state
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         items: Sequence[MenuItem],
@@ -117,6 +132,7 @@ class Menu:
         viewport: Size2D | None = None,
         title: str | None = None,
         style: MenuStyle | None = None,
+        on_select: Optional[Callable[[MenuItem], None]] = None,
     ):
         """
         :param items: Sequence of MenuItem instances to display.
@@ -136,6 +152,27 @@ class Menu:
         self.title = title
         self.style = style or MenuStyle()
         self.selected_index = 0
+        self._on_select = on_select
+        self._max_content_w_seen = 0
+        self._max_button_w_seen = 0
+        self.stable_width = True
+
+    # pylint: enable=too-many-arguments
+
+    def set_labels(self, labels: Sequence[str]):
+        """Set the labels of the menu items.
+        :param labels: Sequence of new labels for the menu items.
+        :type labels: Sequence[str]
+        """
+        for index, label in enumerate(labels):
+            if index < len(self.items):
+                item = self.items[index]
+                self.items[index] = MenuItem(
+                    id=item.id,
+                    label=label,
+                    on_select=item.on_select,
+                    label_fn=item.label_fn,
+                )
 
     def move_up(self):
         """Move the selection up by one item, wrapping around if necessary."""
@@ -149,8 +186,11 @@ class Menu:
 
     def select(self):
         """Select the currently highlighted item, invoking its action."""
-        if self.items:
-            self.items[self.selected_index].on_select()
+        if not self.items:
+            return
+        item = self.items[self.selected_index]
+        if self._on_select is not None:
+            self._on_select(item)
 
     def handle_event(
         self,
@@ -159,7 +199,7 @@ class Menu:
         up_key: int,
         down_key: int,
         select_key: int,
-    ):
+    ) -> bool:
         """
         Handle an input event to navigate the menu.
 
@@ -176,43 +216,19 @@ class Menu:
         :type select_key: int
         """
         if event.type != EventType.KEYDOWN or event.key is None:
-            return
+            return False
+
         if event.key == up_key:
             self.move_up()
-        elif event.key == down_key:
+            return True
+        if event.key == down_key:
             self.move_down()
-        elif event.key == select_key:
+            return True
+        if event.key == select_key:
             self.select()
+            return True
 
-    def _measure_content(self, surface: Backend) -> tuple[int, int, int]:
-        # Returns (content_width, content_height, title_height)
-        # where content is items-only (no padding)
-        if not self.items and not self.title:
-            return 0, 0, 0
-
-        max_w = 0
-        title_h = 0
-
-        if self.title:
-            tw, th = surface.measure_text(
-                self.title, self.style.title_font_size
-            )
-            max_w = max(max_w, tw)
-            title_h = th
-
-        # Items
-        for it in self.items:
-            w, _ = surface.measure_text(it.label, self.style.item_font_size)
-            max_w = max(max_w, w)
-
-        items_h = len(self.items) * self.style.line_height
-
-        # Total content height includes title block if present
-        content_h = items_h
-        if self.title:
-            content_h += title_h + self.style.title_spacing
-
-        return max_w, content_h, title_h
+        return False
 
     def draw(self, surface: Backend):
         """
@@ -315,9 +331,16 @@ class Menu:
         else:
             max_label_w = 0
             for it in self.items:
-                w, _ = surface.measure_text(it.label)
+                w, _ = surface.measure_text(
+                    it.label, font_size=self.style.item_font_size
+                )
                 max_label_w = max(max_label_w, w)
             bw = max_label_w + self.style.button_padding_x * 2
+
+            # ✅ Sticky button width (never shrink)
+            if self.stable_width:
+                self._max_button_w_seen = max(self._max_button_w_seen, bw)
+                bw = self._max_button_w_seen
 
         bh = self.style.button_height
         gap = self.style.button_gap
@@ -341,10 +364,18 @@ class Menu:
 
             # Label color
             text_color = self.style.selected if selected else self.style.normal
-            tw, th = surface.measure_text(item.label)
+            tw, th = surface.measure_text(
+                item.label, font_size=self.style.item_font_size
+            )
             tx = x + (bw - tw) // 2
             ty = y + (bh - th) // 2
-            surface.draw_text(tx, ty, item.label, color=text_color)
+            surface.draw_text(
+                tx,
+                ty,
+                item.label,
+                color=text_color,
+                font_size=self.style.item_font_size,
+            )
 
     # pylint: enable=too-many-locals
 
@@ -353,25 +384,32 @@ class Menu:
         max_w = 0
         title_h = 0
 
+        # Title
         if self.title:
-            tw, th = surface.measure_text(self.title)
+            tw, th = surface.measure_text(
+                self.title, font_size=self.style.title_font_size
+            )
             max_w = max(max_w, tw)
             title_h = th
 
         if not self.items:
-            content_h = 0
-            if self.title:
-                content_h = title_h
+            content_h = title_h if self.title else 0
+            # Apply stable width even for empty items
+            if self.stable_width:
+                self._max_content_w_seen = max(self._max_content_w_seen, max_w)
+                max_w = self._max_content_w_seen
             return max_w, content_h, title_h
 
         if self.style.button_enabled:
-            # width: either fixed or auto-fit
+            # Width: fixed or auto-fit by longest label
             if self.style.button_width is not None:
                 items_w = self.style.button_width
             else:
                 max_label_w = 0
                 for it in self.items:
-                    w, _ = surface.measure_text(it.label)
+                    w, _ = surface.measure_text(
+                        it.label, font_size=self.style.item_font_size
+                    )
                     max_label_w = max(max_label_w, w)
                 items_w = max_label_w + self.style.button_padding_x * 2
 
@@ -382,7 +420,9 @@ class Menu:
             items_h = len(self.items) * bh + (len(self.items) - 1) * gap
         else:
             for it in self.items:
-                w, _ = surface.measure_text(it.label)
+                w, _ = surface.measure_text(
+                    it.label, font_size=self.style.item_font_size
+                )
                 max_w = max(max_w, w)
             items_h = len(self.items) * self.style.line_height
 
@@ -393,6 +433,11 @@ class Menu:
                 + self.style.title_spacing
                 + self.style.title_margin_bottom
             )
+
+        # ✅ Sticky width (never shrink)
+        if self.stable_width:
+            self._max_content_w_seen = max(self._max_content_w_seen, max_w)
+            max_w = self._max_content_w_seen
 
         return max_w, content_h, title_h
 
@@ -414,3 +459,136 @@ class Menu:
         )
 
     # pylint: enable=too-many-arguments
+
+
+# pylint: enable=too-many-instance-attributes
+
+
+@dataclass
+class MenuModel(SceneModel):
+    """Data model for menu scenes."""
+
+    up_key: Key = Key.UP
+    down_key: Key = Key.DOWN
+    select_key: Key = Key.ENTER
+
+
+class MenuSystem(BaseSceneSystem):
+    """
+    Scene system to manage menu interaction and rendering.
+
+    :ivar menu (Menu): The Menu instance being managed.
+    """
+
+    menu: Menu
+    scene: BaseMenuScene
+
+    def __init__(self, scene):
+        super().__init__(scene)
+        self.menu: Menu | None = None
+
+    def on_enter(self):
+        self.menu = Menu(
+            self.scene.menu_items(),
+            viewport=self.scene.size,
+            title=self.scene.menu_title,
+            style=self.scene.menu_style(),
+            on_select=lambda item: item.on_select.execute(self.scene.game),
+        )
+
+    def handle_event(self, event: Event) -> bool:
+        if self.menu is None:
+            return False
+
+        # Let menu update selection; on select -> emit event / run command
+        selected_action = self.menu.handle_event(
+            event,
+            up_key=self.scene.model.up_key,
+            down_key=self.scene.model.down_key,
+            select_key=self.scene.model.select_key,
+        )
+        return selected_action
+
+    def draw(self, surface: Backend):
+        self.menu.set_labels(
+            [it.resolved_label(self.scene.game) for it in self.menu.items]
+        )
+        self.menu.draw(surface)
+
+
+class BaseMenuScene(Scene):
+    """
+    Base scene class for menu-based scenes.
+
+    :ivar model (MenuModel): The data model for the menu scene.
+    """
+
+    model: MenuModel
+
+    def __init__(self, game: Game):
+        super().__init__(game)
+        self.model = MenuModel()
+
+    # hooks
+    @property
+    def menu_title(self) -> str | None:
+        """
+        Optional title text for the menu.
+
+        :return: Title string or None for no title.
+        :rtype: str | None
+        """
+        return None
+
+    def menu_style(self) -> MenuStyle:
+        """
+        MenuStyle instance for customizing menu appearance.
+
+        :return: MenuStyle instance.
+        :rtype: MenuStyle
+        """
+        return MenuStyle()
+
+    def menu_items(self) -> list[MenuItem]:
+        """
+        Return the list of MenuItem instances for this menu.
+
+        :return: List of MenuItem instances.
+        :rtype: list[MenuItem]
+
+        :raises NotImplementedError: If not overridden in subclass.
+        """
+        raise NotImplementedError
+
+    def quit_command(self) -> BaseCommand[Game] | None:
+        """
+        Quit command to bind to ESCAPE and window close events.
+
+        :return: BaseCommand instance to execute on quit, or None for no action.
+        :rtype: BaseCommand[Game] | None
+        """
+        return QuitGameCommand()  # core default (optional)
+
+    def on_enter(self):
+        # install menu system (core)
+        self.services.systems.add(MenuSystem(self))
+
+        # bind quit if provided
+        cmd = self.quit_command()
+        if cmd:
+            self.services.input.on_key_down(Key.ESCAPE, cmd, "quit")
+            self.services.input.on_quit(cmd, "quit")
+
+        self._systems_on_enter()
+
+    def handle_event(self, event: Event):
+        if self._systems_handle_event(event):
+            return
+        self.services.input.handle_event(event, self)
+
+    def draw(self, surface: Backend):
+        self._systems_draw(surface)
+
+    def on_exit(self): ...
+
+    def update(self, dt: float): ...

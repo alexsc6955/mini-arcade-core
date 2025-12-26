@@ -5,17 +5,78 @@ Provides cheat codes and related functionality.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Deque, Dict, Optional, Sequence, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Deque,
+    Dict,
+    Generic,
+    Optional,
+    Protocol,
+    Sequence,
+    TypeVar,
+)
+
+from mini_arcade_core.backend import Event, EventType
+from mini_arcade_core.scenes.system import BaseSceneSystem
+
+if TYPE_CHECKING:
+    from mini_arcade_core.scenes import Scene
 
 # Justification: We want to keep the type variable name simple here.
 # pylint: disable=invalid-name
 TContext = TypeVar("TContext")
+TScene = TypeVar("TScene", bound="Scene")
 # pylint: enable=invalid-name
 
-CheatCallback = Callable[[TContext], None]
+
+@dataclass
+class BaseCheatCommand(ABC, Generic[TContext]):
+    """
+    Base class for cheat codes.
+
+    :ivar enabled (bool): Whether the cheat code is enabled.
+    """
+
+    enabled: bool = True
+
+    def __call__(self, context: TContext) -> None:
+        """
+        Execute the cheat code with the given context.
+
+        :param context: Context object for cheat execution.
+        :type context: TContext
+        """
+        if not self.enabled:
+            return False
+        self.execute(context)
+        return True
+
+    @abstractmethod
+    def execute(self, context: TContext):
+        """
+        Execute the cheat code with the given context.
+
+        :param context: Context object for cheat execution.
+        :type context: TContext
+        """
+        raise NotImplementedError("CheatCommand.execute must be overridden.")
+
+
+class CheatAction(Protocol[TContext]):
+    """
+    Protocol for cheat code actions.
+
+    :ivar enabled: Whether the cheat action is enabled.
+    """
+
+    enabled: bool
+
+    def __call__(self, ctx: TContext) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -25,14 +86,14 @@ class CheatCode:
 
     :ivar name (str): Unique name of the cheat code.
     :ivar sequence (tuple[str, ...]): Sequence of key strings that trigger the cheat.
-    :ivar callback (CheatCallback): Function to call when the cheat is activated.
+    :ivar action (CheatAction): BaseCheatCommand to call when the cheat is activated.
     :ivar clear_buffer_on_match (bool): Whether to clear the input buffer after a match.
     :ivar enabled (bool): Whether the cheat code is enabled.
     """
 
     name: str
     sequence: tuple[str, ...]
-    callback: CheatCallback
+    action: CheatAction[TContext]
     clear_buffer_on_match: bool = False
     enabled: bool = True
 
@@ -74,17 +135,17 @@ class CheatManager:
 
     # Justification: We want to keep the number of arguments manageable here.
     # pylint: disable=too-many-arguments
-    def register_code(
+    def register_command(
         self,
         name: str,
         sequence: Sequence[str],
-        callback: CheatCallback,
+        command: BaseCheatCommand[TContext],
         *,
         clear_buffer_on_match: bool = False,
         enabled: bool = True,
     ):
         """
-        Register a new cheat code.
+        Register a new cheat code that triggers a BaseCheatCommand.
 
         :param name: Unique name for the cheat code.
         :type name: str
@@ -92,8 +153,8 @@ class CheatManager:
         :param sequence: Sequence of key strings that trigger the cheat.
         :type sequence: Sequence[str]
 
-        :param callback: Function to call when the cheat is activated.
-        :type callback: CheatCallback
+        :param command: BaseCheatCommand to execute when the cheat is activated.
+        :type command: BaseCheatCommand[TContext]
 
         :param clear_buffer_on_match: Whether to clear the input buffer after a match.
         :type clear_buffer_on_match: bool
@@ -112,7 +173,7 @@ class CheatManager:
         self._codes[name] = CheatCode(
             name=name,
             sequence=norm_seq,
-            callback=callback,
+            action=command,
             clear_buffer_on_match=clear_buffer_on_match,
             enabled=enabled,
         )
@@ -182,7 +243,7 @@ class CheatManager:
             if len(seq) > len(buf):
                 continue
             if buf[-len(seq) :] == seq:
-                code.callback(context)
+                code.action(context)
                 matched.append(code.name)
                 if code.clear_buffer_on_match:
                     self.clear_buffer()
@@ -233,3 +294,62 @@ class CheatManager:
                 return str(v)
 
         return None
+
+
+class CheatSystem(BaseSceneSystem, Generic[TScene]):
+    """
+    Scene system for handling cheat codes.
+
+    :ivar priority (int): Priority of the system (lower runs first).
+    :ivar enabled (bool): Whether the system is enabled.
+    """
+
+    priority = 10
+
+    def __init__(self, scene: TScene, buffer_size=16):
+        """
+        :param buffer_size: Size of the cheat input buffer.
+        :type buffer_size: int
+        """
+        super().__init__(scene)
+        self.cheats = CheatManager(buffer_size=buffer_size)
+
+    def register(self, name: str, seq: list[str], cmd: Callable, **kwargs):
+        """
+        Helper to register a cheat command.
+
+        :param name: Unique name for the cheat code.
+        :type name: str
+
+        :param seq: Sequence of key strings that trigger the cheat.
+        :type seq: list[str]
+
+        :param cmd: Callable to execute when the cheat is activated.
+        :type cmd: Callable
+
+        :param kwargs: Additional keyword arguments for cheat registration.
+        """
+        self.cheats.register_command(name, seq, cmd, **kwargs)
+
+    def on_enter(self):
+        """
+        Called when the scene is entered.
+        """
+        # register codes here (or via a builder)
+
+    def handle_event(self, event: Event) -> bool:
+        """
+        Handle an event.
+
+        :param event: The event to handle.
+        :type event: Event
+
+        :param scene: The scene receiving the event.
+        :type scene: TScene
+
+        :return: True if the event was handled, False otherwise.
+        :rtype: bool
+        """
+        if event.type == EventType.KEYDOWN:
+            self.cheats.process_event(event, self.scene)
+        return False  # usually don't consume
