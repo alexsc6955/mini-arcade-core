@@ -35,7 +35,9 @@ class Scene(ABC):
         """
         self.game = game
         self.entities: List[Entity] = []
-        self.size: Size2D = Size2D(game.config.width, game.config.height)
+        self.size: Size2D = Size2D(
+            game.config.window.width, game.config.window.height
+        )
 
         self.services: SceneRuntime = (
             services if services is not None else SceneRuntime()

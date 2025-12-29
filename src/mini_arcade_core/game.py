@@ -14,13 +14,25 @@ from typing import TYPE_CHECKING, Literal, Union
 from PIL import Image  # type: ignore[import]
 
 from mini_arcade_core.backend import Backend
+from mini_arcade_core.runtime.services import RuntimeServices, WindowPort
 from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
     from mini_arcade_core.scenes import Scene
 
 SceneOrId = Union["Scene", str]
-Runtime = Literal["legacy", "sim"]
+
+
+@dataclass
+class WindowConfig:
+    """
+    Configuration for a game window (not implemented).
+    """
+
+    width: int
+    height: int
+    background_color: tuple[int, int, int]
+    title: str
 
 
 @dataclass
@@ -36,13 +48,9 @@ class GameConfig:
     :ivar backend: Optional Backend instance to use for rendering and input.
     """
 
-    width: int = 800
-    height: int = 600
-    title: str = "Mini Arcade Game"
+    window: WindowConfig | None = None
     fps: int = 60
-    background_color: tuple[int, int, int] = (0, 0, 0)
     backend: Backend | None = None
-    runtime: Runtime = "legacy"
 
 
 Difficulty = Literal["easy", "normal", "hard", "insane"]
@@ -63,6 +71,24 @@ class GameSettings:
 class _StackEntry:
     scene: "Scene"
     as_overlay: bool = False
+
+
+class WindowManager(WindowPort):
+    """
+    Manages multiple game windows (not implemented).
+    """
+
+    def __init__(self, backend: Backend):
+        self.backend = backend
+
+    def set_window_size(self, width, height):
+        self.backend.init(width, height)
+
+    def set_title(self, title: str) -> None:
+        self.backend.set_window_title(title)
+
+    def set_clear_color(self, r: int, g: int, b: int) -> None:
+        self.backend.set_clear_color(r, g, b)
 
 
 class Game:
@@ -92,6 +118,11 @@ class Game:
         self.registry = registry or SceneRegistry(_factories={})
         self._scene_stack: list[_StackEntry] = []
         self.settings = GameSettings()
+        self.services = RuntimeServices(
+            window=WindowManager(
+                self.backend,
+            )
+        )
 
     def current_scene(self) -> "Scene | None":
         """
@@ -194,10 +225,12 @@ class Game:
         :type initial_scene: SceneOrId
         """
         backend = self.backend
-        backend.init(self.config.width, self.config.height, self.config.title)
+        self.services.window.set_window_size(
+            self.config.window.width, self.config.window.height
+        )
 
-        br, bg, bb = self.config.background_color
-        backend.set_clear_color(br, bg, bb)
+        br, bg, bb = self.config.window.background_color
+        self.services.window.set_clear_color(br, bg, bb)
 
         self.change_scene(initial_scene)
 

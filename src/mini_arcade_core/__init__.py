@@ -5,7 +5,7 @@ Provides access to core classes and a convenience function to run a game.
 
 from __future__ import annotations
 
-import logging
+import traceback
 from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Type, Union
 
@@ -22,12 +22,11 @@ from mini_arcade_core.commands import (
     QuitGameCommand,
 )
 from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
-from mini_arcade_core.game import Game, GameConfig
+from mini_arcade_core.game import Game, GameConfig, WindowConfig
 from mini_arcade_core.scenes import Scene, SceneRegistry
+from mini_arcade_core.utils import logger
 
 SceneFactoryLike = Union[Type[Scene], Callable[[Game], Scene]]
-
-logger = logging.getLogger(__name__)
 
 
 def run_game(
@@ -55,32 +54,37 @@ def run_game(
 
     :raises ValueError: If the provided config does not have a valid Backend.
     """
-    # Handle run_game(cfg) where the first arg is actually a GameConfig
-    if isinstance(scene, GameConfig) and config is None:
-        config = scene
-        scene = None
+    try:
+        # Handle run_game(cfg) where the first arg is actually a GameConfig
+        if isinstance(scene, GameConfig) and config is None:
+            config = scene
+            scene = None
 
-    cfg = config or GameConfig()
-    if cfg.backend is None:
-        raise ValueError(
-            "GameConfig.backend must be set to a Backend instance"
-        )
+        cfg = config or GameConfig()
+        if cfg.backend is None:
+            raise ValueError(
+                "GameConfig.backend must be set to a Backend instance"
+            )
 
-    # If user provided a Scene factory/class, ensure it's registered
-    if scene is not None:
-        if registry is None:
-            registry = SceneRegistry(_factories={})
-        registry.register(
-            initial_scene, scene
-        )  # Scene class is callable(game) -> Scene
+        # If user provided a Scene factory/class, ensure it's registered
+        if scene is not None:
+            if registry is None:
+                registry = SceneRegistry(_factories={})
+            registry.register(
+                initial_scene, scene
+            )  # Scene class is callable(game) -> Scene
 
-    game = Game(cfg, registry=registry)
-    game.run(initial_scene)
+        game = Game(cfg, registry=registry)
+        game.run(initial_scene)
+    except Exception as e:
+        logger.exception(f"Unhandled exception in game loop: {e}")
+        logger.debug(traceback.format_exc())
 
 
 __all__ = [
     "Game",
     "GameConfig",
+    "WindowConfig",
     "Entity",
     "SpriteEntity",
     "KinematicEntity",

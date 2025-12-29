@@ -195,3 +195,11 @@ Temporary Items
 *.icloud
 .trivox_conductor/
 .trivox/
+
+# While developing
+input_adapter.py
+input_frame.py
+sim_runner.py
+sim_scene.py
+sim/
+view/
