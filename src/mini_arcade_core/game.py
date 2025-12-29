@@ -228,6 +228,7 @@ class Game:
         self.services.window.set_window_size(
             self.config.window.width, self.config.window.height
         )
+        self.services.window.set_title(self.config.window.title)
 
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
