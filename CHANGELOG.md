@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-12-26
+
+### Added
+- Implement command and cheat management system
+- Add Overlay and BaseOverlay classes with update and draw methods for enhanced overlay management
+
+### Other
+- Merge release/0.9 into develop
+- Merge branch 'release/0.9' of https://github.com/alexsc6955/mini-arcade-core into release/0.9
+
 ## [0.9.9] - 2025-12-22
 
 ### Added
