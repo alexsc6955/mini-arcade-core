@@ -49,7 +49,7 @@ class SceneAdapter(ScenePort):
     Manages multiple scenes (not implemented).
     """
 
-    def __init__(self, registry: SceneRegistry, game: Game | None = None):
+    def __init__(self, registry: SceneRegistry, game: Game):
         self.registry = registry
         self._scene_stack: list[_StackEntry] = []
         self.game = game
@@ -103,7 +103,7 @@ class SceneAdapter(ScenePort):
 
         top = self.current_scene
         if top is None:
-            # self.quit()
+            self.game.quit()
             return popped.scene
 
         top.on_resume()

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter, sleep
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from PIL import Image  # type: ignore[import]
 
@@ -22,9 +22,6 @@ from mini_arcade_core.runtime.adapters import (
 )
 from mini_arcade_core.runtime.services import RuntimeServices
 from mini_arcade_core.scenes.registry import SceneRegistry
-
-if TYPE_CHECKING:  # avoid runtime circular import
-    from mini_arcade_core.scenes import Scene
 
 
 @dataclass
