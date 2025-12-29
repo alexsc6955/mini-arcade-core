@@ -5,6 +5,12 @@ Contains runtime-related classes and functions.
 
 from __future__ import annotations
 
+from .adapters import (
+    LocalFilesAdapter,
+    NullAudioAdapter,
+    SceneAdapter,
+    WindowAdapter,
+)
 from .services import (
     AudioPort,
     FilePort,
@@ -19,4 +25,8 @@ __all__ = [
     "ScenePort",
     "AudioPort",
     "FilePort",
+    "WindowAdapter",
+    "SceneAdapter",
+    "NullAudioAdapter",
+    "LocalFilesAdapter",
 ]

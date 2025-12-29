@@ -14,11 +14,13 @@ from typing import TYPE_CHECKING, Literal, Union
 from PIL import Image  # type: ignore[import]
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.runtime.services import (
-    RuntimeServices,
-    ScenePort,
-    WindowPort,
+from mini_arcade_core.runtime.adapters import (
+    LocalFilesAdapter,
+    NullAudioAdapter,
+    SceneAdapter,
+    WindowAdapter,
 )
+from mini_arcade_core.runtime.services import RuntimeServices
 from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
@@ -71,104 +73,6 @@ class GameSettings:
     difficulty: Difficulty = "normal"
 
 
-@dataclass
-class _StackEntry:
-    scene: "Scene"
-    as_overlay: bool = False
-
-
-class WindowManager(WindowPort):
-    """
-    Manages multiple game windows (not implemented).
-    """
-
-    def __init__(self, backend):
-        self.backend = backend
-
-    def set_window_size(self, width, height):
-        self.backend.init(width, height)
-
-    def set_title(self, title: str):
-        self.backend.set_window_title(title)
-
-    def set_clear_color(self, r: int, g: int, b: int):
-        self.backend.set_clear_color(r, g, b)
-
-
-class SceneManager(ScenePort):
-    """
-    Manages multiple scenes (not implemented).
-    """
-
-    def __init__(self, registry: SceneRegistry, game: Game | None = None):
-        self.registry = registry
-        self._scene_stack: list[_StackEntry] = []
-        self.game = game
-
-    @property
-    def current_scene(self) -> "Scene | None":
-        return self._scene_stack[-1].scene if self._scene_stack else None
-
-    @property
-    def visible_stack(self) -> list["Scene"]:
-        if not self._scene_stack:
-            return []
-
-        # find top-most base scene (as_overlay=False)
-        base_idx = 0
-        for i in range(len(self._scene_stack) - 1, -1, -1):
-            if not self._scene_stack[i].as_overlay:
-                base_idx = i
-                break
-
-        return [e.scene for e in self._scene_stack[base_idx:]]
-
-    def change(self, scene_id: str):
-        scene = self._resolve_scene(scene_id)
-
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
-
-        self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
-        scene.on_enter()
-
-    def push(self, scene_id: str, *, as_overlay: bool = False):
-        scene = self._resolve_scene(scene_id)
-
-        top = self.current_scene
-        if top is not None:
-            top.on_pause()
-
-        self._scene_stack.append(
-            _StackEntry(scene=scene, as_overlay=as_overlay)
-        )
-        scene.on_enter()
-
-    def pop(self) -> "Scene | None":
-        if not self._scene_stack:
-            return None
-
-        popped = self._scene_stack.pop()
-        popped.scene.on_exit()
-
-        top = self.current_scene
-        if top is None:
-            # self.quit()
-            return popped.scene
-
-        top.on_resume()
-        return popped.scene
-
-    def clean(self):
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
-
-    def _resolve_scene(self, scene_id: str) -> "Scene":
-        return self.registry.create(scene_id, self.game)
-
-
 class Game:
     """Core game object responsible for managing the main loop and active scene."""
 
@@ -195,10 +99,12 @@ class Game:
         self.registry = registry or SceneRegistry(_factories={})
         self.settings = GameSettings()
         self.services = RuntimeServices(
-            window=WindowManager(
+            window=WindowAdapter(
                 self.backend,
             ),
-            scenes=SceneManager(self.registry, self),
+            scenes=SceneAdapter(self.registry, self),
+            audio=NullAudioAdapter(),
+            files=LocalFilesAdapter(),
         )
 
     def quit(self):
@@ -301,6 +207,11 @@ class Game:
         filename = f"{stamp}_{label}"
         bmp_path = os.path.join(directory, f"{filename}.bmp")
 
+        if self.backend.capture_frame(bmp_path):
+            out_path = Path(directory) / f"{filename}.png"
+            self._convert_bmp_to_image(bmp_path, str(out_path))
+            return str(out_path)
+        return None
         if self.backend.capture_frame(bmp_path):
             out_path = Path(directory) / f"{filename}.png"
             self._convert_bmp_to_image(bmp_path, str(out_path))
