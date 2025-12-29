@@ -255,6 +255,7 @@ class Game:
         # exit remaining scenes
         self.services.scenes.clean()
 
+    # TODO: This needs to be refactored
     @staticmethod
     def _convert_bmp_to_image(bmp_path: str, out_path: str) -> bool:
         """
