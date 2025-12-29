@@ -160,6 +160,11 @@ class SceneManager(ScenePort):
         top.on_resume()
         return popped.scene
 
+    def clean(self):
+        while self._scene_stack:
+            entry = self._scene_stack.pop()
+            entry.scene.on_exit()
+
     def _resolve_scene(self, scene_id: str) -> "Scene":
         return self.registry.create(scene_id, self.game)
 
@@ -180,7 +185,6 @@ class Game:
         :raises ValueError: If the provided config does not have a valid Backend.
         """
         self.config = config
-        self._current_scene: Scene | None = None
         self._running: bool = False
 
         if config.backend is None:
@@ -189,7 +193,6 @@ class Game:
             )
         self.backend: Backend = config.backend
         self.registry = registry or SceneRegistry(_factories={})
-        self._scene_stack: list[_StackEntry] = []
         self.settings = GameSettings()
         self.services = RuntimeServices(
             window=WindowManager(
@@ -250,9 +253,7 @@ class Game:
                 sleep(target_dt - dt)
 
         # exit remaining scenes
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
+        self.services.scenes.clean()
 
     @staticmethod
     def _convert_bmp_to_image(bmp_path: str, out_path: str) -> bool:

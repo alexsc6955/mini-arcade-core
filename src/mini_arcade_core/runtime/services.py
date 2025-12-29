@@ -5,14 +5,12 @@ Service interfaces for runtime components.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Protocol
+from typing import TYPE_CHECKING, List, Optional, Protocol
 
 from mini_arcade_core.backend import Backend
 
-# from mini_arcade_core.scenes.scene import Scene
-
-
-class Scene: ...
+if TYPE_CHECKING:
+    from mini_arcade_core.scenes.scene import Scene
 
 
 class WindowPort(Protocol):
@@ -101,6 +99,11 @@ class ScenePort(Protocol):
 
         :return: The popped Scene instance, or None if the stack was empty.
         :rtype: Scene | None
+        """
+
+    def clean(self):
+        """
+        Clean up all scenes from the scene stack.
         """
 
 
