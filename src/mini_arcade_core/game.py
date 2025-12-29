@@ -26,8 +26,6 @@ from mini_arcade_core.scenes.registry import SceneRegistry
 if TYPE_CHECKING:  # avoid runtime circular import
     from mini_arcade_core.scenes import Scene
 
-SceneOrId = Union["Scene", str]
-
 
 @dataclass
 class WindowConfig:
@@ -111,15 +109,15 @@ class Game:
         """Request that the main loop stops."""
         self._running = False
 
-    def run(self, initial_scene: SceneOrId):
+    def run(self, initial_scene_id: str):
         """
         Run the main loop starting with the given scene.
 
         This is intentionally left abstract so you can plug pygame, pyglet,
         or another backend.
 
-        :param initial_scene: The scene to start the game with.
-        :type initial_scene: SceneOrId
+        :param initial_scene_id: The scene id to start the game with (must be registered).
+        :type initial_scene_id: str
         """
         backend = self.backend
         self.services.window.set_window_size(
@@ -130,7 +128,7 @@ class Game:
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
 
-        self.services.scenes.change(initial_scene)
+        self.services.scenes.change(initial_scene_id)
 
         self._running = True
         target_dt = 1.0 / self.config.fps if self.config.fps > 0 else 0.0
