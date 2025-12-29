@@ -5,11 +5,20 @@ Service interfaces for runtime components.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import List, Optional, Protocol
+
+from mini_arcade_core.backend import Backend
+
+# from mini_arcade_core.scenes.scene import Scene
+
+
+class Scene: ...
 
 
 class WindowPort(Protocol):
     """Interface for window-related operations."""
+
+    backend: Backend
 
     def set_window_size(self, width: int, height: int):
         """
@@ -48,6 +57,25 @@ class WindowPort(Protocol):
 class ScenePort(Protocol):
     """Interface for scene management operations."""
 
+    @property
+    def current_scene(self) -> "Scene | None":
+        """
+        Get the currently active scene.
+
+        :return: The active Scene instance, or None if no scene is active.
+        :rtype: Scene | None
+        """
+
+    @property
+    def visible_stack(self) -> List["Scene"]:
+        """
+        Return the list of scenes that should be drawn (base + overlays).
+        We draw from the top-most non-overlay scene upward.
+
+        :return: List of visible Scene instances.
+        :rtype: list[Scene]
+        """
+
     def change(self, scene_id: str):
         """
         Change the current scene to the specified scene.
@@ -67,9 +95,12 @@ class ScenePort(Protocol):
         :type as_overlay: bool
         """
 
-    def pop(self):
+    def pop(self) -> "Scene | None":
         """
         Pop the current scene from the scene stack.
+
+        :return: The popped Scene instance, or None if the stack was empty.
+        :rtype: Scene | None
         """
 
 
@@ -125,4 +156,5 @@ class RuntimeServices:
     window: Optional[WindowPort] = None
     scenes: Optional[ScenePort] = None
     audio: Optional[AudioPort] = None
+    files: Optional[FilePort] = None
     files: Optional[FilePort] = None

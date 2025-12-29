@@ -33,6 +33,15 @@ class Backend(Protocol):
         :type title: str
         """
 
+    def set_window_title(self, title: str):
+        """
+        Set the window title.
+
+        :param title: The new title for the window.
+        :type title: str
+        """
+        raise NotImplementedError
+
     def poll_events(self) -> Iterable[Event]:
         """
         Return all pending events since last call.

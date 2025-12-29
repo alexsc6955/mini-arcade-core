@@ -14,7 +14,11 @@ from typing import TYPE_CHECKING, Literal, Union
 from PIL import Image  # type: ignore[import]
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.runtime.services import RuntimeServices, WindowPort
+from mini_arcade_core.runtime.services import (
+    RuntimeServices,
+    ScenePort,
+    WindowPort,
+)
 from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
@@ -78,17 +82,86 @@ class WindowManager(WindowPort):
     Manages multiple game windows (not implemented).
     """
 
-    def __init__(self, backend: Backend):
+    def __init__(self, backend):
         self.backend = backend
 
     def set_window_size(self, width, height):
         self.backend.init(width, height)
 
-    def set_title(self, title: str) -> None:
+    def set_title(self, title: str):
         self.backend.set_window_title(title)
 
-    def set_clear_color(self, r: int, g: int, b: int) -> None:
+    def set_clear_color(self, r: int, g: int, b: int):
         self.backend.set_clear_color(r, g, b)
+
+
+class SceneManager(ScenePort):
+    """
+    Manages multiple scenes (not implemented).
+    """
+
+    def __init__(self, registry: SceneRegistry, game: Game | None = None):
+        self.registry = registry
+        self._scene_stack: list[_StackEntry] = []
+        self.game = game
+
+    @property
+    def current_scene(self) -> "Scene | None":
+        return self._scene_stack[-1].scene if self._scene_stack else None
+
+    @property
+    def visible_stack(self) -> list["Scene"]:
+        if not self._scene_stack:
+            return []
+
+        # find top-most base scene (as_overlay=False)
+        base_idx = 0
+        for i in range(len(self._scene_stack) - 1, -1, -1):
+            if not self._scene_stack[i].as_overlay:
+                base_idx = i
+                break
+
+        return [e.scene for e in self._scene_stack[base_idx:]]
+
+    def change(self, scene_id: str):
+        scene = self._resolve_scene(scene_id)
+
+        while self._scene_stack:
+            entry = self._scene_stack.pop()
+            entry.scene.on_exit()
+
+        self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
+        scene.on_enter()
+
+    def push(self, scene_id: str, *, as_overlay: bool = False):
+        scene = self._resolve_scene(scene_id)
+
+        top = self.current_scene
+        if top is not None:
+            top.on_pause()
+
+        self._scene_stack.append(
+            _StackEntry(scene=scene, as_overlay=as_overlay)
+        )
+        scene.on_enter()
+
+    def pop(self) -> "Scene | None":
+        if not self._scene_stack:
+            return None
+
+        popped = self._scene_stack.pop()
+        popped.scene.on_exit()
+
+        top = self.current_scene
+        if top is None:
+            # self.quit()
+            return popped.scene
+
+        top.on_resume()
+        return popped.scene
+
+    def _resolve_scene(self, scene_id: str) -> "Scene":
+        return self.registry.create(scene_id, self.game)
 
 
 class Game:
@@ -121,94 +194,9 @@ class Game:
         self.services = RuntimeServices(
             window=WindowManager(
                 self.backend,
-            )
+            ),
+            scenes=SceneManager(self.registry, self),
         )
-
-    def current_scene(self) -> "Scene | None":
-        """
-        Get the currently active scene.
-
-        :return: The active Scene instance, or None if no scene is active.
-        :rtype: Scene | None
-        """
-        return self._scene_stack[-1].scene if self._scene_stack else None
-
-    def change_scene(self, scene: SceneOrId):
-        """
-        Swap the active scene. Concrete implementations should call
-        ``on_exit``/``on_enter`` appropriately.
-
-        :param scene: The new scene to activate.
-        :type scene: SceneOrId
-        """
-        scene = self._resolve_scene(scene)
-
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
-
-        self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
-        scene.on_enter()
-
-    def push_scene(self, scene: SceneOrId, as_overlay: bool = False):
-        """
-        Push a scene on top of the current one.
-        If as_overlay=True, underlying scene(s) may still be drawn but never updated.
-
-        :param scene: The scene to push onto the stack.
-        :type scene: SceneOrId
-
-        :param as_overlay: Whether to treat the scene as an overlay.
-        :type as_overlay: bool
-        """
-        scene = self._resolve_scene(scene)
-
-        top = self.current_scene()
-        if top is not None:
-            top.on_pause()
-
-        self._scene_stack.append(
-            _StackEntry(scene=scene, as_overlay=as_overlay)
-        )
-        scene.on_enter()
-
-    def pop_scene(self) -> "Scene | None":
-        """
-        Pop the top scene. If stack becomes empty, quit.
-
-        :return: The popped Scene instance, or None if the stack is now empty.
-        :rtype: Scene | None
-        """
-        if not self._scene_stack:
-            return None
-
-        popped = self._scene_stack.pop()
-        popped.scene.on_exit()
-
-        top = self.current_scene()
-        if top is None:
-            self.quit()
-            return popped.scene
-
-        top.on_resume()
-        return popped.scene
-
-    def _visible_stack(self) -> list["Scene"]:
-        """
-        Return the list of scenes that should be drawn (base + overlays).
-        We draw from the top-most non-overlay scene upward.
-        """
-        if not self._scene_stack:
-            return []
-
-        # find top-most base scene (as_overlay=False)
-        base_idx = 0
-        for i in range(len(self._scene_stack) - 1, -1, -1):
-            if not self._scene_stack[i].as_overlay:
-                base_idx = i
-                break
-
-        return [e.scene for e in self._scene_stack[base_idx:]]
 
     def quit(self):
         """Request that the main loop stops."""
@@ -233,7 +221,7 @@ class Game:
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
 
-        self.change_scene(initial_scene)
+        self.services.scenes.change(initial_scene)
 
         self._running = True
         target_dt = 1.0 / self.config.fps if self.config.fps > 0 else 0.0
@@ -244,7 +232,7 @@ class Game:
             dt = now - last_time
             last_time = now
 
-            top = self.current_scene()
+            top = self.services.scenes.current_scene
             if top is None:
                 break
 
@@ -254,7 +242,7 @@ class Game:
             top.update(dt)
 
             backend.begin_frame()
-            for scene in self._visible_stack():
+            for scene in self.services.scenes.visible_stack:
                 scene.draw(backend)
             backend.end_frame()
 
@@ -316,8 +304,3 @@ class Game:
             self._convert_bmp_to_image(bmp_path, str(out_path))
             return str(out_path)
         return None
-
-    def _resolve_scene(self, scene: SceneOrId) -> "Scene":
-        if isinstance(scene, str):
-            return self.registry.create(scene, self)
-        return scene
