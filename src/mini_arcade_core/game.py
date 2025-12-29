@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # avoid runtime circular import
     from mini_arcade_core.scenes import Scene
 
 SceneOrId = Union["Scene", str]
+Runtime = Literal["legacy", "sim"]
 
 
 @dataclass
@@ -41,6 +42,7 @@ class GameConfig:
     fps: int = 60
     background_color: tuple[int, int, int] = (0, 0, 0)
     backend: Backend | None = None
+    runtime: Runtime = "legacy"
 
 
 Difficulty = Literal["easy", "normal", "hard", "insane"]
