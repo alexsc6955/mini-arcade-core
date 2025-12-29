@@ -210,8 +210,3 @@ class Game:
             self._convert_bmp_to_image(bmp_path, str(out_path))
             return str(out_path)
         return None
-        if self.backend.capture_frame(bmp_path):
-            out_path = Path(directory) / f"{filename}.png"
-            self._convert_bmp_to_image(bmp_path, str(out_path))
-            return str(out_path)
-        return None
