@@ -5,7 +5,7 @@ Service interfaces for runtime components.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Protocol
+from typing import TYPE_CHECKING, List, Protocol
 
 from mini_arcade_core.backend import Backend, Event
 from mini_arcade_core.runtime.input_frame import InputFrame
@@ -151,29 +151,15 @@ class CapturePort(Protocol):
 
     backend: Backend
 
-    def _bmp_to_image(self, bmp_path: str, out_path: str) -> bytes | None:
-        """
-        Convert a BMP file to PNG bytes using Pillow.
-
-        :param bmp_path: Path to the input BMP file.
-        :type bmp_path: str
-
-        :param out_path: Path to the output PNG file.
-        :type out_path: str
-
-        :return: PNG image data as bytes, or None on failure.
-        :rtype: bytes | None
-        """
-
-    def screenshot(self, label: str | None = None) -> bytes | None:
+    def screenshot(self, label: str | None = None) -> str:
         """
         Capture the current frame.
 
         :param label: Optional label for the screenshot file.
         :type label: str | None
 
-        :return: Screenshot data as bytes, or None if saving to file.
-        :rtype: bytes | None
+        :return: Screenshot file path.
+        :rtype: str
         """
 
     def screenshot_bytes(self) -> bytes | None:
@@ -213,15 +199,17 @@ class RuntimeServices:
     """
     Container for runtime service ports.
 
-    :ivar window (Optional[WindowPort]): Window service port.
-    :ivar scenes (Optional[ScenePort]): Scene management service port.
-    :ivar audio (Optional[AudioPort]): Audio service port.
-    :ivar files (Optional[FilePort]): File service port.
+    :ivar window (WindowPort): Window service port.
+    :ivar scenes (ScenePort): Scene management service port.
+    :ivar audio (AudioPort): Audio service port.
+    :ivar files (FilePort): File service port.
+    :ivar capture (CapturePort): Capture service port.
+    :ivar input (InputPort): Input handling service port.
     """
 
-    window: Optional[WindowPort] = None
-    scenes: Optional[ScenePort] = None
-    audio: Optional[AudioPort] = None
-    files: Optional[FilePort] = None
-    capture: Optional[CapturePort] = None
-    input: Optional[InputPort] = None
+    window: WindowPort
+    scenes: ScenePort
+    audio: AudioPort
+    files: FilePort
+    capture: CapturePort
+    input: InputPort
