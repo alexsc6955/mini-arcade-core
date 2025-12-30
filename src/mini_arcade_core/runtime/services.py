@@ -11,14 +11,16 @@ from mini_arcade_core.backend import Backend, Event
 from mini_arcade_core.runtime.input_frame import InputFrame
 
 if TYPE_CHECKING:
-    from mini_arcade_core.sim.protocols import SimScene
+    from mini_arcade_core.commands import CommandQueue
     from mini_arcade_core.scenes.scene import Scene
+    from mini_arcade_core.sim.protocols import SimScene
 
 
 class WindowPort(Protocol):
     """Interface for window-related operations."""
 
     backend: Backend
+    size: tuple[int, int]
 
     def set_window_size(self, width: int, height: int):
         """
@@ -259,3 +261,5 @@ class RuntimeServices:
     files: FilePort
     capture: CapturePort
     input: InputPort
+    # TODO: Create CommandPort protocol
+    commands: CommandQueue

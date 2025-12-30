@@ -109,9 +109,9 @@ class Game:
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
+            commands=CommandQueue(),
         )
 
-        self._commands = CommandQueue()
         self.cheats = CheatManager()
 
     def quit(self):
@@ -128,18 +128,12 @@ class Game:
         :param initial_scene_id: The scene id to start the game with (must be registered).
         :type initial_scene_id: str
         """
-        backend = self.backend
 
         if self.config.window is None:
             raise ValueError("GameConfig.window must be set")
+        backend = self.backend
 
-        self.services.window.set_window_size(
-            self.config.window.width, self.config.window.height
-        )
-        self.services.window.set_title(self.config.window.title)
-
-        br, bg, bb = self.config.window.background_color
-        self.services.window.set_clear_color(br, bg, bb)
+        self._initialize_window()
 
         self.services.scenes.change(initial_scene_id)
 
@@ -163,8 +157,7 @@ class Game:
 
             # Window/OS quit (close button)
             if input_frame.quit:
-                self._commands.push(QuitCommand())
-                break
+                self.services.commands.push(QuitCommand())
 
             # who gets input?
             input_entry = self.services.scenes.input_entry()
@@ -183,6 +176,10 @@ class Game:
                 packet = scene.tick(effective_input, dt)
                 packet_cache[id(scene)] = packet
 
+            # Execute commands at the end of the frame (consistent write path)
+            for cmd in self.services.commands.drain():
+                cmd.execute(self.services, settings=self.settings)
+
             backend.begin_frame()
             for entry in self.services.scenes.visible_entries():
                 scene = entry.scene
@@ -195,10 +192,6 @@ class Game:
                 pipeline.draw_packet(backend, packet)
             backend.end_frame()
 
-            # Execute commands at the end of the frame (consistent write path)
-            for cmd in self._commands.drain():
-                cmd.execute(self.services)
-
             if target_dt > 0 and dt < target_dt:
                 sleep(target_dt - dt)
 
@@ -207,20 +200,7 @@ class Game:
         # exit remaining scenes
         self.services.scenes.clean()
 
-    def run_sim(
-        self,
-        initial_scene_id: str,
-        *,
-        cfg: SimRunnerConfig | None = None,
-    ) -> None:
-        """
-        Run the simulation-first loop using the already configured backend + services.
-
-        This keeps Game as the composition root. No duplicate setup elsewhere.
-        """
-        backend = self.backend
-
-        # reuse window setup from classic run (same behavior)
+    def _initialize_window(self):
         if self.config.window is None:
             raise ValueError("GameConfig.window must be set")
 
@@ -231,11 +211,3 @@ class Game:
 
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
-
-        # run the sim loop
-        runner = SimRunner(
-            backend=backend,
-            services=self.services,
-            render_pipeline=RenderPipeline(),
-        )
-        runner.run(initial_scene_id, cfg=cfg)

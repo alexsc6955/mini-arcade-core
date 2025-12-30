@@ -102,13 +102,19 @@ class Command(Protocol):
     """
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         """
         Execute the command with the given world and runtime services.
 
         :param services: Runtime services for command execution.
         :type services: RuntimeServices
+
+        :param settings: Optional settings object for command execution.
+        :type settings: object | None
 
         :param world: The world object (can be any type).
         :type world: object | None
@@ -149,7 +155,10 @@ class QuitCommand(Command):
     """Quit the game."""
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         services.scenes.quit()
 
@@ -165,7 +174,10 @@ class ScreenshotCommand(Command):
     label: str | None = None
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         services.capture.screenshot(label=self.label, mode="manual")
 
@@ -183,7 +195,10 @@ class PushSceneCommand(Command):
     as_overlay: bool = False
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         services.scenes.push(self.scene_id, as_overlay=self.as_overlay)
 
@@ -193,7 +208,10 @@ class PopSceneCommand(Command):
     """Pop the current scene from the scene stack."""
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         services.scenes.pop()
 
@@ -209,6 +227,9 @@ class ChangeSceneCommand(Command):
     scene_id: str
 
     def execute(
-        self, services: RuntimeServices, world: Optional[object] = None
+        self,
+        services: RuntimeServices,
+        settings: Optional[object] = None,
+        world: Optional[object] = None,
     ) -> None:
         services.scenes.change(self.scene_id)

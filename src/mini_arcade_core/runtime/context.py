@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from mini_arcade_core.commands import CommandQueue
     from mini_arcade_core.game import Game, GameConfig, GameSettings
     from mini_arcade_core.runtime.services import RuntimeServices
 
@@ -13,6 +14,7 @@ class RuntimeContext:
     services: RuntimeServices
     config: GameConfig
     settings: GameSettings
+    commands: CommandQueue | None = None
 
     @staticmethod
     def from_game(game_entity: Game) -> "RuntimeContext":

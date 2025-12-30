@@ -11,7 +11,6 @@ from .menu import (
     MenuItem,
     MenuModel,
     MenuStyle,
-    MenuSystem,
 )
 from .overlays import BaseOverlay
 
@@ -20,7 +19,6 @@ __all__ = [
     "MenuItem",
     "MenuStyle",
     "MenuModel",
-    "MenuSystem",
     "BaseMenuScene",
     "BaseOverlay",
 ]
