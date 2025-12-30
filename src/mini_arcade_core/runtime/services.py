@@ -145,6 +145,42 @@ class FilePort(Protocol):
         """
 
 
+class CapturePort(Protocol):
+    """Interface for frame capture operations."""
+
+    backend: Backend
+
+    def _bmp_to_image(self, bmp_path: str) -> bytes | None:
+        """
+        Convert a BMP file to PNG bytes using Pillow.
+
+        :param bmp_path: Path to the input BMP file.
+        :type bmp_path: str
+
+        :return: PNG image data as bytes, or None on failure.
+        :rtype: bytes | None
+        """
+
+    def screenshot(self, label: str | None = None) -> bytes | None:
+        """
+        Capture the current frame.
+
+        :param label: Optional label for the screenshot file.
+        :type label: str | None
+
+        :return: Screenshot data as bytes, or None if saving to file.
+        :rtype: bytes | None
+        """
+
+    def screenshot_bytes(self) -> bytes | None:
+        """
+        Capture the current frame and return it as bytes.
+
+        :return: Screenshot data as bytes.
+        :rtype: bytes | None
+        """
+
+
 @dataclass
 class RuntimeServices:
     """
@@ -160,3 +196,4 @@ class RuntimeServices:
     scenes: Optional[ScenePort] = None
     audio: Optional[AudioPort] = None
     files: Optional[FilePort] = None
+    capture: Optional[CapturePort] = None

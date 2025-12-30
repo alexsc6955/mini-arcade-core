@@ -6,6 +6,8 @@ Contains runtime-related classes and functions.
 from __future__ import annotations
 
 from .adapters import (
+    CaptureAdapter,
+    CapturePathBuilder,
     LocalFilesAdapter,
     NullAudioAdapter,
     SceneAdapter,
@@ -13,6 +15,7 @@ from .adapters import (
 )
 from .services import (
     AudioPort,
+    CapturePort,
     FilePort,
     RuntimeServices,
     ScenePort,
@@ -29,4 +32,7 @@ __all__ = [
     "SceneAdapter",
     "NullAudioAdapter",
     "LocalFilesAdapter",
+    "CapturePort",
+    "CaptureAdapter",
+    "CapturePathBuilder",
 ]
