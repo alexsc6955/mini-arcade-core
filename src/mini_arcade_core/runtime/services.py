@@ -53,6 +53,29 @@ class WindowPort(Protocol):
         """
 
 
+@dataclass(frozen=True)
+class ScenePolicy:
+    """
+    Controls how a scene behaves in the scene stack.
+
+    blocks_update: if True, scenes below do not tick/update (pause modal)
+    blocks_input:  if True, scenes below do not receive input
+    is_opaque:     if True, scenes below are not rendered
+    """
+
+    blocks_update: bool = False
+    blocks_input: bool = False
+    is_opaque: bool = False
+
+
+@dataclass(frozen=True)
+class SceneEntry:
+    scene_id: str
+    scene: object
+    is_overlay: bool
+    policy: ScenePolicy
+
+
 class ScenePort(Protocol):
     """Interface for scene management operations."""
 
@@ -110,6 +133,23 @@ class ScenePort(Protocol):
     def quit(self):
         """
         Quit the game
+        """
+
+    def visible_entries(self) -> list[SceneEntry]:
+        """
+        Render from bottom->top unless an opaque entry exists; if so, render only from that entry up.
+        """
+
+    def update_entries(self) -> list[SceneEntry]:
+        """
+        Tick/update scenes considering blocks_update.
+        Typical: pause overlay blocks update below it.
+        """
+
+    def input_entry(self) -> SceneEntry | None:
+        """
+        Who gets input this frame. If top blocks_input, only it receives input.
+        If not, top still gets input (v1 simple). Later you can allow fall-through.
         """
 
 

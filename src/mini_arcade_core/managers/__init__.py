@@ -5,7 +5,7 @@ Provides various manager classes for handling game entities and resources.
 
 from __future__ import annotations
 
-from .cheats import BaseCheatCommand, CheatCode, CheatManager
+from .cheats import CheatCode, CheatManager
 from .entities import EntityManager
 from .inputs import InputManager
 from .overlays import OverlayManager
@@ -16,7 +16,6 @@ __all__ = [
     "OverlayManager",
     "CheatCode",
     "CheatManager",
-    "BaseCheatCommand",
     "InputManager",
     "SystemManager",
 ]

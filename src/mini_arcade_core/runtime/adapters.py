@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 from venv import logger
 
 from PIL import Image
@@ -20,6 +20,8 @@ from mini_arcade_core.runtime.services import (
     CapturePort,
     FilePort,
     InputPort,
+    SceneEntry,
+    ScenePolicy,
     ScenePort,
     WindowPort,
 )
@@ -31,9 +33,8 @@ if TYPE_CHECKING:  # avoid runtime circular import
 
 
 @dataclass
-class _StackEntry:
-    scene: "Scene"
-    as_overlay: bool = False
+class _StackItem:
+    entry: SceneEntry
 
 
 class WindowAdapter(WindowPort):
@@ -60,75 +61,81 @@ class SceneAdapter(ScenePort):
     """
 
     def __init__(self, registry: SceneRegistry, game: Game):
-        self.registry = registry
-        self._scene_stack: list[_StackEntry] = []
-        self.game = game
+        self._registry = registry
+        self._stack: List[_StackItem] = []
+        self._game = game
 
     @property
     def current_scene(self) -> "Scene | None":
-        return self._scene_stack[-1].scene if self._scene_stack else None
+        return self._stack[-1].entry.scene if self._stack else None
 
     @property
     def visible_stack(self) -> list["Scene"]:
-        if not self._scene_stack:
-            return []
-
-        # find top-most base scene (as_overlay=False)
-        base_idx = 0
-        for i in range(len(self._scene_stack) - 1, -1, -1):
-            if not self._scene_stack[i].as_overlay:
-                base_idx = i
-                break
-
-        return [e.scene for e in self._scene_stack[base_idx:]]
+        return [e.scene for e in self.visible_entries()]
 
     def change(self, scene_id: str):
-        scene = self._resolve_scene(scene_id)
+        self.clean()
+        self.push(scene_id, as_overlay=False)
 
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
-
-        self._scene_stack.append(_StackEntry(scene=scene, as_overlay=False))
+    def push(
+        self,
+        scene_id: str,
+        *,
+        as_overlay: bool = False,
+        policy: ScenePolicy | None = None,
+    ):
+        # default policy based on overlay vs base
+        if policy is None:
+            # base scenes: do not block anything by default
+            policy = ScenePolicy()
+        scene = self._registry.create(
+            scene_id, self._game
+        )  # or whatever your factory call is
         scene.on_enter()
 
-    def push(self, scene_id: str, *, as_overlay: bool = False):
-        scene = self._resolve_scene(scene_id)
-
-        top = self.current_scene
-        if top is not None:
-            top.on_pause()
-
-        self._scene_stack.append(
-            _StackEntry(scene=scene, as_overlay=as_overlay)
+        entry = SceneEntry(
+            scene_id=scene_id,
+            scene=scene,
+            is_overlay=as_overlay,
+            policy=policy,
         )
-        scene.on_enter()
+        self._stack.append(_StackItem(entry=entry))
 
-    def pop(self) -> "Scene | None":
-        if not self._scene_stack:
-            return None
-
-        popped = self._scene_stack.pop()
-        popped.scene.on_exit()
-
-        top = self.current_scene
-        if top is None:
-            self.game.quit()
-            return popped.scene
-
-        top.on_resume()
-        return popped.scene
+    def pop(self):
+        if not self._stack:
+            return
+        item = self._stack.pop()
+        item.entry.scene.on_exit()
 
     def clean(self):
-        while self._scene_stack:
-            entry = self._scene_stack.pop()
-            entry.scene.on_exit()
+        while self._stack:
+            self.pop()
 
     def quit(self):
-        self.game.quit()
+        self._game.quit()
 
-    def _resolve_scene(self, scene_id: str) -> "Scene":
-        return self.registry.create(scene_id, self.game)
+    def visible_entries(self) -> list[SceneEntry]:
+        entries = [i.entry for i in self._stack]
+        # find highest opaque from top down; render starting there
+        for idx in range(len(entries) - 1, -1, -1):
+            if entries[idx].policy.is_opaque:
+                return entries[idx:]
+        return entries
+
+    def update_entries(self) -> list[SceneEntry]:
+        vis = self.visible_entries()
+        if not vis:
+            return []
+        out: list[SceneEntry] = []
+        for entry in reversed(vis):  # top->down
+            out.append(entry)
+            if entry.policy.blocks_update:
+                break
+        return list(reversed(out))  # bottom->top order
+
+    def input_entry(self) -> SceneEntry | None:
+        vis = self.visible_entries()
+        return vis[-1] if vis else None
 
 
 class NullAudioAdapter(AudioPort):

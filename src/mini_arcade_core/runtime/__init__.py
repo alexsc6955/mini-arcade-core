@@ -20,6 +20,8 @@ from .services import (
     FilePort,
     InputPort,
     RuntimeServices,
+    SceneEntry,
+    ScenePolicy,
     ScenePort,
     WindowPort,
 )
@@ -40,4 +42,6 @@ __all__ = [
     "InputFrame",
     "ButtonState",
     "InputPort",
+    "SceneEntry",
+    "ScenePolicy",
 ]

@@ -10,6 +10,7 @@ from typing import Literal
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.commands import CommandQueue, QuitCommand
+from mini_arcade_core.managers.cheats import CheatManager
 from mini_arcade_core.runtime.adapters import (
     CaptureAdapter,
     InputAdapter,
@@ -103,6 +104,7 @@ class Game:
         )
 
         self._commands = CommandQueue()
+        self.cheats = CheatManager()
 
     def quit(self):
         """Request that the main loop stops."""
