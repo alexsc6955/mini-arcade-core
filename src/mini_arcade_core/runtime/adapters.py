@@ -186,7 +186,7 @@ class CaptureAdapter(CapturePort):
         self.backend = backend
         self.path_builder = path_builder or CapturePathBuilder()
 
-    def _bmp_to_image(self, bmp_path: str, out_path: str) -> None:
+    def _bmp_to_image(self, bmp_path: str, out_path: str):
         img = Image.open(bmp_path)
         img.save(out_path)
 

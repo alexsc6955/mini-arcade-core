@@ -150,12 +150,15 @@ class CapturePort(Protocol):
 
     backend: Backend
 
-    def _bmp_to_image(self, bmp_path: str) -> bytes | None:
+    def _bmp_to_image(self, bmp_path: str, out_path: str) -> bytes | None:
         """
         Convert a BMP file to PNG bytes using Pillow.
 
         :param bmp_path: Path to the input BMP file.
         :type bmp_path: str
+
+        :param out_path: Path to the output PNG file.
+        :type out_path: str
 
         :return: PNG image data as bytes, or None on failure.
         :rtype: bytes | None
