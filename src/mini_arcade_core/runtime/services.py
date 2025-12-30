@@ -7,7 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Protocol
 
-from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend import Backend, Event
+from mini_arcade_core.runtime.input_frame import InputFrame
 
 if TYPE_CHECKING:
     from mini_arcade_core.scenes.scene import Scene
@@ -184,6 +185,29 @@ class CapturePort(Protocol):
         """
 
 
+class InputPort(Protocol):
+    """Interface for input handling operations."""
+
+    def build(
+        self, events: list[Event], frame_index: int, dt: float
+    ) -> InputFrame:
+        """
+        Build an InputFrame from the given events.
+
+        :param events: List of input events.
+        :type events: list[Event]
+
+        :param frame_index: Current frame index.
+        :type frame_index: int
+
+        :param dt: Delta time since last frame.
+        :type dt: float
+
+        :return: Constructed InputFrame.
+        :rtype: InputFrame
+        """
+
+
 @dataclass
 class RuntimeServices:
     """
@@ -200,3 +224,4 @@ class RuntimeServices:
     audio: Optional[AudioPort] = None
     files: Optional[FilePort] = None
     capture: Optional[CapturePort] = None
+    input: Optional[InputPort] = None

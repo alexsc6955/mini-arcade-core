@@ -11,6 +11,7 @@ from typing import Literal
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.runtime.adapters import (
     CaptureAdapter,
+    InputAdapter,
     LocalFilesAdapter,
     NullAudioAdapter,
     SceneAdapter,
@@ -97,6 +98,7 @@ class Game:
             audio=NullAudioAdapter(),
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
+            input=InputAdapter(),
         )
 
     def quit(self):
@@ -128,6 +130,8 @@ class Game:
         target_dt = 1.0 / self.config.fps if self.config.fps > 0 else 0.0
         last_time = perf_counter()
 
+        frame_index = 0
+
         while self._running:
             now = perf_counter()
             dt = now - last_time
@@ -137,7 +141,14 @@ class Game:
             if top is None:
                 break
 
-            for ev in backend.poll_events():
+            events = list(backend.poll_events())
+            input_frame = self.services.input.build(events, frame_index, dt)
+
+            if input_frame.quit:
+                self.quit()
+                break
+
+            for ev in events:
                 top.handle_event(ev)
 
             top.update(dt)
@@ -149,6 +160,8 @@ class Game:
 
             if target_dt > 0 and dt < target_dt:
                 sleep(target_dt - dt)
+
+            frame_index += 1
 
         # exit remaining scenes
         self.services.scenes.clean()
