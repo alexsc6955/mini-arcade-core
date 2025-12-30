@@ -14,6 +14,7 @@ from PIL import Image
 
 from mini_arcade_core.backend import Backend, Event, EventType
 from mini_arcade_core.keymaps import Key
+from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.runtime.services import (
     AudioPort,
@@ -29,7 +30,7 @@ from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:  # avoid runtime circular import
     from mini_arcade_core.game import Game
-    from mini_arcade_core.scenes import Scene
+    from mini_arcade_core.sim.protocols import SimScene
 
 
 @dataclass
@@ -66,11 +67,11 @@ class SceneAdapter(ScenePort):
         self._game = game
 
     @property
-    def current_scene(self) -> "Scene | None":
+    def current_scene(self) -> "SimScene | None":
         return self._stack[-1].entry.scene if self._stack else None
 
     @property
-    def visible_stack(self) -> list["Scene"]:
+    def visible_stack(self) -> list["SimScene"]:
         return [e.scene for e in self.visible_entries()]
 
     def change(self, scene_id: str):
@@ -88,8 +89,9 @@ class SceneAdapter(ScenePort):
         if policy is None:
             # base scenes: do not block anything by default
             policy = ScenePolicy()
+        runtime_context = RuntimeContext.from_game(self._game)
         scene = self._registry.create(
-            scene_id, self._game
+            scene_id, runtime_context
         )  # or whatever your factory call is
         scene.on_enter()
 
@@ -187,6 +189,16 @@ class CapturePathBuilder:
         name = f"{self.prefix}{stamp}_{safe_label}.{self.ext}"
         return Path(self.directory) / name
 
+    def build_sim(self, run_id: str, frame_index: int, label: str) -> Path:
+        safe_label = "".join(
+            c if c.isalnum() or c in ("-", "_") else "_" for c in label
+        )
+        # deterministic: run_id + frame index
+        name = (
+            f"{self.prefix}{run_id}_f{frame_index:08d}_{safe_label}.{self.ext}"
+        )
+        return Path(self.directory) / run_id / name
+
 
 class CaptureAdapter(CapturePort):
     """Adapter for capturing frames."""
@@ -231,6 +243,27 @@ class CaptureAdapter(CapturePort):
         if data is None:
             raise RuntimeError("Backend returned None for screenshot_bytes()")
         return data
+
+    def screenshot_sim(
+        self, run_id: str, frame_index: int, label: str = "frame"
+    ) -> str:
+        out_path = self.path_builder.build_sim(run_id, frame_index, label)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        bmp_path = out_path.with_suffix(".bmp")
+        self.backend.capture_frame(str(bmp_path))
+
+        if not bmp_path.exists():
+            raise RuntimeError("Backend capture_frame did not create BMP file")
+
+        self._bmp_to_image(str(bmp_path), str(out_path))
+
+        try:
+            bmp_path.unlink(missing_ok=True)
+        except Exception:
+            logger.warning(f"Failed to delete temporary BMP file: {bmp_path}")
+
+        return str(out_path)
 
 
 @dataclass

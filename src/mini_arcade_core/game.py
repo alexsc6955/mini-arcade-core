@@ -11,6 +11,7 @@ from typing import Literal
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.commands import CommandQueue, QuitCommand
 from mini_arcade_core.managers.cheats import CheatManager
+from mini_arcade_core.render.pipeline import RenderPipeline
 from mini_arcade_core.runtime.adapters import (
     CaptureAdapter,
     InputAdapter,
@@ -19,8 +20,11 @@ from mini_arcade_core.runtime.adapters import (
     SceneAdapter,
     WindowAdapter,
 )
+from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.runtime.services import RuntimeServices
 from mini_arcade_core.scenes.registry import SceneRegistry
+from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
+from mini_arcade_core.view.render_packet import RenderPacket
 
 
 @dataclass
@@ -65,6 +69,10 @@ class GameSettings:
     """
 
     difficulty: Difficulty = "normal"
+
+
+def _neutral_input(frame_index: int, dt: float) -> InputFrame:
+    return InputFrame(frame_index=frame_index, dt=dt)
 
 
 class Game:
@@ -121,6 +129,10 @@ class Game:
         :type initial_scene_id: str
         """
         backend = self.backend
+
+        if self.config.window is None:
+            raise ValueError("GameConfig.window must be set")
+
         self.services.window.set_window_size(
             self.config.window.width, self.config.window.height
         )
@@ -131,20 +143,20 @@ class Game:
 
         self.services.scenes.change(initial_scene_id)
 
+        pipeline = RenderPipeline()
+
         self._running = True
         target_dt = 1.0 / self.config.fps if self.config.fps > 0 else 0.0
         last_time = perf_counter()
-
         frame_index = 0
+
+        # cache packets so blocked-update scenes still render their last frame
+        packet_cache: dict[int, RenderPacket] = {}
 
         while self._running:
             now = perf_counter()
             dt = now - last_time
             last_time = now
-
-            top = self.services.scenes.current_scene
-            if top is None:
-                break
 
             events = list(backend.poll_events())
             input_frame = self.services.input.build(events, frame_index, dt)
@@ -154,14 +166,33 @@ class Game:
                 self._commands.push(QuitCommand())
                 break
 
-            for ev in events:
-                top.handle_event(ev)
+            # who gets input?
+            input_entry = self.services.scenes.input_entry()
+            if input_entry is None:
+                break
 
-            top.update(dt)
+            # tick policy-aware scenes
+            for entry in self.services.scenes.update_entries():
+                scene = entry.scene
+                effective_input = (
+                    input_frame
+                    if entry is input_entry
+                    else _neutral_input(frame_index, dt)
+                )
+
+                packet = scene.tick(effective_input, dt)
+                packet_cache[id(scene)] = packet
 
             backend.begin_frame()
-            for scene in self.services.scenes.visible_stack:
-                scene.draw(backend)
+            for entry in self.services.scenes.visible_entries():
+                scene = entry.scene
+                packet = packet_cache.get(id(scene))
+                if packet is None:
+                    # bootstrap (first frame visible but not updated)
+                    packet = scene.tick(_neutral_input(frame_index, 0.0), 0.0)
+                    packet_cache[id(scene)] = packet
+
+                pipeline.draw_packet(backend, packet)
             backend.end_frame()
 
             # Execute commands at the end of the frame (consistent write path)
@@ -175,3 +206,36 @@ class Game:
 
         # exit remaining scenes
         self.services.scenes.clean()
+
+    def run_sim(
+        self,
+        initial_scene_id: str,
+        *,
+        cfg: SimRunnerConfig | None = None,
+    ) -> None:
+        """
+        Run the simulation-first loop using the already configured backend + services.
+
+        This keeps Game as the composition root. No duplicate setup elsewhere.
+        """
+        backend = self.backend
+
+        # reuse window setup from classic run (same behavior)
+        if self.config.window is None:
+            raise ValueError("GameConfig.window must be set")
+
+        self.services.window.set_window_size(
+            self.config.window.width, self.config.window.height
+        )
+        self.services.window.set_title(self.config.window.title)
+
+        br, bg, bb = self.config.window.background_color
+        self.services.window.set_clear_color(br, bg, bb)
+
+        # run the sim loop
+        runner = SimRunner(
+            backend=backend,
+            services=self.services,
+            render_pipeline=RenderPipeline(),
+        )
+        runner.run(initial_scene_id, cfg=cfg)

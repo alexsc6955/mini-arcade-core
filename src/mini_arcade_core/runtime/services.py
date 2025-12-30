@@ -11,6 +11,7 @@ from mini_arcade_core.backend import Backend, Event
 from mini_arcade_core.runtime.input_frame import InputFrame
 
 if TYPE_CHECKING:
+    from mini_arcade_core.sim.protocols import SimScene
     from mini_arcade_core.scenes.scene import Scene
 
 
@@ -71,7 +72,7 @@ class ScenePolicy:
 @dataclass(frozen=True)
 class SceneEntry:
     scene_id: str
-    scene: object
+    scene: SimScene
     is_overlay: bool
     policy: ScenePolicy
 

@@ -199,5 +199,4 @@ Temporary Items
 # While developing
 sim_runner.py
 sim_scene.py
-sim/
 view/

@@ -1,5 +1,5 @@
 """
-Scene registry for mini arcade core.
+SimScene registry for mini arcade core.
 Allows registering and creating scenes by string IDs.
 """
 
@@ -10,11 +10,12 @@ import pkgutil
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Protocol
 
+from mini_arcade_core.runtime.context import RuntimeContext
+
 from .autoreg import snapshot
 
 if TYPE_CHECKING:
-    from mini_arcade_core.game import Game
-    from mini_arcade_core.scenes import Scene
+    from mini_arcade_core.sim import SimScene
 
 
 class SceneFactory(Protocol):
@@ -22,7 +23,7 @@ class SceneFactory(Protocol):
     Protocol for scene factory callables.
     """
 
-    def __call__(self, game: "Game") -> "Scene": ...
+    def __call__(self, context: RuntimeContext) -> "SimScene": ...
 
 
 @dataclass
@@ -40,28 +41,28 @@ class SceneRegistry:
         :param scene_id: The string ID for the scene.
         :type scene_id: str
 
-        :param factory: A callable that creates a Scene instance.
+        :param factory: A callable that creates a SimScene instance.
         :type factory: SceneFactory
         """
         self._factories[scene_id] = factory
 
-    def register_cls(self, scene_id: str, scene_cls: type["Scene"]):
+    def register_cls(self, scene_id: str, scene_cls: type["SimScene"]):
         """
-        Register a Scene class under a given scene ID.
+        Register a SimScene class under a given scene ID.
 
         :param scene_id: The string ID for the scene.
         :type scene_id: str
 
-        :param scene_cls: The Scene class to register.
-        :type scene_cls: type["Scene"]
+        :param scene_cls: The SimScene class to register.
+        :type scene_cls: type["SimScene"]
         """
 
-        def return_factory(game: "Game") -> "Scene":
-            return scene_cls(game)
+        def return_factory(context: RuntimeContext) -> "SimScene":
+            return scene_cls(context)
 
         self.register(scene_id, return_factory)
 
-    def create(self, scene_id: str, game: "Game") -> "Scene":
+    def create(self, scene_id: str, context: RuntimeContext) -> "SimScene":
         """
         Create a scene instance using the registered factory for the given scene ID.
 
@@ -71,22 +72,22 @@ class SceneRegistry:
         :param game: The Game instance to pass to the scene factory.
         :type game: Game
 
-        :return: A new Scene instance.
-        :rtype: Scene
+        :return: A new SimScene instance.
+        :rtype: SimScene
 
         :raises KeyError: If no factory is registered for the given scene ID.
         """
         try:
-            return self._factories[scene_id](game)
+            return self._factories[scene_id](context)
         except KeyError as e:
             raise KeyError(f"Unknown scene_id={scene_id!r}") from e
 
-    def load_catalog(self, catalog: Dict[str, type["Scene"]]):
+    def load_catalog(self, catalog: Dict[str, type["SimScene"]]):
         """
-        Load a catalog of Scene classes into the registry.
+        Load a catalog of SimScene classes into the registry.
 
-        :param catalog: A dictionary mapping scene IDs to Scene classes.
-        :type catalog: Dict[str, type["Scene"]]
+        :param catalog: A dictionary mapping scene IDs to SimScene classes.
+        :type catalog: Dict[str, type["SimScene"]]
         """
         for scene_id, cls in catalog.items():
             self.register_cls(scene_id, cls)
@@ -108,5 +109,7 @@ class SceneRegistry:
         for mod in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + "."):
             importlib.import_module(mod.name)
 
+        self.load_catalog(snapshot())
+        return self
         self.load_catalog(snapshot())
         return self

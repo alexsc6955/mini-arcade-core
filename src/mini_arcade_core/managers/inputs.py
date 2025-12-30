@@ -9,10 +9,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 from mini_arcade_core.backend import Event, EventType
-from mini_arcade_core.commands import BaseCommand, BaseSceneCommand
 from mini_arcade_core.keymaps import Key
 
 if TYPE_CHECKING:
+    from mini_arcade_core.commands import BaseCommand, BaseSceneCommand
     from mini_arcade_core.scenes.scene import Scene
 
 logger = logging.getLogger(__name__)
