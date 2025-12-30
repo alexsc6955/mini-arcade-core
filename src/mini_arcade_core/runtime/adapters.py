@@ -124,6 +124,9 @@ class SceneAdapter(ScenePort):
             entry = self._scene_stack.pop()
             entry.scene.on_exit()
 
+    def quit(self):
+        self.game.quit()
+
     def _resolve_scene(self, scene_id: str) -> "Scene":
         return self.registry.create(scene_id, self.game)
 

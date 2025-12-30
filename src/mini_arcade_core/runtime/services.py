@@ -107,6 +107,11 @@ class ScenePort(Protocol):
         Clean up all scenes from the scene stack.
         """
 
+    def quit(self):
+        """
+        Quit the game
+        """
+
 
 class AudioPort(Protocol):
     """Interface for audio playback operations."""

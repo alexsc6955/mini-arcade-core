@@ -9,6 +9,7 @@ from time import perf_counter, sleep
 from typing import Literal
 
 from mini_arcade_core.backend import Backend
+from mini_arcade_core.commands import CommandQueue, QuitCommand
 from mini_arcade_core.runtime.adapters import (
     CaptureAdapter,
     InputAdapter,
@@ -101,6 +102,8 @@ class Game:
             input=InputAdapter(),
         )
 
+        self._commands = CommandQueue()
+
     def quit(self):
         """Request that the main loop stops."""
         self._running = False
@@ -144,8 +147,9 @@ class Game:
             events = list(backend.poll_events())
             input_frame = self.services.input.build(events, frame_index, dt)
 
+            # Window/OS quit (close button)
             if input_frame.quit:
-                self.quit()
+                self._commands.push(QuitCommand())
                 break
 
             for ev in events:
@@ -157,6 +161,10 @@ class Game:
             for scene in self.services.scenes.visible_stack:
                 scene.draw(backend)
             backend.end_frame()
+
+            # Execute commands at the end of the frame (consistent write path)
+            for cmd in self._commands.drain():
+                cmd.execute(self.services)
 
             if target_dt > 0 and dt < target_dt:
                 sleep(target_dt - dt)
