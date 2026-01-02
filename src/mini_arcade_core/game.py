@@ -12,18 +12,17 @@ from mini_arcade_core.backend import Backend
 from mini_arcade_core.commands import CommandQueue, QuitCommand
 from mini_arcade_core.managers.cheats import CheatManager
 from mini_arcade_core.render.pipeline import RenderPipeline
-from mini_arcade_core.runtime.adapters import (
-    CaptureAdapter,
-    InputAdapter,
-    LocalFilesAdapter,
-    NullAudioAdapter,
-    SceneAdapter,
-    WindowAdapter,
-)
+from mini_arcade_core.runtime.audio.audio_adapter import NullAudioAdapter
+from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
+from mini_arcade_core.runtime.file.file_adapter import LocalFilesAdapter
+from mini_arcade_core.runtime.input.input_adapter import InputAdapter
 from mini_arcade_core.runtime.input_frame import InputFrame
+from mini_arcade_core.runtime.scene.scene_adapter import SceneAdapter
 from mini_arcade_core.runtime.services import RuntimeServices
+from mini_arcade_core.runtime.window.window_adapter import WindowAdapter
 from mini_arcade_core.scenes.registry import SceneRegistry
-from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
+
+# from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
 from mini_arcade_core.view.render_packet import RenderPacket
 
 
@@ -109,10 +108,16 @@ class Game:
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
-            commands=CommandQueue(),
+            # commands=CommandQueue(),
         )
 
+        self._commands = CommandQueue()
         self.cheats = CheatManager()
+
+    @property
+    def commands(self) -> CommandQueue:
+        """Access the command queue for this game."""
+        return self._commands
 
     def quit(self):
         """Request that the main loop stops."""
@@ -157,7 +162,7 @@ class Game:
 
             # Window/OS quit (close button)
             if input_frame.quit:
-                self.services.commands.push(QuitCommand())
+                self._commands.push(QuitCommand())
 
             # who gets input?
             input_entry = self.services.scenes.input_entry()
@@ -177,7 +182,7 @@ class Game:
                 packet_cache[id(scene)] = packet
 
             # Execute commands at the end of the frame (consistent write path)
-            for cmd in self.services.commands.drain():
+            for cmd in self._commands.drain():
                 cmd.execute(self.services, settings=self.settings)
 
             backend.begin_frame()

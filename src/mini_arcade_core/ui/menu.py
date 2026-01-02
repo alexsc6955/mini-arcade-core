@@ -630,7 +630,7 @@ class BaseMenuScene(SimScene):
         self.menu.items = self._build_display_items()
         self.menu.selected_index = self.model.selected
 
-        queue: CommandQueue = self.context.services.commands
+        queue: CommandQueue = self.context.commands
 
         # Navigation becomes commands
         if Key.UP in input_frame.keys_pressed:

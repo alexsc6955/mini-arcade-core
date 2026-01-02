@@ -7,7 +7,8 @@ from typing import Dict, Optional
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.render import RenderPacket, RenderPipeline
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.runtime.services import RuntimeServices, SceneEntry
+from mini_arcade_core.runtime.scene.scene_port import SceneEntry
+from mini_arcade_core.runtime.services import RuntimeServices
 
 
 def _neutral_input(frame_index: int, dt: float) -> InputFrame:
