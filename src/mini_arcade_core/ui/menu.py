@@ -8,14 +8,19 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Sequence
 
 from mini_arcade_core.backend import Backend, Color, Event, EventType
-from mini_arcade_core.commands import Command, CommandQueue, QuitCommand
+from mini_arcade_core.commands import (
+    Command,
+    CommandContext,
+    CommandQueue,
+    QuitCommand,
+)
 from mini_arcade_core.keymaps import Key
 from mini_arcade_core.render.packet import RenderPacket
+from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.scenes import SceneModel
 from mini_arcade_core.sim.protocols import SimScene
 from mini_arcade_core.spaces.d2 import Size2D
-from mini_arcade_core.utils import logger
 
 
 @dataclass(frozen=True)
@@ -161,6 +166,21 @@ class Menu:
         self.stable_width = True
 
     # pylint: enable=too-many-arguments
+
+    def set_items(self, items: Sequence[MenuItem]):
+        """Set the menu items.
+        :param items: Sequence of new MenuItem instances.
+        :type items: Sequence[MenuItem]
+        """
+        self.items = list(items)
+
+    def set_selected_index(self, index: int):
+        """Set the selected index of the menu.
+        :param index: New selected index.
+        :type index: int
+        """
+        if 0 <= index < len(self.items):
+            self.selected_index = index
 
     def set_labels(self, labels: Sequence[str]):
         """Set the labels of the menu items.
@@ -507,14 +527,19 @@ class MenuModel(SceneModel):
 
 @dataclass(frozen=True)
 class MenuMoveUpCommand(Command):
+    """
+    Move the menu selection up.
+
+    :ivar menu (Menu): The Menu instance to operate on.
+    :ivar model (MenuModel): The MenuModel instance for cooldown management.
+    """
+
     menu: Menu
     model: MenuModel
 
     def execute(
         self,
-        services: object,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
         if not self.model.can_move():
             return
@@ -525,14 +550,19 @@ class MenuMoveUpCommand(Command):
 
 @dataclass(frozen=True)
 class MenuMoveDownCommand(Command):
+    """
+    Move the menu selection down.
+
+    :ivar menu (Menu): The Menu instance to operate on.
+    :ivar model (MenuModel): The MenuModel instance for cooldown management.
+    """
+
     menu: Menu
     model: MenuModel
 
     def execute(
         self,
-        services: object,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
         if not self.model.can_move():
             return
@@ -543,19 +573,23 @@ class MenuMoveDownCommand(Command):
 
 @dataclass(frozen=True)
 class MenuSelectCommand(Command):
+    """
+    Select the currently highlighted menu item.
+
+    :ivar menu (Menu): The Menu instance to operate on.
+    """
+
     menu: Menu
 
     def execute(
         self,
-        services: object,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
         if not self.menu.items:
             return
         item = self.menu.items[self.menu.selected_index]
         # Push the selected item's command onto the SAME queue
-        services.commands.push(item.command_factory())
+        context.commands.push(item.command_factory())
 
 
 class BaseMenuScene(SimScene):
@@ -567,8 +601,8 @@ class BaseMenuScene(SimScene):
 
     menu: Menu
 
-    def __init__(self, ctx):
-        super().__init__(ctx)
+    def __init__(self, ctx: RuntimeContext, commands: CommandQueue):
+        super().__init__(ctx, commands)
         self.model = MenuModel()
 
     # ---- hooks (same spirit as before) ----
@@ -627,10 +661,10 @@ class BaseMenuScene(SimScene):
 
         self.model.step_timer(dt)
 
-        self.menu.items = self._build_display_items()
-        self.menu.selected_index = self.model.selected
+        self.menu.set_items(self._build_display_items())
+        self.menu.set_selected_index(self.model.selected)
 
-        queue: CommandQueue = self.context.commands
+        queue: CommandQueue = self.commands
 
         # Navigation becomes commands
         if Key.UP in input_frame.keys_pressed:
@@ -647,7 +681,9 @@ class BaseMenuScene(SimScene):
 
         # Quit stays a command too
         if Key.ESCAPE in input_frame.keys_pressed:
-            queue.push(self.quit_command())
+            quit_cmd = self.quit_command()
+            if quit_cmd is not None:
+                queue.push(quit_cmd)
 
         # Rendering still uses Menu.draw
         return RenderPacket.from_ops([self.menu.draw])

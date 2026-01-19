@@ -9,7 +9,7 @@ from time import perf_counter, sleep
 from typing import Literal
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.commands import CommandQueue, QuitCommand
+from mini_arcade_core.commands import CommandContext, CommandQueue, QuitCommand
 from mini_arcade_core.managers.cheats import CheatManager
 from mini_arcade_core.render.pipeline import RenderPipeline
 from mini_arcade_core.runtime.audio.audio_adapter import NullAudioAdapter
@@ -30,6 +30,11 @@ from mini_arcade_core.view.render_packet import RenderPacket
 class WindowConfig:
     """
     Configuration for a game window (not implemented).
+
+    :ivar width (int): Width of the window in pixels.
+    :ivar height (int): Height of the window in pixels.
+    :ivar background_color (tuple[int, int, int]): RGB background color.
+    :ivar title (str): Title of the window.
     """
 
     width: int
@@ -43,12 +48,9 @@ class GameConfig:
     """
     Configuration options for the Game.
 
-    :ivar width: Width of the game window in pixels.
-    :ivar height: Height of the game window in pixels.
-    :ivar title: Title of the game window.
-    :ivar fps: Target frames per second.
-    :ivar background_color: RGB background color.
-    :ivar backend: Optional Backend instance to use for rendering and input.
+    :ivar window (WindowConfig | None): Optional window configuration.
+    :ivar fps (int): Target frames per second.
+    :ivar backend (Backend | None): Optional Backend instance to use for rendering and input.
     """
 
     window: WindowConfig | None = None
@@ -64,13 +66,14 @@ class GameSettings:
     """
     Game settings that can be modified during gameplay.
 
-    :ivar difficulty: Current game difficulty level.
+    :ivar difficulty (Difficulty): Current game difficulty level.
     """
 
     difficulty: Difficulty = "normal"
 
 
 def _neutral_input(frame_index: int, dt: float) -> InputFrame:
+    """Create a neutral InputFrame with no input events."""
     return InputFrame(frame_index=frame_index, dt=dt)
 
 
@@ -96,6 +99,9 @@ class Game:
             raise ValueError(
                 "GameConfig.backend must be set to a Backend instance"
             )
+        if config.window is None:
+            raise ValueError("GameConfig.window must be set")
+
         self.backend: Backend = config.backend
         self.registry = registry or SceneRegistry(_factories={})
         self.settings = GameSettings()
@@ -108,7 +114,6 @@ class Game:
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
-            # commands=CommandQueue(),
         )
 
         self._commands = CommandQueue()
@@ -133,9 +138,6 @@ class Game:
         :param initial_scene_id: The scene id to start the game with (must be registered).
         :type initial_scene_id: str
         """
-
-        if self.config.window is None:
-            raise ValueError("GameConfig.window must be set")
         backend = self.backend
 
         self._initialize_window()
@@ -181,9 +183,16 @@ class Game:
                 packet = scene.tick(effective_input, dt)
                 packet_cache[id(scene)] = packet
 
+            command_context = CommandContext(
+                services=self.services,
+                commands=self._commands,
+                settings=self.settings,
+                world=None,
+            )
+
             # Execute commands at the end of the frame (consistent write path)
             for cmd in self._commands.drain():
-                cmd.execute(self.services, settings=self.settings)
+                cmd.execute(command_context)
 
             backend.begin_frame()
             for entry in self.services.scenes.visible_entries():
@@ -206,9 +215,7 @@ class Game:
         self.services.scenes.clean()
 
     def _initialize_window(self):
-        if self.config.window is None:
-            raise ValueError("GameConfig.window must be set")
-
+        """Initialize the game window based on the configuration."""
         self.services.window.set_window_size(
             self.config.window.width, self.config.window.height
         )

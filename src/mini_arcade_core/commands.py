@@ -90,6 +90,23 @@ class QuitGameCommand(BaseGameCommand):
         context.quit()
 
 
+@dataclass
+class CommandContext:
+    """
+    Context for command execution.
+
+    :ivar services (RuntimeServices): The runtime services.
+    :ivar commands (CommandQueue | None): Optional command queue.
+    :ivar settings (object | None): Optional settings object.
+    :ivar world (object | None): The world object (can be any type).
+    """
+
+    services: RuntimeServices
+    commands: Optional["CommandQueue"] = None
+    settings: Optional[object] = None
+    world: Optional[object] = None
+
+
 class Command(Protocol):
     """
     A command is the only allowed "write path" from input/systems into:
@@ -103,15 +120,16 @@ class Command(Protocol):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
         """
         Execute the command with the given world and runtime services.
 
         :param services: Runtime services for command execution.
         :type services: RuntimeServices
+
+        :param commands: Optional command queue for command execution.
+        :type commands: object | None
 
         :param settings: Optional settings object for command execution.
         :type settings: object | None
@@ -156,11 +174,9 @@ class QuitCommand(Command):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
-        services.scenes.quit()
+        context.services.scenes.quit()
 
 
 @dataclass(frozen=True)
@@ -175,11 +191,9 @@ class ScreenshotCommand(Command):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
-        services.capture.screenshot(label=self.label, mode="manual")
+        context.services.capture.screenshot(label=self.label, mode="manual")
 
 
 @dataclass(frozen=True)
@@ -196,11 +210,9 @@ class PushSceneCommand(Command):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
-        services.scenes.push(self.scene_id, as_overlay=self.as_overlay)
+        context.services.scenes.push(self.scene_id, as_overlay=self.as_overlay)
 
 
 @dataclass(frozen=True)
@@ -209,11 +221,9 @@ class PopSceneCommand(Command):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
-        services.scenes.pop()
+        context.services.scenes.pop()
 
 
 @dataclass(frozen=True)
@@ -228,8 +238,6 @@ class ChangeSceneCommand(Command):
 
     def execute(
         self,
-        services: RuntimeServices,
-        settings: Optional[object] = None,
-        world: Optional[object] = None,
+        context: CommandContext,
     ) -> None:
-        services.scenes.change(self.scene_id)
+        context.services.scenes.change(self.scene_id)

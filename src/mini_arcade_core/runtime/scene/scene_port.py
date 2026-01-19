@@ -123,17 +123,27 @@ class ScenePort:
 
     def visible_entries(self) -> list[SceneEntry]:
         """
-        Render from bottom->top unless an opaque entry exists; if so, render only from that entry up.
+        Render from bottom->top unless an opaque entry exists; if so,
+            render only from that entry up.
+
+        :return: List of SceneEntry instances to render.
+        :rtype: list[SceneEntry]
         """
 
     def update_entries(self) -> list[SceneEntry]:
         """
         Tick/update scenes considering blocks_update.
         Typical: pause overlay blocks update below it.
+
+        :return: List of SceneEntry instances to update.
+        :rtype: list[SceneEntry]
         """
 
     def input_entry(self) -> SceneEntry | None:
         """
         Who gets input this frame. If top blocks_input, only it receives input.
         If not, top still gets input (v1 simple). Later you can allow fall-through.
+
+        :return: The SceneEntry that receives input, or None if no scenes are active.
+        :rtype: SceneEntry | None
         """

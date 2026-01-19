@@ -19,6 +19,7 @@ from mini_arcade_core.commands import (
     BaseCommand,
     BaseGameCommand,
     BaseSceneCommand,
+    CommandContext,
     QuitGameCommand,
 )
 from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
@@ -92,6 +93,7 @@ __all__ = [
     "BaseGameCommand",
     "BaseSceneCommand",
     "QuitGameCommand",
+    "CommandContext",
     "event_bus",
     "run_game",
     "backend",

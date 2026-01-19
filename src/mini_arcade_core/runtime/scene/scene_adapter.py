@@ -48,7 +48,7 @@ class SceneAdapter(ScenePort):
             policy = ScenePolicy()
         runtime_context = RuntimeContext.from_game(self._game)
         scene = self._registry.create(
-            scene_id, runtime_context
+            scene_id, runtime_context, self._game.commands
         )  # or whatever your factory call is
         scene.on_enter()
 
