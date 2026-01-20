@@ -117,7 +117,7 @@ class Game:
         )
 
         self.command_queue = CommandQueue()
-        self.cheats = CheatManager()
+        self.cheat_manager = CheatManager()
 
     def quit(self):
         """Request that the main loop stops."""
@@ -185,7 +185,7 @@ class Game:
                 world=self._resolve_world(),
             )
 
-            self.cheats.process_frame(
+            self.cheat_manager.process_frame(
                 input_frame,
                 context=command_context,
                 queue=self.command_queue,
