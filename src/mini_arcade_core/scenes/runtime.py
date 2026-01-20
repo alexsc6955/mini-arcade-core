@@ -9,7 +9,8 @@ from dataclasses import dataclass, field
 from mini_arcade_core.managers.entities import EntityManager
 from mini_arcade_core.managers.inputs import InputManager
 from mini_arcade_core.managers.overlays import OverlayManager
-from mini_arcade_core.managers.system import SystemManager
+
+# from mini_arcade_core.managers.system import SystemManager
 
 
 @dataclass
@@ -26,4 +27,4 @@ class SceneRuntime:
     input: InputManager = field(default_factory=InputManager)
     entities: EntityManager = field(default_factory=EntityManager)
     overlays: OverlayManager = field(default_factory=OverlayManager)
-    systems: SystemManager = field(default_factory=SystemManager)
+    # systems: SystemManager = field(default_factory=SystemManager)

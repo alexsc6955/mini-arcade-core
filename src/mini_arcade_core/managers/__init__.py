@@ -9,7 +9,8 @@ from .cheats import CheatCode, CheatManager
 from .entities import EntityManager
 from .inputs import InputManager
 from .overlays import OverlayManager
-from .system import SystemManager
+
+# from .system import SystemManager
 
 __all__ = [
     "EntityManager",
@@ -17,5 +18,5 @@ __all__ = [
     "CheatCode",
     "CheatManager",
     "InputManager",
-    "SystemManager",
+    # "SystemManager",
 ]

@@ -5,7 +5,6 @@ from typing import Callable, Iterable, Protocol, runtime_checkable
 
 from mini_arcade_core.backend import Backend
 
-
 DrawOp = Callable[[Backend], None]
 
 
@@ -25,6 +24,15 @@ class RenderPacket:
 
     @staticmethod
     def from_ops(ops: Iterable[DrawOp], **meta: object) -> "RenderPacket":
+        """
+        Create a RenderPacket from an iterable of DrawOps and optional meta.
+
+        :param ops: Iterable of DrawOp callables.
+        :type ops: Iterable[DrawOp]
+
+        :return: RenderPacket instance.
+        :rtype: RenderPacket
+        """
         return RenderPacket(ops=tuple(ops), meta=dict(meta))
 
 

@@ -10,7 +10,6 @@ from .model import SceneModel
 from .registry import SceneRegistry
 from .runtime import SceneRuntime
 from .scene import Scene
-from .system import BaseSceneSystem
 
 __all__ = [
     "Scene",
@@ -18,5 +17,4 @@ __all__ = [
     "SceneRegistry",
     "SceneRuntime",
     "SceneModel",
-    "BaseSceneSystem",
 ]

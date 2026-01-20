@@ -187,7 +187,7 @@ class Game:
                 services=self.services,
                 commands=self._commands,
                 settings=self.settings,
-                world=None,
+                world=self._resolve_world(),
             )
 
             # Execute commands at the end of the frame (consistent write path)
@@ -223,3 +223,13 @@ class Game:
 
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
+
+    def _resolve_world(self) -> object | None:
+        # Prefer gameplay world underneath overlays:
+        # scan from top to bottom and pick the first scene that has .world
+        for entry in reversed(self.services.scenes.visible_entries()):
+            scene = entry.scene
+            world = getattr(scene, "world", None)
+            if world is not None:
+                return world
+        return None

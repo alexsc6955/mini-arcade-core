@@ -19,6 +19,15 @@ class Position2D:
     x: float
     y: float
 
+    def to_tuple(self) -> tuple[float, float]:
+        """
+        Convert Position2D to a tuple.
+
+        :return: Tuple of (x, y).
+        :rtype: tuple[float, float]
+        """
+        return (self.x, self.y)
+
 
 @dataclass
 class Size2D:
@@ -31,6 +40,15 @@ class Size2D:
 
     width: int
     height: int
+
+    def to_tuple(self) -> tuple[int, int]:
+        """
+        Convert Size2D to a tuple.
+
+        :return: Tuple of (width, height).
+        :rtype: tuple[int, int]
+        """
+        return (self.width, self.height)
 
 
 @dataclass

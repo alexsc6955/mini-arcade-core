@@ -4,8 +4,18 @@ Menu system for mini arcade core.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Optional, Sequence
+from dataclasses import dataclass, field
+from typing import (
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    TypeVar,
+    runtime_checkable,
+)
 
 from mini_arcade_core.backend import Backend, Color, Event, EventType
 from mini_arcade_core.commands import (
@@ -21,6 +31,7 @@ from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.scenes import SceneModel
 from mini_arcade_core.sim.protocols import SimScene
 from mini_arcade_core.spaces.d2 import Size2D
+from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 
 
 @dataclass(frozen=True)
@@ -501,7 +512,7 @@ class MenuModel(SceneModel):
     move_cooldown: float = 0.12
     _cooldown_timer: float = 0.0
 
-    def step_timer(self, dt: float) -> None:
+    def step_timer(self, dt: float):
         """
         Step the internal cooldown timer.
 
@@ -520,7 +531,7 @@ class MenuModel(SceneModel):
         """
         return self._cooldown_timer <= 0.0
 
-    def consume_move(self) -> None:
+    def consume_move(self):
         """Consume a move action and reset the cooldown timer."""
         self._cooldown_timer = self.move_cooldown
 
@@ -540,7 +551,7 @@ class MenuMoveUpCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         if not self.model.can_move():
             return
         self.menu.move_up()
@@ -563,7 +574,7 @@ class MenuMoveDownCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         if not self.model.can_move():
             return
         self.menu.move_down()
@@ -584,12 +595,143 @@ class MenuSelectCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         if not self.menu.items:
             return
         item = self.menu.items[self.menu.selected_index]
         # Push the selected item's command onto the SAME queue
         context.commands.push(item.command_factory())
+
+
+@dataclass
+class MenuTickContext:
+    """
+    Context for a single tick of the menu scene.
+
+    :ivar input_frame (InputFrame): The current input frame.
+    :ivar dt (float): Delta time since last tick.
+    :ivar menu (Menu): The Menu instance.
+    :ivar model (MenuModel): The MenuModel instance.
+    :ivar commands (CommandQueue): The command queue for pushing commands.
+    :ivar intent (MenuIntent | None): The current menu intent.
+    :ivar quit_cmd_factory (callable | None): Factory for quit command.
+    :ivar packet (RenderPacket | None): The resulting render packet.
+    """
+
+    input_frame: InputFrame
+    dt: float
+
+    menu: "Menu"
+    model: "MenuModel"
+    commands: CommandQueue
+
+    # computed data that systems can write into
+    intent: "MenuIntent | None" = None
+
+    # scene hook: a callable to produce quit cmd (per scene override)
+    quit_cmd_factory: callable | None = None
+
+    # final output
+    packet: RenderPacket | None = None
+
+
+@dataclass(frozen=True)
+class MenuIntent:
+    """
+    Represents the user's intent in the menu for the current tick.
+
+    :ivar move_up (bool): Whether the user intends to move up.
+    :ivar move_down (bool): Whether the user intends to move down.
+    :ivar select (bool): Whether the user intends to select the current item.
+    :ivar quit (bool): Whether the user intends to quit the menu.
+    """
+
+    move_up: bool = False
+    move_down: bool = False
+    select: bool = False
+    quit: bool = False
+
+
+@dataclass
+class MenuInputSystem:
+    """
+    Converts InputFrame -> MenuIntent.
+    """
+
+    name: str = "menu_input"
+    order: int = 10
+
+    def step(self, ctx: MenuTickContext):
+        """
+        Step the input system to extract menu intent.
+
+        :param ctx: The MenuTickContext for this tick.
+        :type ctx: MenuTickContext
+        """
+        pressed = ctx.input_frame.keys_pressed
+        ctx.intent = MenuIntent(
+            move_up=Key.UP in pressed,
+            move_down=Key.DOWN in pressed,
+            select=(Key.ENTER in pressed) or (Key.SPACE in pressed),
+            quit=Key.ESCAPE in pressed,
+        )
+
+
+@dataclass
+class MenuNavigationSystem:
+
+    name: str = "menu_nav"
+    order: int = 20
+
+    def step(self, ctx: MenuTickContext):
+        intent = ctx.intent
+        if intent is None:
+            return
+
+        ctx.model.step_timer(ctx.dt)
+
+        if not ctx.model.can_move():
+            return
+
+        if intent.move_up:
+            ctx.menu.move_up()
+            ctx.model.selected = ctx.menu.selected_index
+            ctx.model.consume_move()
+            return
+
+        if intent.move_down:
+            ctx.menu.move_down()
+            ctx.model.selected = ctx.menu.selected_index
+            ctx.model.consume_move()
+
+
+@dataclass
+class MenuActionSystem:
+    name: str = "menu_actions"
+    order: int = 30
+
+    def step(self, ctx: MenuTickContext):
+        intent = ctx.intent
+        if intent is None:
+            return
+
+        if intent.select and ctx.menu.items:
+            item = ctx.menu.items[ctx.menu.selected_index]
+            ctx.commands.push(item.command_factory())
+
+        if intent.quit and ctx.quit_cmd_factory is not None:
+            cmd = ctx.quit_cmd_factory()
+            if cmd is not None:
+                ctx.commands.push(cmd)
+
+
+@dataclass
+class MenuRenderSystem:
+    name: str = "menu_render"
+    order: int = 100
+
+    def step(self, ctx: MenuTickContext):
+        ctx.packet = RenderPacket.from_ops([ctx.menu.draw])
 
 
 class BaseMenuScene(SimScene):
@@ -600,6 +742,7 @@ class BaseMenuScene(SimScene):
     """
 
     menu: Menu
+    systems: SystemPipeline[MenuTickContext]
 
     def __init__(self, ctx: RuntimeContext, commands: CommandQueue):
         super().__init__(ctx, commands)
@@ -653,6 +796,15 @@ class BaseMenuScene(SimScene):
             style=self.menu_style(),
         )
         self.menu.selected_index = self.model.selected
+        self.systems = SystemPipeline()
+        self.systems.extend(
+            [
+                MenuInputSystem(),
+                MenuNavigationSystem(),
+                MenuActionSystem(),
+                MenuRenderSystem(),
+            ]
+        )
 
     def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:
         items = self.menu_items()
@@ -664,29 +816,19 @@ class BaseMenuScene(SimScene):
         self.menu.set_items(self._build_display_items())
         self.menu.set_selected_index(self.model.selected)
 
-        queue: CommandQueue = self.commands
+        ctx = MenuTickContext(
+            input_frame=input_frame,
+            dt=dt,
+            menu=self.menu,
+            model=self.model,
+            commands=self.commands,
+            quit_cmd_factory=self.quit_command,
+        )
 
-        # Navigation becomes commands
-        if Key.UP in input_frame.keys_pressed:
-            queue.push(MenuMoveUpCommand(self.menu, self.model))
-        if Key.DOWN in input_frame.keys_pressed:
-            queue.push(MenuMoveDownCommand(self.menu, self.model))
+        self.systems.step(ctx)
 
-        # Select becomes command
-        if (
-            Key.ENTER in input_frame.keys_pressed
-            or Key.SPACE in input_frame.keys_pressed
-        ):
-            queue.push(MenuSelectCommand(self.menu))
-
-        # Quit stays a command too
-        if Key.ESCAPE in input_frame.keys_pressed:
-            quit_cmd = self.quit_command()
-            if quit_cmd is not None:
-                queue.push(quit_cmd)
-
-        # Rendering still uses Menu.draw
-        return RenderPacket.from_ops([self.menu.draw])
+        # always return packet from pipeline
+        return ctx.packet or RenderPacket()
 
     def _build_display_items(self) -> list[MenuItem]:
         """
