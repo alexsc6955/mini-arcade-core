@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from mini_arcade_core.commands import CommandQueue
     from mini_arcade_core.game import Game, GameConfig, GameSettings
+    from mini_arcade_core.managers.cheats import CheatManager
     from mini_arcade_core.runtime.services import RuntimeServices
 
 
@@ -15,6 +16,7 @@ class RuntimeContext:
     config: GameConfig
     settings: GameSettings
     command_queue: CommandQueue | None = None
+    cheats: CheatManager | None = None
 
     @staticmethod
     def from_game(game_entity: Game) -> "RuntimeContext":
@@ -23,4 +25,5 @@ class RuntimeContext:
             config=game_entity.config,
             settings=game_entity.settings,
             command_queue=game_entity.command_queue,
+            cheats=game_entity.cheat_manager,
         )

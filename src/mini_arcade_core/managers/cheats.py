@@ -55,8 +55,8 @@ class CheatManager:
 
     def register(
         self,
-        *,
         name: str,
+        *,
         sequence: Sequence[str],
         command_factory: Callable[[TContext], Command],
         clear_buffer_on_match: bool = False,
