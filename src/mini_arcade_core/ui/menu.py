@@ -29,9 +29,9 @@ from mini_arcade_core.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.scenes import SceneModel
+from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 from mini_arcade_core.sim.protocols import SimScene
 from mini_arcade_core.spaces.d2 import Size2D
-from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 
 
 @dataclass(frozen=True)
@@ -744,8 +744,8 @@ class BaseMenuScene(SimScene):
     menu: Menu
     systems: SystemPipeline[MenuTickContext]
 
-    def __init__(self, ctx: RuntimeContext, commands: CommandQueue):
-        super().__init__(ctx, commands)
+    def __init__(self, ctx: RuntimeContext):
+        super().__init__(ctx)
         self.model = MenuModel()
 
     # ---- hooks (same spirit as before) ----
@@ -821,7 +821,7 @@ class BaseMenuScene(SimScene):
             dt=dt,
             menu=self.menu,
             model=self.model,
-            commands=self.commands,
+            commands=self.context.command_queue,
             quit_cmd_factory=self.quit_command,
         )
 

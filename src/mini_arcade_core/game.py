@@ -116,13 +116,8 @@ class Game:
             input=InputAdapter(),
         )
 
-        self._commands = CommandQueue()
+        self.command_queue = CommandQueue()
         self.cheats = CheatManager()
-
-    @property
-    def commands(self) -> CommandQueue:
-        """Access the command queue for this game."""
-        return self._commands
 
     def quit(self):
         """Request that the main loop stops."""
@@ -164,7 +159,7 @@ class Game:
 
             # Window/OS quit (close button)
             if input_frame.quit:
-                self._commands.push(QuitCommand())
+                self.command_queue.push(QuitCommand())
 
             # who gets input?
             input_entry = self.services.scenes.input_entry()
@@ -185,13 +180,19 @@ class Game:
 
             command_context = CommandContext(
                 services=self.services,
-                commands=self._commands,
+                commands=self.command_queue,
                 settings=self.settings,
                 world=self._resolve_world(),
             )
 
+            self.cheats.process_frame(
+                input_frame,
+                context=command_context,
+                queue=self.command_queue,
+            )
+
             # Execute commands at the end of the frame (consistent write path)
-            for cmd in self._commands.drain():
+            for cmd in self.command_queue.drain():
                 cmd.execute(command_context)
 
             backend.begin_frame()

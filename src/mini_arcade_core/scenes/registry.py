@@ -24,9 +24,7 @@ class SceneFactory(Protocol):
     Protocol for scene factory callables.
     """
 
-    def __call__(
-        self, context: RuntimeContext, commands: CommandQueue
-    ) -> "SimScene": ...
+    def __call__(self, context: RuntimeContext) -> "SimScene": ...
 
 
 @dataclass
@@ -60,16 +58,12 @@ class SceneRegistry:
         :type scene_cls: type["SimScene"]
         """
 
-        def return_factory(
-            context: RuntimeContext, commands: CommandQueue
-        ) -> "SimScene":
-            return scene_cls(context, commands)
+        def return_factory(context: RuntimeContext) -> "SimScene":
+            return scene_cls(context)
 
         self.register(scene_id, return_factory)
 
-    def create(
-        self, scene_id: str, context: RuntimeContext, commands: CommandQueue
-    ) -> "SimScene":
+    def create(self, scene_id: str, context: RuntimeContext) -> "SimScene":
         """
         Create a scene instance using the registered factory for the given scene ID.
 
@@ -79,16 +73,13 @@ class SceneRegistry:
         :param game: The Game instance to pass to the scene factory.
         :type game: Game
 
-        :commands: The CommandQueue for the game.
-        :type commands: CommandQueue
-
         :return: A new SimScene instance.
         :rtype: SimScene
 
         :raises KeyError: If no factory is registered for the given scene ID.
         """
         try:
-            return self._factories[scene_id](context, commands)
+            return self._factories[scene_id](context)
         except KeyError as e:
             raise KeyError(f"Unknown scene_id={scene_id!r}") from e
 

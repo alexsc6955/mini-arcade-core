@@ -14,7 +14,7 @@ class RuntimeContext:
     services: RuntimeServices
     config: GameConfig
     settings: GameSettings
-    commands: CommandQueue | None = None
+    command_queue: CommandQueue | None = None
 
     @staticmethod
     def from_game(game_entity: Game) -> "RuntimeContext":
@@ -22,4 +22,5 @@ class RuntimeContext:
             services=game_entity.services,
             config=game_entity.config,
             settings=game_entity.settings,
+            command_queue=game_entity.command_queue,
         )
