@@ -1,3 +1,8 @@
+"""
+Simulation scene protocol module.
+Defines the SimScene protocol for simulation scenes.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,10 +22,10 @@ class SimScene:
 
     context: RuntimeContext
 
-    def on_enter(self) -> None:
+    def on_enter(self):
         """Called when the scene is entered."""
 
-    def on_exit(self) -> None:
+    def on_exit(self):
         """Called when the scene is exited."""
 
     def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:

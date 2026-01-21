@@ -3,6 +3,8 @@ Input manager for handling input bindings and commands.
 """
 
 # TODO: Implement this manager into the new input system
+# Justification: These module will be used later.
+# pylint: disable=no-name-in-module,import-error,used-before-assignment
 
 from __future__ import annotations
 

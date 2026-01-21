@@ -1,3 +1,8 @@
+"""
+Simulation runner module.
+Defines the SimRunner class for running simulation scenes.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -86,12 +91,29 @@ class SimRunner:
 
         self._running: bool = False
 
-    def stop(self) -> None:
+    def stop(self):
+        """
+        Stop the simulation loop.
+        """
         self._running = False
 
+    # TODO: Solve too-many-statements, too-many-branches and too-many-locals
+    # warning later
+    # Justification: The run method orchestrates multiple complex steps in the
+    # simulation loop.
+    # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     def run(
         self, initial_scene_id: str, *, cfg: Optional[SimRunnerConfig] = None
-    ) -> None:
+    ):
+        """
+        Run the simulation loop starting from the initial scene.
+
+        :param initial_scene_id: ID of the initial scene to load.
+        :type initial_scene_id: str
+
+        :param cfg: Optional SimRunnerConfig instance.
+        :type cfg: Optional[SimRunnerConfig]
+        """
         cfg = cfg or SimRunnerConfig()
 
         scenes = self.services.scenes
@@ -152,7 +174,8 @@ class SimRunner:
                     packet = scene_obj.tick(effective_input, dt)  # SimScene
                     if not isinstance(packet, RenderPacket):
                         raise TypeError(
-                            f"{entry.scene_id}.tick() must return RenderPacket, got {type(packet)!r}"
+                            f"{entry.scene_id}.tick() must "
+                            f"return RenderPacket, got {type(packet)!r}"
                         )
                     self._packets[scene_key] = packet
                 elif _has_update(scene_obj):

@@ -49,10 +49,13 @@ class CheatManager:
     _buffer: Deque[str] = field(default_factory=lambda: deque(maxlen=16))
     _codes: Dict[str, CheatCode[TContext]] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self):
         # ensure deque maxlen matches buffer_size
         self._buffer = deque(maxlen=self.buffer_size)
 
+    # TODO: ISolve too-many-arguments warning later
+    # Justification: The method needs multiple optional parameters for flexibility.
+    # pylint: disable=too-many-arguments
     def register(
         self,
         name: str,
@@ -61,7 +64,27 @@ class CheatManager:
         command_factory: Callable[[TContext], Command],
         clear_buffer_on_match: bool = False,
         enabled: bool = True,
-    ) -> None:
+    ):
+        """
+        Register a new cheat code.
+
+        :param name: Unique name of the cheat code.
+        :type name: str
+
+        :param sequence: Sequence of key strings that trigger the cheat.
+        :type sequence: Sequence[str]
+
+        :param command_factory: Factory function to create the Command when the cheat is activated.
+        :type command_factory: Callable[[TContext], Command]
+
+        :param clear_buffer_on_match: Whether to clear the input buffer after a match.
+        :type clear_buffer_on_match: bool
+
+        :param enabled: Whether the cheat code is enabled.
+        :type enabled: bool
+
+        :raises ValueError: If name is empty or sequence is empty.
+        """
         if not name:
             raise ValueError("Cheat name must be non-empty.")
         if not sequence:
@@ -76,6 +99,8 @@ class CheatManager:
             enabled=enabled,
         )
 
+    # pylint: enable=too-many-arguments
+
     def process_frame(
         self,
         input_frame: InputFrame,
@@ -83,6 +108,21 @@ class CheatManager:
         context: TContext,
         queue: CommandQueue,
     ) -> list[str]:
+        """
+        Process an InputFrame for cheat code matches.
+
+        :param input_frame: InputFrame containing current inputs.
+        :type input_frame: InputFrame
+
+        :param context: Context to pass to command factories.
+        :type context: TContext
+
+        :param queue: CommandQueue to push matched commands into.
+        :type queue: CommandQueue
+
+        :return: List of names of matched cheat codes.
+        :rtype: list[str]
+        """
         if not self.enabled:
             return []
 
@@ -97,6 +137,21 @@ class CheatManager:
     def process_key(
         self, key: str, *, context: TContext, queue: CommandQueue
     ) -> list[str]:
+        """
+        Process a single key input.
+
+        :param key: The key string to process.
+        :type key: str
+
+        :param context: Context to pass to command factories.
+        :type context: TContext
+
+        :param queue: CommandQueue to push matched commands into.
+        :type queue: CommandQueue
+
+        :return: List of names of matched cheat codes.
+        :rtype: list[str]
+        """
         if not self.enabled:
             return []
 

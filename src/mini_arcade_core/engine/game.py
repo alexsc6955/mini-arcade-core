@@ -94,7 +94,7 @@ class FrameTimer:
     enabled: bool = True
     marks: Dict[str, float] = field(default_factory=dict)
 
-    def mark(self, name: str) -> None:
+    def mark(self, name: str):
         """
         Record a time mark with the given name.
 
@@ -136,7 +136,7 @@ class FrameTimer:
             out[f"{a}->{b}"] = self.diff_ms(a, b)
         return out
 
-    def clear(self) -> None:
+    def clear(self):
         """Clear all recorded marks."""
         if not self.enabled:
             return

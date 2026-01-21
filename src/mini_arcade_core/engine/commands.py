@@ -47,7 +47,7 @@ class Command(Protocol):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         """
         Execute the command with the given world and runtime services.
 
@@ -73,7 +73,7 @@ class CommandQueue:
 
     _items: List[Command] = field(default_factory=list)
 
-    def push(self, cmd: Command) -> None:
+    def push(self, cmd: Command):
         """
         Push a command onto the queue.
 
@@ -101,7 +101,7 @@ class QuitCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         context.services.scenes.quit()
 
 
@@ -118,7 +118,7 @@ class ScreenshotCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         context.services.capture.screenshot(label=self.label, mode="manual")
 
 
@@ -137,7 +137,7 @@ class PushSceneCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         context.services.scenes.push(self.scene_id, as_overlay=self.as_overlay)
 
 
@@ -148,7 +148,7 @@ class PopSceneCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         context.services.scenes.pop()
 
 
@@ -165,5 +165,5 @@ class ChangeSceneCommand(Command):
     def execute(
         self,
         context: CommandContext,
-    ) -> None:
+    ):
         context.services.scenes.change(self.scene_id)

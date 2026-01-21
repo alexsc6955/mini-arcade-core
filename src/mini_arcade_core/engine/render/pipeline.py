@@ -1,3 +1,8 @@
+"""
+Render pipeline module.
+Defines the RenderPipeline class for rendering RenderPackets.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,7 +23,16 @@ class RenderPipeline:
       - backend draw pass
     """
 
-    def draw_packet(self, backend: Backend, packet: RenderPacket) -> None:
+    def draw_packet(self, backend: Backend, packet: RenderPacket):
+        """
+        Draw the given RenderPacket using the provided Backend.
+
+        :param backend: Backend to use for drawing.
+        :type backend: Backend
+
+        :param packet: RenderPacket to draw.
+        :type packet: RenderPacket
+        """
         if not packet:
             return
         for op in packet.ops:

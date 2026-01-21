@@ -1,3 +1,7 @@
+"""
+Render packet module.
+Defines the RenderPacket class and related types."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -36,10 +40,17 @@ class RenderPacket:
         return RenderPacket(ops=tuple(ops), meta=dict(meta))
 
 
+# TODO: Implement later
 @runtime_checkable
 class Renderable(Protocol):
     """
     Optional convenience: any object that can produce a RenderPacket.
     """
 
-    def render(self) -> RenderPacket: ...
+    def render(self) -> RenderPacket:
+        """
+        Produce a RenderPacket for this object.
+
+        :return: RenderPacket instance.
+        :rtype: RenderPacket
+        """

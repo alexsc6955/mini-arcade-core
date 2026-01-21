@@ -25,6 +25,9 @@ class ButtonState:
     released: bool
 
 
+# TODO: Solve too-many-instance-attributes warning later
+# Justification: This data class needs multiple attributes to capture input state.
+# pylint: disable=too-many-instance-attributes
 @dataclass(frozen=True)
 class InputFrame:
     """
@@ -63,3 +66,6 @@ class InputFrame:
 
     # Window/OS quit request
     quit: bool = False
+
+
+# pylint: enable=too-many-instance-attributes

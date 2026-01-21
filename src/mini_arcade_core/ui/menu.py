@@ -4,29 +4,14 @@ Menu system for mini arcade core.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import (
-    Callable,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Protocol,
-    Sequence,
-    TypeVar,
-    runtime_checkable,
-)
+from dataclasses import dataclass
+from typing import Callable, Optional, Sequence
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.backend.events import Event, EventType
 from mini_arcade_core.backend.keys import Key
 from mini_arcade_core.backend.types import Color
-from mini_arcade_core.engine.commands import (
-    Command,
-    CommandContext,
-    CommandQueue,
-    QuitCommand,
-)
+from mini_arcade_core.engine.commands import Command, CommandQueue, QuitCommand
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
@@ -537,6 +522,9 @@ class MenuModel:
         self._cooldown_timer = self.move_cooldown
 
 
+# TODO: Solve too-many-instance-attributes warning later
+# Justification: Context for menu tick needs multiple attributes.
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class MenuTickContext:
     """
@@ -569,6 +557,9 @@ class MenuTickContext:
     packet: RenderPacket | None = None
 
 
+# pylint: enable=too-many-instance-attributes
+
+
 @dataclass(frozen=True)
 class MenuIntent:
     """
@@ -588,20 +579,13 @@ class MenuIntent:
 
 @dataclass
 class MenuInputSystem:
-    """
-    Converts InputFrame -> MenuIntent.
-    """
+    """Converts InputFrame -> MenuIntent."""
 
     name: str = "menu_input"
     order: int = 10
 
     def step(self, ctx: MenuTickContext):
-        """
-        Step the input system to extract menu intent.
-
-        :param ctx: The MenuTickContext for this tick.
-        :type ctx: MenuTickContext
-        """
+        """Step the input system to extract menu intent."""
         pressed = ctx.input_frame.keys_pressed
         ctx.intent = MenuIntent(
             move_up=Key.UP in pressed,
@@ -613,11 +597,13 @@ class MenuInputSystem:
 
 @dataclass
 class MenuNavigationSystem:
+    """Menu navigation system."""
 
     name: str = "menu_nav"
     order: int = 20
 
     def step(self, ctx: MenuTickContext):
+        """Update menu selection based on intent."""
         intent = ctx.intent
         if intent is None:
             return
@@ -641,10 +627,13 @@ class MenuNavigationSystem:
 
 @dataclass
 class MenuActionSystem:
+    """Menu action execution system."""
+
     name: str = "menu_actions"
     order: int = 30
 
     def step(self, ctx: MenuTickContext):
+        """Execute actions based on menu intent."""
         intent = ctx.intent
         if intent is None:
             return
@@ -661,10 +650,13 @@ class MenuActionSystem:
 
 @dataclass
 class MenuRenderSystem:
+    """Menu rendering system."""
+
     name: str = "menu_render"
     order: int = 100
 
     def step(self, ctx: MenuTickContext):
+        """Set the render packet to draw the menu."""
         ctx.packet = RenderPacket.from_ops([ctx.menu.draw])
 
 
