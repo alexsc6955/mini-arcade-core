@@ -6,6 +6,46 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-01-21
+
+### Added
+- Add FrameTimer class for performance measurement and reporting in Game loop
+- Implement menu systems and context for enhanced menu interactions and rendering
+- Introduce CommandContext for structured command execution and update related command classes
+- Enhance command execution by adding settings parameter and refactor menu command handling
+- Implement RenderPipeline and RenderPacket for enhanced rendering capabilities
+- Integrate CheatManager for enhanced cheat code functionality and scene management
+- Introduce Command protocol and CommandQueue for structured command execution
+- Implement InputAdapter and InputFrame for enhanced input handling
+- Introduce CaptureAdapter and CapturePort for enhanced screenshot functionality
+- Refactor runtime services by introducing adapters for window and scene management
+- Implement scene cleanup functionality in SceneManager and ScenePort
+- Add window title management to backend and enhance scene management interfaces
+- Add window title setting and enhance service interface documentation
+- Enhance runtime services with window management and logging utilities
+- Add runtime configuration, logging utilities and deprecated wrapper
+
+### Fixed
+- Update _bmp_to_image method signature to include out_path parameter
+
+### Changed
+- Remove temporary development files from .gitignore
+- Enhance docstrings across multiple modules for clarity and maintainability
+- Remove Entity base classes to streamline architecture
+- Clean up and reorganize scene and manager modules; remove unused classes and improve imports
+- Simplify collision detection logic and enhance Collider2D abstraction
+- Update CheatManager registration to improve clarity and consistency in parameter handling
+- Rename cheats to cheat_manager in Game class for clarity and remove duplicate input declaration in RuntimeServices
+- Replace _commands with command_queue in Game class and related components
+- Remove unused _bmp_to_image method and update screenshot return type to file path
+- Remove unused TYPE_CHECKING imports and simplify SceneAdapter initialization
+- Update run method to use scene ID instead of SceneOrId type
+
+### Other
+- Refactor input and rendering modules; migrate to engine structure
+- Refactor runtime components and reorganize adapters
+- Merge release/0.10 into develop
+
 ## [0.10.0] - 2025-12-26
 
 ### Added
