@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional, Tuple
 
-from mini_arcade_core.keymaps.keys import Key
+from mini_arcade_core.backend.keys import Key
 
 
 class EventType(Enum):

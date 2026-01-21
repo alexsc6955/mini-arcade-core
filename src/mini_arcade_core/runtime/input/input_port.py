@@ -4,7 +4,7 @@ Service interfaces for runtime components.
 
 from __future__ import annotations
 
-from mini_arcade_core.backend import Event
+from mini_arcade_core.backend.events import Event
 from mini_arcade_core.runtime.input_frame import InputFrame
 
 

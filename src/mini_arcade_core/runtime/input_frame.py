@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, Tuple
 
-from mini_arcade_core.keymaps import Key
+from mini_arcade_core.backend.keys import Key
 
 
 @dataclass(frozen=True)

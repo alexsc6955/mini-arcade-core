@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, List
 from mini_arcade_core.scenes.registry import SceneRegistry
 
 if TYPE_CHECKING:
-    from mini_arcade_core.game import Game
+    from mini_arcade_core.engine.game import Game
     from mini_arcade_core.scenes.scene import Scene
     from mini_arcade_core.sim.protocols import SimScene
 

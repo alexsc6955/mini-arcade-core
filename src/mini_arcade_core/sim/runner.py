@@ -5,7 +5,8 @@ from time import perf_counter, sleep
 from typing import Dict, Optional
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.render import RenderPacket, RenderPipeline
+from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.runtime.scene.scene_port import SceneEntry
 from mini_arcade_core.runtime.services import RuntimeServices

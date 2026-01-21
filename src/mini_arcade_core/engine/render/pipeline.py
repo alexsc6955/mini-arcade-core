@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.render.packet import RenderPacket
+from mini_arcade_core.engine.render.packet import RenderPacket
 
 
 @dataclass

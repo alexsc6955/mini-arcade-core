@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.view.render_packet import RenderPacket
 
 
 @runtime_checkable

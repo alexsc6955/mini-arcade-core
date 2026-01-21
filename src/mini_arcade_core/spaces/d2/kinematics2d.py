@@ -7,8 +7,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from mini_arcade_core.backend import Color
-
 from .collision2d import Collider2D
 from .geometry2d import Position2D, Size2D
 from .physics2d import Velocity2D

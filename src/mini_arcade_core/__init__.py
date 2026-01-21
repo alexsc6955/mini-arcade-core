@@ -9,7 +9,7 @@ import traceback
 from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Type, Union
 
-from mini_arcade_core.game import Game, GameConfig, WindowConfig
+from mini_arcade_core.engine.game import Game, GameConfig, WindowConfig
 from mini_arcade_core.scenes.registry import SceneRegistry
 from mini_arcade_core.scenes.sim_scene import SimScene
 from mini_arcade_core.utils import logger

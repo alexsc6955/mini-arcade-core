@@ -9,7 +9,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, Deque, Dict, Optional, Sequence, TypeVar
 
-from mini_arcade_core.commands import Command, CommandQueue
+from mini_arcade_core.engine.commands import Command, CommandQueue
 from mini_arcade_core.runtime.input_frame import InputFrame
 
 # Justification: We want to keep the type variable name simple here.

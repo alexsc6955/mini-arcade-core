@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from mini_arcade_core.backend import Event, EventType
-from mini_arcade_core.keymaps import Key
+from mini_arcade_core.backend.events import Event, EventType
+from mini_arcade_core.backend.keys import Key
 from mini_arcade_core.runtime.input.input_port import InputPort
 from mini_arcade_core.runtime.input_frame import InputFrame
 

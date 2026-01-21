@@ -9,9 +9,16 @@ from time import perf_counter, sleep
 from typing import Dict, Literal
 
 from mini_arcade_core.backend import Backend
-from mini_arcade_core.commands import CommandContext, CommandQueue, QuitCommand
+from mini_arcade_core.engine.commands import (
+    CommandContext,
+    CommandQueue,
+    QuitCommand,
+)
+
+# from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
+from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.managers.cheats import CheatManager
-from mini_arcade_core.render.pipeline import RenderPipeline
 from mini_arcade_core.runtime.audio.audio_adapter import NullAudioAdapter
 from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
 from mini_arcade_core.runtime.file.file_adapter import LocalFilesAdapter
@@ -22,9 +29,6 @@ from mini_arcade_core.runtime.services import RuntimeServices
 from mini_arcade_core.runtime.window.window_adapter import WindowAdapter
 from mini_arcade_core.scenes.registry import SceneRegistry
 from mini_arcade_core.utils import logger
-
-# from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
-from mini_arcade_core.view.render_packet import RenderPacket
 
 
 @dataclass

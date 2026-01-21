@@ -17,21 +17,22 @@ from typing import (
     runtime_checkable,
 )
 
-from mini_arcade_core.backend import Backend, Color, Event, EventType
-from mini_arcade_core.commands import (
+from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend.events import Event, EventType
+from mini_arcade_core.backend.keys import Key
+from mini_arcade_core.backend.types import Color
+from mini_arcade_core.engine.commands import (
     Command,
     CommandContext,
     CommandQueue,
     QuitCommand,
 )
-from mini_arcade_core.keymaps import Key
-from mini_arcade_core.render.packet import RenderPacket
+from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.scenes.model import SceneModel
 from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 from mini_arcade_core.sim.protocols import SimScene
-from mini_arcade_core.spaces.d2 import Size2D
+from mini_arcade_core.spaces.d2.geometry2d import Size2D
 
 
 @dataclass(frozen=True)

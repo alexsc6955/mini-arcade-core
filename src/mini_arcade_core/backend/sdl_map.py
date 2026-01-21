@@ -8,7 +8,7 @@ Maps SDL keycodes to mini arcade core Key enums.
 
 from __future__ import annotations
 
-from mini_arcade_core.keymaps.keys import Key
+from mini_arcade_core.backend.keys import Key
 
 # SDL keycodes you need (minimal set)
 _SDLK_ESCAPE = 27

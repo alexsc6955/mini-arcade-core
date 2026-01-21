@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mini_arcade_core.render import RenderPacket
+from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
 
