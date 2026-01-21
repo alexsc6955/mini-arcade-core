@@ -4,9 +4,9 @@ Game core module defining the Game class and configuration.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from time import perf_counter, sleep
-from typing import Literal
+from typing import Dict, Literal
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.commands import CommandContext, CommandQueue, QuitCommand
@@ -21,6 +21,7 @@ from mini_arcade_core.runtime.scene.scene_adapter import SceneAdapter
 from mini_arcade_core.runtime.services import RuntimeServices
 from mini_arcade_core.runtime.window.window_adapter import WindowAdapter
 from mini_arcade_core.scenes.registry import SceneRegistry
+from mini_arcade_core.utils import logger
 
 # from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
 from mini_arcade_core.view.render_packet import RenderPacket
@@ -75,6 +76,38 @@ class GameSettings:
 def _neutral_input(frame_index: int, dt: float) -> InputFrame:
     """Create a neutral InputFrame with no input events."""
     return InputFrame(frame_index=frame_index, dt=dt)
+
+
+@dataclass
+class FrameTimer:
+    enabled: bool = True
+    marks: Dict[str, float] = field(default_factory=dict)
+
+    def mark(self, name: str) -> None:
+        if not self.enabled:
+            return
+        self.marks[name] = perf_counter()
+
+    def diff_ms(self, start: str, end: str) -> float:
+        return (self.marks[end] - self.marks[start]) * 1000.0
+
+    def report_ms(self) -> Dict[str, float]:
+        """
+        Returns diffs between consecutive marks in insertion order.
+        """
+        if not self.enabled:
+            return {}
+
+        keys = list(self.marks.keys())
+        out: Dict[str, float] = {}
+        for a, b in zip(keys, keys[1:]):
+            out[f"{a}->{b}"] = self.diff_ms(a, b)
+        return out
+
+    def clear(self) -> None:
+        if not self.enabled:
+            return
+        self.marks.clear()
 
 
 class Game:
@@ -149,13 +182,22 @@ class Game:
         # cache packets so blocked-update scenes still render their last frame
         packet_cache: dict[int, RenderPacket] = {}
 
+        timer = FrameTimer(enabled=True)
+        report_every = 60  # print once per second at 60fps
+
         while self._running:
+            timer.clear()
+            timer.mark("frame_start")
+
             now = perf_counter()
             dt = now - last_time
             last_time = now
 
             events = list(backend.poll_events())
+            timer.mark("events_polled")
+
             input_frame = self.services.input.build(events, frame_index, dt)
+            timer.mark("input_built")
 
             # Window/OS quit (close button)
             if input_frame.quit:
@@ -167,6 +209,7 @@ class Game:
                 break
 
             # tick policy-aware scenes
+            timer.mark("tick_start")
             for entry in self.services.scenes.update_entries():
                 scene = entry.scene
                 effective_input = (
@@ -177,25 +220,35 @@ class Game:
 
                 packet = scene.tick(effective_input, dt)
                 packet_cache[id(scene)] = packet
+            timer.mark("tick_end")
 
+            timer.mark("command_ctx_start")
             command_context = CommandContext(
                 services=self.services,
                 commands=self.command_queue,
                 settings=self.settings,
                 world=self._resolve_world(),
             )
+            timer.mark("command_ctx_end")
 
+            timer.mark("cheats_start")
             self.cheat_manager.process_frame(
                 input_frame,
                 context=command_context,
                 queue=self.command_queue,
             )
+            timer.mark("cheats_end")
 
             # Execute commands at the end of the frame (consistent write path)
+            timer.mark("cmd_exec_start")
             for cmd in self.command_queue.drain():
                 cmd.execute(command_context)
+            timer.mark("cmd_exec_end")
 
+            timer.mark("render_start")
             backend.begin_frame()
+            timer.mark("begin_frame_done")
+
             for entry in self.services.scenes.visible_entries():
                 scene = entry.scene
                 packet = packet_cache.get(id(scene))
@@ -205,10 +258,23 @@ class Game:
                     packet_cache[id(scene)] = packet
 
                 pipeline.draw_packet(backend, packet)
-            backend.end_frame()
 
+            timer.mark("draw_done")
+            backend.end_frame()
+            timer.mark("end_frame_done")
+
+            timer.mark("sleep_start")
             if target_dt > 0 and dt < target_dt:
                 sleep(target_dt - dt)
+            timer.mark("sleep_end")
+
+            # --- report ---
+            if frame_index % report_every == 0 and frame_index > 0:
+                ms = timer.report_ms()
+                total = (perf_counter() - timer.marks["frame_start"]) * 1000.0
+                logger.debug(
+                    f"[Frame {frame_index}] total={total:.2f}ms | {ms}"
+                )
 
             frame_index += 1
 
