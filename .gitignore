@@ -195,8 +195,3 @@ Temporary Items
 *.icloud
 .trivox_conductor/
 .trivox/
-
-# While developing
-sim_runner.py
-view/
-game/
