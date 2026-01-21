@@ -28,7 +28,7 @@ from mini_arcade_core.keymaps import Key
 from mini_arcade_core.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.scenes import SceneModel
+from mini_arcade_core.scenes.model import SceneModel
 from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 from mini_arcade_core.sim.protocols import SimScene
 from mini_arcade_core.spaces.d2 import Size2D
@@ -499,7 +499,7 @@ class Menu:
 
 
 @dataclass
-class MenuModel(SceneModel):
+class MenuModel:
     """
     Data model for menu scenes.
 
@@ -534,73 +534,6 @@ class MenuModel(SceneModel):
     def consume_move(self):
         """Consume a move action and reset the cooldown timer."""
         self._cooldown_timer = self.move_cooldown
-
-
-@dataclass(frozen=True)
-class MenuMoveUpCommand(Command):
-    """
-    Move the menu selection up.
-
-    :ivar menu (Menu): The Menu instance to operate on.
-    :ivar model (MenuModel): The MenuModel instance for cooldown management.
-    """
-
-    menu: Menu
-    model: MenuModel
-
-    def execute(
-        self,
-        context: CommandContext,
-    ):
-        if not self.model.can_move():
-            return
-        self.menu.move_up()
-        self.model.selected = self.menu.selected_index
-        self.model.consume_move()
-
-
-@dataclass(frozen=True)
-class MenuMoveDownCommand(Command):
-    """
-    Move the menu selection down.
-
-    :ivar menu (Menu): The Menu instance to operate on.
-    :ivar model (MenuModel): The MenuModel instance for cooldown management.
-    """
-
-    menu: Menu
-    model: MenuModel
-
-    def execute(
-        self,
-        context: CommandContext,
-    ):
-        if not self.model.can_move():
-            return
-        self.menu.move_down()
-        self.model.selected = self.menu.selected_index
-        self.model.consume_move()
-
-
-@dataclass(frozen=True)
-class MenuSelectCommand(Command):
-    """
-    Select the currently highlighted menu item.
-
-    :ivar menu (Menu): The Menu instance to operate on.
-    """
-
-    menu: Menu
-
-    def execute(
-        self,
-        context: CommandContext,
-    ):
-        if not self.menu.items:
-            return
-        item = self.menu.items[self.menu.selected_index]
-        # Push the selected item's command onto the SAME queue
-        context.commands.push(item.command_factory())
 
 
 @dataclass

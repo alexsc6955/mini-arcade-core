@@ -1,3 +1,10 @@
+"""
+Protocol for base systems in the mini arcade core.
+Defines the BaseSystem protocol that all systems should implement.
+"""
+
+from __future__ import annotations
+
 from typing import Generic, Protocol, TypeVar, runtime_checkable
 
 TSystemContext = TypeVar("TSystemContext")

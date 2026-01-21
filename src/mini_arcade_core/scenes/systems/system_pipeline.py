@@ -1,3 +1,10 @@
+"""
+Pipeline for managing and executing systems in order.
+Defines the SystemPipeline dataclass that holds and runs systems.
+"""
+
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Generic, Iterable, List
 

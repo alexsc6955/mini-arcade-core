@@ -80,20 +80,48 @@ def _neutral_input(frame_index: int, dt: float) -> InputFrame:
 
 @dataclass
 class FrameTimer:
+    """
+    Simple frame timer for marking and reporting time intervals.
+
+    :ivar enabled (bool): Whether timing is enabled.
+    :ivar marks (Dict[str, float]): Recorded time marks.
+    """
+
     enabled: bool = True
     marks: Dict[str, float] = field(default_factory=dict)
 
     def mark(self, name: str) -> None:
+        """
+        Record a time mark with the given name.
+
+        :param name: Name of the mark.
+        :type name: str
+        """
         if not self.enabled:
             return
         self.marks[name] = perf_counter()
 
     def diff_ms(self, start: str, end: str) -> float:
+        """
+        Get the time difference in milliseconds between two marks.
+
+        :param start: Name of the start mark.
+        :type start: str
+
+        :param end: Name of the end mark.
+        :type end: str
+
+        :return: Time difference in milliseconds.
+        :rtype: float
+        """
         return (self.marks[end] - self.marks[start]) * 1000.0
 
     def report_ms(self) -> Dict[str, float]:
         """
         Returns diffs between consecutive marks in insertion order.
+
+        :return: Dictionary mapping "start->end" to time difference in milliseconds.
+        :rtype: Dict[str, float]
         """
         if not self.enabled:
             return {}
@@ -105,11 +133,15 @@ class FrameTimer:
         return out
 
     def clear(self) -> None:
+        """Clear all recorded marks."""
         if not self.enabled:
             return
         self.marks.clear()
 
 
+# TODO: Fix too-many-instance-attributes warning
+# Justification: Core game class with many dependencies.
+# pylint: disable=too-many-instance-attributes
 class Game:
     """Core game object responsible for managing the main loop and active scene."""
 
@@ -156,6 +188,9 @@ class Game:
         """Request that the main loop stops."""
         self._running = False
 
+    # TODO: Fix too-many-statements and too-many-locals warnings
+    # Justification: Main game loop with multiple responsibilities.
+    # pylint: disable=too-many-statements,too-many-locals
     def run(self, initial_scene_id: str):
         """
         Run the main loop starting with the given scene.
@@ -184,6 +219,12 @@ class Game:
 
         timer = FrameTimer(enabled=True)
         report_every = 60  # print once per second at 60fps
+
+        # TODO: Integrate SimRunner for simulation stepping
+        # TODO: Fix assignment-from-no-return warning in self.services.input.build
+        # & self.services.scenes.input_entry
+        # Justification: These methods are expected to return values.
+        # pylint: disable=assignment-from-no-return
 
         while self._running:
             timer.clear()
@@ -278,8 +319,12 @@ class Game:
 
             frame_index += 1
 
+        # pylint: enable=assignment-from-no-return
+
         # exit remaining scenes
         self.services.scenes.clean()
+
+    # pylint: enable=too-many-statements,too-many-locals
 
     def _initialize_window(self):
         """Initialize the game window based on the configuration."""
@@ -300,3 +345,6 @@ class Game:
             if world is not None:
                 return world
         return None
+
+
+# pylint: enable=too-many-instance-attributes

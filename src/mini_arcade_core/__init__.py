@@ -9,27 +9,15 @@ import traceback
 from importlib.metadata import PackageNotFoundError, version
 from typing import Callable, Type, Union
 
-from mini_arcade_core import backend  # noqa: F401
-from mini_arcade_core import keymaps  # noqa: F401
-from mini_arcade_core import managers  # noqa: F401
-from mini_arcade_core import spaces  # noqa: F401
-from mini_arcade_core import ui  # noqa: F401
-from mini_arcade_core.bus import event_bus
-from mini_arcade_core.commands import (
-    BaseCommand,
-    BaseGameCommand,
-    BaseSceneCommand,
-    CommandContext,
-    QuitGameCommand,
-)
-from mini_arcade_core.entity import Entity, KinematicEntity, SpriteEntity
 from mini_arcade_core.game import Game, GameConfig, WindowConfig
-from mini_arcade_core.scenes import Scene, SceneRegistry
+from mini_arcade_core.scenes.registry import SceneRegistry
+from mini_arcade_core.scenes.sim_scene import SimScene
 from mini_arcade_core.utils import logger
 
-SceneFactoryLike = Union[Type[Scene], Callable[[Game], Scene]]
+SceneFactoryLike = Union[Type[SimScene], Callable[[Game], SimScene]]
 
 
+# TODO: Improve exception handling and logging in run_game
 def run_game(
     scene: SceneFactoryLike | None = None,
     config: GameConfig | None = None,
@@ -44,7 +32,7 @@ def run_game(
       - run_game(config=cfg, initial_scene="main", registry=...)  # registry-based
       - run_game(cfg)                       # config-only
 
-    :param initial_scene: The Scene ID to start the game with.
+    :param initial_scene: The SimScene ID to start the game with.
     :type initial_scene: str
 
     :param config: Optional GameConfig to customize game settings.
@@ -67,41 +55,23 @@ def run_game(
                 "GameConfig.backend must be set to a Backend instance"
             )
 
-        # If user provided a Scene factory/class, ensure it's registered
+        # If user provided a SimScene factory/class, ensure it's registered
         if scene is not None:
             if registry is None:
                 registry = SceneRegistry(_factories={})
             registry.register(
                 initial_scene, scene
-            )  # Scene class is callable(game) -> Scene
+            )  # SimScene class is callable(game) -> SimScene
 
         game = Game(cfg, registry=registry)
         game.run(initial_scene)
+    # Justification: We need to catch all exceptions while we improve error handling.
+    # pylint: disable=broad-exception-caught
     except Exception as e:
         logger.exception(f"Unhandled exception in game loop: {e}")
         logger.debug(traceback.format_exc())
+    # pylint: enable=broad-exception-caught
 
-
-__all__ = [
-    "Game",
-    "GameConfig",
-    "WindowConfig",
-    "Entity",
-    "SpriteEntity",
-    "KinematicEntity",
-    "BaseCommand",
-    "BaseGameCommand",
-    "BaseSceneCommand",
-    "QuitGameCommand",
-    "CommandContext",
-    "event_bus",
-    "run_game",
-    "backend",
-    "keymaps",
-    "managers",
-    "spaces",
-    "ui",
-]
 
 PACKAGE_NAME = "mini-arcade-core"  # or whatever is in your pyproject.toml
 
@@ -128,5 +98,12 @@ def get_version() -> str:
         )
         return "0.0.0"
 
+
+__all__ = [
+    "Game",
+    "GameConfig",
+    "WindowConfig",
+    "run_game",
+]
 
 __version__ = get_version()

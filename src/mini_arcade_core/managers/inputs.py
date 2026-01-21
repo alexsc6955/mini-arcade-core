@@ -2,6 +2,8 @@
 Input manager for handling input bindings and commands.
 """
 
+# TODO: Implement this manager into the new input system
+
 from __future__ import annotations
 
 import logging

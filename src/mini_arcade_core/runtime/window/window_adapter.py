@@ -24,4 +24,3 @@ class WindowAdapter(WindowPort):
 
     def set_clear_color(self, r, g, b):
         self.backend.set_clear_color(r, g, b)
-        self.backend.set_clear_color(r, g, b)

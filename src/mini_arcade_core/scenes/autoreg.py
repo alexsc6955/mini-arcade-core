@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Type
 
 if TYPE_CHECKING:
-    from . import Scene
+    from mini_arcade_core.scenes.scene import Scene
 
 _AUTO: Dict[str, Type["Scene"]] = {}
 
