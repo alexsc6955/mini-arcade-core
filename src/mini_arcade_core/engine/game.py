@@ -91,7 +91,7 @@ class FrameTimer:
     :ivar marks (Dict[str, float]): Recorded time marks.
     """
 
-    enabled: bool = True
+    enabled: bool = False
     marks: Dict[str, float] = field(default_factory=dict)
 
     def mark(self, name: str):
