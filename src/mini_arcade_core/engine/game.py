@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from time import perf_counter, sleep
 from typing import Dict, Literal
 
-from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend import Backend, WindowSettings
 from mini_arcade_core.engine.commands import (
     CommandContext,
     CommandQueue,
@@ -19,7 +19,7 @@ from mini_arcade_core.engine.commands import (
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.managers.cheats import CheatManager
-from mini_arcade_core.runtime.audio.audio_adapter import NullAudioAdapter
+from mini_arcade_core.runtime.audio.audio_adapter import SDLAudioAdapter
 from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
 from mini_arcade_core.runtime.file.file_adapter import LocalFilesAdapter
 from mini_arcade_core.runtime.input.input_adapter import InputAdapter
@@ -177,9 +177,13 @@ class Game:
         self.services = RuntimeServices(
             window=WindowAdapter(
                 self.backend,
+                WindowSettings(
+                    width=self.config.window.width,
+                    height=self.config.window.height,
+                ),
             ),
             scenes=SceneAdapter(self.registry, self),
-            audio=NullAudioAdapter(),
+            audio=SDLAudioAdapter(self.backend),
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
@@ -314,12 +318,14 @@ class Game:
             timer.mark("sleep_end")
 
             # --- report ---
-            if frame_index % report_every == 0 and frame_index > 0:
-                ms = timer.report_ms()
-                total = (perf_counter() - timer.marks["frame_start"]) * 1000.0
-                logger.debug(
-                    f"[Frame {frame_index}] total={total:.2f}ms | {ms}"
-                )
+            # if timer.enabled and (
+            #     frame_index % report_every == 0 and frame_index > 0
+            # ):
+            #     ms = timer.report_ms()
+            #     total = (perf_counter() - timer.marks["frame_start"]) * 1000.0
+            #     logger.debug(
+            #         f"[Frame {frame_index}] total={total:.2f}ms | {ms}"
+            #     )
 
             frame_index += 1
 

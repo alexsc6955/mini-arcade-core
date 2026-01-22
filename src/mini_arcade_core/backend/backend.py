@@ -5,10 +5,24 @@ This is the only part of the code that talks to SDL/pygame directly.
 
 from __future__ import annotations
 
-from typing import Iterable, Protocol
+from dataclasses import dataclass
+from typing import Iterable, Optional, Protocol
 
 from .events import Event
 from .types import Color
+
+
+@dataclass
+class WindowSettings:
+    """
+    Settings for the backend window.
+
+    :ivar width (int): Width of the window in pixels.
+    :ivar height (int): Height of the window in pixels.
+    """
+
+    width: int
+    height: int
 
 
 class Backend(Protocol):
@@ -18,19 +32,13 @@ class Backend(Protocol):
     mini-arcade-core only talks to this protocol, never to SDL/pygame directly.
     """
 
-    def init(self, width: int, height: int, title: str):
+    def init(self, window_settings: WindowSettings):
         """
         Initialize the backend and open a window.
         Should be called once before the main loop.
 
-        :param width: Width of the window in pixels.
-        :type width: int
-
-        :param height: Height of the window in pixels.
-        :type height: int
-
-        :param title: Title of the window.
-        :type title: str
+        :param window_settings: Settings for the backend window.
+        :type window_settings: WindowSettings
         """
 
     def set_window_title(self, title: str):
@@ -158,3 +166,38 @@ class Backend(Protocol):
         :rtype: bytes | None
         """
         raise NotImplementedError
+
+    def init_audio(
+        self, frequency: int = 44100, channels: int = 2, chunk_size: int = 2048
+    ):
+        """Initialize SDL_mixer audio."""
+
+    def shutdown_audio(self):
+        """Shutdown SDL_mixer audio and free loaded sounds."""
+
+    def load_sound(self, sound_id: str, path: str):
+        """
+        Load a WAV sound and store it by ID.
+        Example: backend.load_sound("hit", "assets/sfx/hit.wav")
+        """
+
+    def play_sound(self, sound_id: str, loops: int = 0):
+        """
+        Play a loaded sound.
+        loops=0 => play once
+        loops=-1 => infinite loop
+        loops=1 => play twice (SDL convention)
+        """
+
+    def set_master_volume(self, volume: int):
+        """
+        Master volume: 0..128
+        """
+
+    def set_sound_volume(self, sound_id: str, volume: int):
+        """
+        Per-sound volume: 0..128
+        """
+
+    def stop_all_sounds(self):
+        """Stop all channels."""

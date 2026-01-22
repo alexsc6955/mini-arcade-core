@@ -4,7 +4,7 @@ Service interfaces for runtime components.
 
 from __future__ import annotations
 
-from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend import Backend, WindowSettings
 
 
 class WindowPort:
@@ -12,6 +12,7 @@ class WindowPort:
 
     backend: Backend
     size: tuple[int, int]
+    window_settings_cls: WindowSettings
 
     def set_window_size(self, width: int, height: int):
         """

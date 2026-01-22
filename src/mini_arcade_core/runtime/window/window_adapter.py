@@ -12,12 +12,13 @@ class WindowAdapter(WindowPort):
     Manages multiple game windows (not implemented).
     """
 
-    def __init__(self, backend):
+    def __init__(self, backend, window_settings):
         self.backend = backend
+        self.window_settings = window_settings
 
     def set_window_size(self, width, height):
         self.size = (width, height)
-        self.backend.init(width, height)
+        self.backend.init(self.window_settings)
 
     def set_title(self, title):
         self.backend.set_window_title(title)
