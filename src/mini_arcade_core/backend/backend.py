@@ -171,7 +171,18 @@ class Backend(Protocol):
     def init_audio(
         self, frequency: int = 44100, channels: int = 2, chunk_size: int = 2048
     ):
-        """Initialize SDL_mixer audio."""
+        """
+        Initialize SDL_mixer audio.
+
+        :param frequency: Audio frequency in Hz.
+        :type frequency: int
+
+        :param channels: Number of audio channels (1=mono, 2=stereo).
+        :type channels: int
+
+        :param chunk_size: Size of audio chunks.
+        :type chunk_size: int
+        """
 
     def shutdown_audio(self):
         """Shutdown SDL_mixer audio and free loaded sounds."""
@@ -180,6 +191,12 @@ class Backend(Protocol):
         """
         Load a WAV sound and store it by ID.
         Example: backend.load_sound("hit", "assets/sfx/hit.wav")
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param path: File path to the WAV sound.
+        :type path: str
         """
 
     def play_sound(self, sound_id: str, loops: int = 0):
@@ -188,6 +205,12 @@ class Backend(Protocol):
         loops=0 => play once
         loops=-1 => infinite loop
         loops=1 => play twice (SDL convention)
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param loops: Number of times to loop the sound.
+        :type loops: int
         """
 
     def set_master_volume(self, volume: int):
@@ -198,6 +221,12 @@ class Backend(Protocol):
     def set_sound_volume(self, sound_id: str, volume: int):
         """
         Per-sound volume: 0..128
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param volume: Volume level (0-128).
+        :type volume: int
         """
 
     def stop_all_sounds(self):
@@ -205,20 +234,55 @@ class Backend(Protocol):
 
     def set_viewport_transform(
         self, offset_x: int, offset_y: int, scale: float
-    ) -> None:
-        """Apply a transform so draw_* receives VIRTUAL coords and backend maps to screen."""
+    ):
+        """
+        Apply a transform so draw_* receives VIRTUAL coords and backend maps to screen.
+
+        :param offset_x: X offset in pixels.
+        :type offset_x: int
+
+        :param offset_y: Y offset in pixels.
+        :type offset_y: int
+
+        :param scale: Scale factor.
+        :type scale: float
+        """
         raise NotImplementedError
 
-    def clear_viewport_transform(self) -> None:
+    def clear_viewport_transform(self):
         """Reset any viewport transform back to identity."""
         raise NotImplementedError
 
-    def resize_window(self, width: int, height: int) -> None:
-        """Resize the actual OS window (SDL_SetWindowSize in native backend)."""
+    def resize_window(self, width: int, height: int):
+        """
+        Resize the actual OS window (SDL_SetWindowSize in native backend).
+
+        :param width: New width in pixels.
+        :type width: int
+
+        :param height: New height in pixels.
+        :type height: int
+        """
         raise NotImplementedError
 
-    def set_clip_rect(self, x: int, y: int, w: int, h: int) -> None:
+    def set_clip_rect(self, x: int, y: int, w: int, h: int):
+        """
+        Set a clipping rectangle for rendering.
+
+        :param x: X position of the rectangle's top-left corner.
+        :type x: int
+
+        :param y: Y position of the rectangle's top-left corner.
+        :type y: int
+
+        :param w: Width of the rectangle.
+        :type w: int
+
+        :param h: Height of the rectangle.
+        :type h: int
+        """
         raise NotImplementedError
 
-    def clear_clip_rect(self) -> None:
+    def clear_clip_rect(self):
+        """Clear any clipping rectangle."""
         raise NotImplementedError

@@ -143,8 +143,6 @@ class InputManager:
                 )
                 binding.command.execute(to_inject)
 
-    # --- Convenience API ------------------------------------------------------
-
     def on_quit(self, command: BaseCommand, action: str = "quit"):
         """
         Bind a command to the QUIT event.

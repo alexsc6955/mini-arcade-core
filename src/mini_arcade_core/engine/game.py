@@ -15,8 +15,6 @@ from mini_arcade_core.engine.commands import (
     CommandQueue,
     QuitCommand,
 )
-
-# from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.managers.cheats import CheatManager
@@ -354,10 +352,7 @@ class Game:
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
 
-        # ✅ the “authoring resolution”
-        # (360, 640)  # Window Resolution Works Well
-        # (200, 640)  # Smaller Width, The playable area moves to the right (bad)
-        # (500, 640)  # Higher Width, The playable area moves to the left (bad)
+        # the “authoring resolution”
         self.services.window.set_virtual_resolution(800, 600)
 
     def _resolve_world(self) -> object | None:

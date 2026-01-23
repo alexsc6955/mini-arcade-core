@@ -52,13 +52,13 @@ class WindowAdapter(WindowPort):
 
         self._viewport.resize(width, height)
 
-    def set_virtual_resolution(self, width: int, height: int) -> None:
+    def set_virtual_resolution(self, width: int, height: int):
         self._viewport.set_virtual_resolution(int(width), int(height))
         # re-apply using current window size
         w, h = self.size
         self._viewport.resize(w, h)
 
-    def set_viewport_mode(self, mode: ViewportMode) -> None:
+    def set_viewport_mode(self, mode: ViewportMode):
         self._viewport.set_mode(mode)
 
     def get_viewport(self) -> ViewportState:
@@ -73,7 +73,7 @@ class WindowAdapter(WindowPort):
     def set_clear_color(self, r, g, b):
         self.backend.set_clear_color(r, g, b)
 
-    def on_window_resized(self, width: int, height: int) -> None:
+    def on_window_resized(self, width: int, height: int):
         logger.debug(f"Window resized event: {width}x{height}")
         width = int(width)
         height = int(height)

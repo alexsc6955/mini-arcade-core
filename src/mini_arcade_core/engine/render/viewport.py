@@ -42,18 +42,18 @@ class Viewport:
         self._mode = mode
         self._state: ViewportState | None = None
 
-    def set_virtual_resolution(self, w: int, h: int) -> None:
+    def set_virtual_resolution(self, w: int, h: int):
         self._virtual_w = int(w)
         self._virtual_h = int(h)
         if self._state:
             self.resize(self._state.window_w, self._state.window_h)
 
-    def set_mode(self, mode: ViewportMode) -> None:
+    def set_mode(self, mode: ViewportMode):
         self._mode = mode
         if self._state:
             self.resize(self._state.window_w, self._state.window_h)
 
-    def resize(self, window_w: int, window_h: int) -> None:
+    def resize(self, window_w: int, window_h: int):
         window_w = int(window_w)
         window_h = int(window_h)
 
