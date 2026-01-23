@@ -10,10 +10,12 @@ from typing import Dict, Literal
 
 from mini_arcade_core.backend import Backend, WindowSettings
 from mini_arcade_core.backend.events import EventType
+from mini_arcade_core.backend.keys import Key
 from mini_arcade_core.engine.commands import (
     CommandContext,
     CommandQueue,
     QuitCommand,
+    ToggleDebugOverlayCommand,
 )
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
@@ -248,6 +250,9 @@ class Game:
                     w, h = e.size
                     logger.debug(f"Window resized event: {w}x{h}")
                     self.services.window.on_window_resized(w, h)
+                # if F1 pressed, toggle debug overlay
+                if e.type == EventType.KEYDOWN and e.key == Key.F1:
+                    self.command_queue.push(ToggleDebugOverlayCommand())
             timer.mark("events_polled")
 
             input_frame = self.services.input.build(events, frame_index, dt)

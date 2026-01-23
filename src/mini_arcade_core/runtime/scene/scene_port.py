@@ -23,11 +23,13 @@ class ScenePolicy:
     blocks_update: if True, scenes below do not tick/update (pause modal)
     blocks_input:  if True, scenes below do not receive input
     is_opaque:     if True, scenes below are not rendered
+    receives_input: if True, scene can receive input
     """
 
     blocks_update: bool = False
     blocks_input: bool = False
     is_opaque: bool = False
+    receives_input: bool = True
 
 
 @dataclass(frozen=True)
@@ -146,4 +148,23 @@ class ScenePort:
 
         :return: The SceneEntry that receives input, or None if no scenes are active.
         :rtype: SceneEntry | None
+        """
+
+    def has_scene(self, scene_id: str) -> bool:
+        """
+        Check if a scene with the given ID exists in the stack.
+
+        :param scene_id: Identifier of the scene to check.
+        :type scene_id: str
+
+        :return: True if the scene exists in the stack, False otherwise.
+        :rtype: bool
+        """
+
+    def remove_scene(self, scene_id: str) -> None:
+        """
+        Remove a scene with the given ID from the stack.
+
+        :param scene_id: Identifier of the scene to remove.
+        :type scene_id: str
         """
