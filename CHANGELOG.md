@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-01-23
+
+### Added
+- implement post-processing effects system with CRT and vignette effects
+
+### Other
+- Merge branch 'release/1.1' of https://github.com/alexsc6955/mini-arcade-core into release/1.1
+
 ## [1.1.0] - 2026-01-23
 
 ### Added
