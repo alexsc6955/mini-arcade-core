@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-23
+
+### Added
+- Implement viewport management and window resizing functionality
+- Introduce WindowSettings and enhance audio adapter functionality
+
+### Changed
+- Improve documentation and type hints in backend and viewport modules
+- Enhance documentation and type hints across multiple modules
+
 ## [1.0.0] - 2026-01-21
 
 ### Added
