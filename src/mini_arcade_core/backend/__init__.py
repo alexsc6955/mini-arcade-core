@@ -6,13 +6,9 @@ This is the only part of the code that talks to SDL/pygame directly.
 
 from __future__ import annotations
 
-from .backend import Backend
-from .events import Event, EventType
-from .types import Color
+from .backend import Backend, WindowSettings
 
 __all__ = [
     "Backend",
-    "Event",
-    "EventType",
-    "Color",
+    "WindowSettings",
 ]

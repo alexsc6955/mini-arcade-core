@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import functools
 
-from mini_arcade_core.utils.logger import logger
+from mini_arcade_core.utils.logging import logger
 
 
 def deprecated(

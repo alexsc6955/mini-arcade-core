@@ -5,12 +5,29 @@ This is the only part of the code that talks to SDL/pygame directly.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable, Protocol
 
 from .events import Event
 from .types import Color
 
 
+@dataclass
+class WindowSettings:
+    """
+    Settings for the backend window.
+
+    :ivar width (int): Width of the window in pixels.
+    :ivar height (int): Height of the window in pixels.
+    """
+
+    width: int
+    height: int
+
+
+# TODO: Refactor backend interface into smaller protocols?
+# Justification: Many public methods needed for backend interface
+# pylint: disable=too-many-public-methods
 class Backend(Protocol):
     """
     Interface that any rendering/input backend must implement.
@@ -18,20 +35,23 @@ class Backend(Protocol):
     mini-arcade-core only talks to this protocol, never to SDL/pygame directly.
     """
 
-    def init(self, width: int, height: int, title: str):
+    def init(self, window_settings: WindowSettings):
         """
         Initialize the backend and open a window.
         Should be called once before the main loop.
 
-        :param width: Width of the window in pixels.
-        :type width: int
+        :param window_settings: Settings for the backend window.
+        :type window_settings: WindowSettings
+        """
 
-        :param height: Height of the window in pixels.
-        :type height: int
+    def set_window_title(self, title: str):
+        """
+        Set the window title.
 
-        :param title: Title of the window.
+        :param title: The new title for the window.
         :type title: str
         """
+        raise NotImplementedError
 
     def poll_events(self) -> Iterable[Event]:
         """
@@ -96,14 +116,13 @@ class Backend(Protocol):
         :type color: Color
         """
 
-    # pylint: enable=too-many-arguments,too-many-positional-arguments
-
     def draw_text(
         self,
         x: int,
         y: int,
         text: str,
         color: Color = (255, 255, 255),
+        font_size: int | None = None,
     ):
         """
         Draw text at the given position in a default font and color.
@@ -123,6 +142,8 @@ class Backend(Protocol):
         :param color: RGB color tuple.
         :type color: Color
         """
+
+    # pylint: enable=too-many-arguments,too-many-positional-arguments
 
     def measure_text(self, text: str) -> tuple[int, int]:
         """
@@ -148,4 +169,123 @@ class Backend(Protocol):
         :return: Raw image bytes if no path given, else None.
         :rtype: bytes | None
         """
+        raise NotImplementedError
+
+    def init_audio(
+        self, frequency: int = 44100, channels: int = 2, chunk_size: int = 2048
+    ):
+        """
+        Initialize SDL_mixer audio.
+
+        :param frequency: Audio frequency in Hz.
+        :type frequency: int
+
+        :param channels: Number of audio channels (1=mono, 2=stereo).
+        :type channels: int
+
+        :param chunk_size: Size of audio chunks.
+        :type chunk_size: int
+        """
+
+    def shutdown_audio(self):
+        """Shutdown SDL_mixer audio and free loaded sounds."""
+
+    def load_sound(self, sound_id: str, path: str):
+        """
+        Load a WAV sound and store it by ID.
+        Example: backend.load_sound("hit", "assets/sfx/hit.wav")
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param path: File path to the WAV sound.
+        :type path: str
+        """
+
+    def play_sound(self, sound_id: str, loops: int = 0):
+        """
+        Play a loaded sound.
+        loops=0 => play once
+        loops=-1 => infinite loop
+        loops=1 => play twice (SDL convention)
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param loops: Number of times to loop the sound.
+        :type loops: int
+        """
+
+    def set_master_volume(self, volume: int):
+        """
+        Master volume: 0..128
+        """
+
+    def set_sound_volume(self, sound_id: str, volume: int):
+        """
+        Per-sound volume: 0..128
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+
+        :param volume: Volume level (0-128).
+        :type volume: int
+        """
+
+    def stop_all_sounds(self):
+        """Stop all channels."""
+
+    def set_viewport_transform(
+        self, offset_x: int, offset_y: int, scale: float
+    ):
+        """
+        Apply a transform so draw_* receives VIRTUAL coords and backend maps to screen.
+
+        :param offset_x: X offset in pixels.
+        :type offset_x: int
+
+        :param offset_y: Y offset in pixels.
+        :type offset_y: int
+
+        :param scale: Scale factor.
+        :type scale: float
+        """
+        raise NotImplementedError
+
+    def clear_viewport_transform(self):
+        """Reset any viewport transform back to identity."""
+        raise NotImplementedError
+
+    def resize_window(self, width: int, height: int):
+        """
+        Resize the actual OS window (SDL_SetWindowSize in native backend).
+
+        :param width: New width in pixels.
+        :type width: int
+
+        :param height: New height in pixels.
+        :type height: int
+        """
+        raise NotImplementedError
+
+    def set_clip_rect(self, x: int, y: int, w: int, h: int):
+        """
+        Set a clipping rectangle for rendering.
+
+        :param x: X position of the rectangle's top-left corner.
+        :type x: int
+
+        :param y: Y position of the rectangle's top-left corner.
+        :type y: int
+
+        :param w: Width of the rectangle.
+        :type w: int
+
+        :param h: Height of the rectangle.
+        :type h: int
+        """
+        raise NotImplementedError
+
+    def clear_clip_rect(self):
+        """Clear any clipping rectangle."""
         raise NotImplementedError

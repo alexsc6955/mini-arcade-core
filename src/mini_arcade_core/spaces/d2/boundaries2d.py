@@ -39,25 +39,34 @@ class VerticalBounce:
 
     bounds: Bounds2D
 
-    def apply(self, obj: RectKinematic):
+    def apply(self, obj: RectKinematic) -> bool:
         """
         Apply vertical bounce to the given object.
 
         :param obj: The object to apply the bounce to.
         :type obj: RectKinematic
+
+        :return: True if a bounce occurred, False otherwise.
+        :rtype: bool
         """
         top = self.bounds.top
         bottom = self.bounds.bottom
+
+        bounced = False
 
         # Top collision
         if obj.position.y <= top:
             obj.position.y = top
             obj.velocity.vy *= -1
+            bounced = True
 
         # Bottom collision
         if obj.position.y + obj.size.height >= bottom:
             obj.position.y = bottom - obj.size.height
             obj.velocity.vy *= -1
+            bounced = True
+
+        return bounced
 
 
 class RectSprite(Protocol):

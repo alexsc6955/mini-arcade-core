@@ -7,8 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from mini_arcade_core.backend import Color
-
+from .collision2d import Collider2D
 from .geometry2d import Position2D, Size2D
 from .physics2d import Velocity2D
 
@@ -28,7 +27,7 @@ class KinematicData:
     size: Size2D
     velocity: Velocity2D
     time_scale: float = 1.0
-    color: Optional[Color] = None  # future use
+    collider: Optional[Collider2D] = None
 
     # Justification: Convenience factory with many params.
     # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -42,7 +41,6 @@ class KinematicData:
         vx: float = 0.0,
         vy: float = 0.0,
         time_scale: float = 1.0,
-        color: Optional[Color] = None,
     ) -> "KinematicData":
         """
         Convenience factory for rectangular kinematic data.
@@ -65,9 +63,6 @@ class KinematicData:
         :param vy: Velocity in the Y direction.
         :type vy: float
 
-        :param color: Optional color for rendering.
-        :type color: Optional[Color]
-
         :return: KinematicData instance with the specified parameters.
         :rtype: KinematicData
         """
@@ -76,7 +71,6 @@ class KinematicData:
             size=Size2D(int(width), int(height)),
             velocity=Velocity2D(float(vx), float(vy)),
             time_scale=time_scale,
-            color=color,
         )
 
     # pylint: enable=too-many-arguments,too-many-positional-arguments

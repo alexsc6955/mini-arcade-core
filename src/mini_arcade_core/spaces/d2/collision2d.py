@@ -4,45 +4,35 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from .geometry2d import Position2D, Size2D
 
 
-def _rects_intersect(
-    pos_a: Position2D,
-    size_a: Size2D,
-    pos_b: Position2D,
-    size_b: Size2D,
-) -> bool:
+class Collider2D(ABC):
     """
-    Low-level AABB check. Internal helper.
-
-    :param pos_a: Top-left position of rectangle A.
-    :type pos_a: Position2D
-
-    :param size_a: Size of rectangle A.
-    :type size_a: Size2D
-
-    :param pos_b: Top-left position of rectangle B.
-    :type pos_b: Position2D
-
-    :param size_b: Size of rectangle B.
-    :type size_b: Size2D
-
-    :return: True if the rectangles intersect.
-    :rtype: bool
+    Abstract base class for 2D colliders.
     """
-    return not (
-        pos_a.x + size_a.width < pos_b.x
-        or pos_a.x > pos_b.x + size_b.width
-        or pos_a.y + size_a.height < pos_b.y
-        or pos_a.y > pos_b.y + size_b.height
-    )
+
+    position: Position2D
+    size: Size2D
+
+    @abstractmethod
+    def intersects(self, other: Collider2D) -> bool:
+        """
+        Check if this collider intersects with another collider.
+
+        :param other: The other collider to check against.
+        :type other: Collider2D
+
+        :return: True if the colliders intersect.
+        :rtype: bool
+        """
 
 
 @dataclass
-class RectCollider:
+class RectCollider(Collider2D):
     """
     OOP collision helper that wraps a Position2D + Size2D pair.
 
@@ -66,6 +56,13 @@ class RectCollider:
         :return: True if the rectangles intersect.
         :rtype: bool
         """
-        return _rects_intersect(
-            self.position, self.size, other.position, other.size
+        pos_a = self.position
+        size_a = self.size
+        pos_b = other.position
+        size_b = other.size
+        return not (
+            pos_a.x + size_a.width < pos_b.x
+            or pos_a.x > pos_b.x + size_b.width
+            or pos_a.y + size_a.height < pos_b.y
+            or pos_a.y > pos_b.y + size_b.height
         )

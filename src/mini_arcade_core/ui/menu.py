@@ -7,12 +7,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Optional, Sequence
 
-from mini_arcade_core.backend import Backend, Color, Event, EventType
-from mini_arcade_core.commands import BaseCommand, QuitGameCommand
-from mini_arcade_core.game import Game
-from mini_arcade_core.keymaps import Key
-from mini_arcade_core.scenes import BaseSceneSystem, Scene, SceneModel
-from mini_arcade_core.spaces.d2 import Size2D
+from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend.events import Event, EventType
+from mini_arcade_core.backend.keys import Key
+from mini_arcade_core.backend.types import Color
+from mini_arcade_core.engine.commands import Command, CommandQueue, QuitCommand
+from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.runtime.context import RuntimeContext
+from mini_arcade_core.runtime.input_frame import InputFrame
+from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
+from mini_arcade_core.sim.protocols import SimScene
+from mini_arcade_core.spaces.d2.geometry2d import Size2D
 
 
 @dataclass(frozen=True)
@@ -26,20 +31,20 @@ class MenuItem:
 
     id: str
     label: str
-    on_select: BaseCommand
-    label_fn: Optional[Callable[[Game], str]] = None
+    command_factory: Callable[[], Command]
+    label_fn: Optional[Callable[[object], str]] = None
 
-    def resolved_label(self, game: Game) -> str:
+    def resolved_label(self, ctx: object) -> str:
         """
         Get the resolved label for this menu item.
 
-        :param game: The current game instance.
-        :type game: Game
+        :param ctx: The current ctx instance.
+        :type ctx: object
 
         :return: The resolved label string.
         :rtype: str
         """
-        return self.label_fn(game) if self.label_fn else self.label
+        return self.label_fn(ctx) if self.label_fn else self.label
 
 
 # Justification: Data container for styling options needs
@@ -123,6 +128,7 @@ class MenuStyle:
 class Menu:
     """A simple text-based menu system."""
 
+    # TODO: Solve too-many-arguments warning later
     # Justification: Multiple attributes for menu state
     # pylint: disable=too-many-arguments
     def __init__(
@@ -146,6 +152,9 @@ class Menu:
 
         :param style: Optional MenuStyle for customizing appearance.
         :type style: MenuStyle | None
+
+        :param on_select: Optional callback when an item is selected.
+        :type on_select: Optional[Callable[[MenuItem], None]]
         """
         self.items = list(items)
         self.viewport = viewport
@@ -159,6 +168,21 @@ class Menu:
 
     # pylint: enable=too-many-arguments
 
+    def set_items(self, items: Sequence[MenuItem]):
+        """Set the menu items.
+        :param items: Sequence of new MenuItem instances.
+        :type items: Sequence[MenuItem]
+        """
+        self.items = list(items)
+
+    def set_selected_index(self, index: int):
+        """Set the selected index of the menu.
+        :param index: New selected index.
+        :type index: int
+        """
+        if 0 <= index < len(self.items):
+            self.selected_index = index
+
     def set_labels(self, labels: Sequence[str]):
         """Set the labels of the menu items.
         :param labels: Sequence of new labels for the menu items.
@@ -170,7 +194,7 @@ class Menu:
                 self.items[index] = MenuItem(
                     id=item.id,
                     label=label,
-                    on_select=item.on_select,
+                    command_factory=item.command_factory,
                     label_fn=item.label_fn,
                 )
 
@@ -230,6 +254,7 @@ class Menu:
 
         return False
 
+    # TODO: Delegate drawing to a renderer class later
     def draw(self, surface: Backend):
         """
         Draw the menu onto the given backend surface.
@@ -242,7 +267,7 @@ class Menu:
                 "Menu requires viewport=Size2D for centering/layout"
             )
 
-        vw, vh = self.viewport.width, self.viewport.height
+        vw, vh = self.viewport
 
         # 0) Solid background (for main menus)
         if self.style.background_color is not None:
@@ -322,6 +347,7 @@ class Menu:
                 font_size=self.style.item_font_size,
             )
 
+    # TODO: Solve too-many-locals warning later
     # Justification: Local variables for layout calculations
     # pylint: disable=too-many-locals
     def _draw_buttons(self, surface: Backend, x_center: int, cursor_y: int):
@@ -434,13 +460,14 @@ class Menu:
                 + self.style.title_margin_bottom
             )
 
-        # ✅ Sticky width (never shrink)
+        # Sticky width (never shrink)
         if self.stable_width:
             self._max_content_w_seen = max(self._max_content_w_seen, max_w)
             max_w = self._max_content_w_seen
 
         return max_w, content_h, title_h
 
+    # TODO: Solve too-many-arguments warning later
     # Justification: Many arguments for text drawing utility
     # pylint: disable=too-many-arguments
     @staticmethod
@@ -465,130 +492,289 @@ class Menu:
 
 
 @dataclass
-class MenuModel(SceneModel):
-    """Data model for menu scenes."""
-
-    up_key: Key = Key.UP
-    down_key: Key = Key.DOWN
-    select_key: Key = Key.ENTER
-
-
-class MenuSystem(BaseSceneSystem):
+class MenuModel:
     """
-    Scene system to manage menu interaction and rendering.
+    Data model for menu scenes.
 
-    :ivar menu (Menu): The Menu instance being managed.
+    :ivar selected (int): Currently selected menu item index.
+    :ivar move_cooldown (float): Cooldown time between menu moves.
+    :ivar _cooldown_timer (float): Internal timer for move cooldown.
     """
 
-    menu: Menu
-    scene: BaseMenuScene
+    selected: int = 0
+    move_cooldown: float = 0.12
+    _cooldown_timer: float = 0.0
 
-    def __init__(self, scene):
-        super().__init__(scene)
-        self.menu: Menu | None = None
+    def step_timer(self, dt: float):
+        """
+        Step the internal cooldown timer.
 
-    def on_enter(self):
-        self.menu = Menu(
-            self.scene.menu_items(),
-            viewport=self.scene.size,
-            title=self.scene.menu_title,
-            style=self.scene.menu_style(),
-            on_select=lambda item: item.on_select.execute(self.scene.game),
+        :param dt: Delta time since last update.
+        :type dt: float
+        """
+        if self._cooldown_timer > 0:
+            self._cooldown_timer = max(0.0, self._cooldown_timer - dt)
+
+    def can_move(self) -> bool:
+        """
+        Check if the menu can move selection (cooldown elapsed).
+
+        :return: True if movement is allowed, False otherwise.
+        :rtype: bool
+        """
+        return self._cooldown_timer <= 0.0
+
+    def consume_move(self):
+        """Consume a move action and reset the cooldown timer."""
+        self._cooldown_timer = self.move_cooldown
+
+
+# TODO: Solve too-many-instance-attributes warning later
+# Justification: Context for menu tick needs multiple attributes.
+# pylint: disable=too-many-instance-attributes
+@dataclass
+class MenuTickContext:
+    """
+    Context for a single tick of the menu scene.
+
+    :ivar input_frame (InputFrame): The current input frame.
+    :ivar dt (float): Delta time since last tick.
+    :ivar menu (Menu): The Menu instance.
+    :ivar model (MenuModel): The MenuModel instance.
+    :ivar commands (CommandQueue): The command queue for pushing commands.
+    :ivar intent (MenuIntent | None): The current menu intent.
+    :ivar quit_cmd_factory (callable | None): Factory for quit command.
+    :ivar packet (RenderPacket | None): The resulting render packet.
+    """
+
+    input_frame: InputFrame
+    dt: float
+
+    menu: "Menu"
+    model: "MenuModel"
+    commands: CommandQueue
+
+    # computed data that systems can write into
+    intent: "MenuIntent | None" = None
+
+    # scene hook: a callable to produce quit cmd (per scene override)
+    quit_cmd_factory: callable | None = None
+
+    # final output
+    packet: RenderPacket | None = None
+
+
+# pylint: enable=too-many-instance-attributes
+
+
+@dataclass(frozen=True)
+class MenuIntent:
+    """
+    Represents the user's intent in the menu for the current tick.
+
+    :ivar move_up (bool): Whether the user intends to move up.
+    :ivar move_down (bool): Whether the user intends to move down.
+    :ivar select (bool): Whether the user intends to select the current item.
+    :ivar quit (bool): Whether the user intends to quit the menu.
+    """
+
+    move_up: bool = False
+    move_down: bool = False
+    select: bool = False
+    quit: bool = False
+
+
+@dataclass
+class MenuInputSystem:
+    """Converts InputFrame -> MenuIntent."""
+
+    name: str = "menu_input"
+    order: int = 10
+
+    def step(self, ctx: MenuTickContext):
+        """Step the input system to extract menu intent."""
+        pressed = ctx.input_frame.keys_pressed
+        ctx.intent = MenuIntent(
+            move_up=Key.UP in pressed,
+            move_down=Key.DOWN in pressed,
+            select=(Key.ENTER in pressed) or (Key.SPACE in pressed),
+            quit=Key.ESCAPE in pressed,
         )
 
-    def handle_event(self, event: Event) -> bool:
-        if self.menu is None:
-            return False
 
-        # Let menu update selection; on select -> emit event / run command
-        selected_action = self.menu.handle_event(
-            event,
-            up_key=self.scene.model.up_key,
-            down_key=self.scene.model.down_key,
-            select_key=self.scene.model.select_key,
-        )
-        return selected_action
+@dataclass
+class MenuNavigationSystem:
+    """Menu navigation system."""
 
-    def draw(self, surface: Backend):
-        self.menu.set_labels(
-            [it.resolved_label(self.scene.game) for it in self.menu.items]
-        )
-        self.menu.draw(surface)
+    name: str = "menu_nav"
+    order: int = 20
+
+    def step(self, ctx: MenuTickContext):
+        """Update menu selection based on intent."""
+        intent = ctx.intent
+        if intent is None:
+            return
+
+        ctx.model.step_timer(ctx.dt)
+
+        if not ctx.model.can_move():
+            return
+
+        if intent.move_up:
+            ctx.menu.move_up()
+            ctx.model.selected = ctx.menu.selected_index
+            ctx.model.consume_move()
+            return
+
+        if intent.move_down:
+            ctx.menu.move_down()
+            ctx.model.selected = ctx.menu.selected_index
+            ctx.model.consume_move()
 
 
-class BaseMenuScene(Scene):
+@dataclass
+class MenuActionSystem:
+    """Menu action execution system."""
+
+    name: str = "menu_actions"
+    order: int = 30
+
+    def step(self, ctx: MenuTickContext):
+        """Execute actions based on menu intent."""
+        intent = ctx.intent
+        if intent is None:
+            return
+
+        if intent.select and ctx.menu.items:
+            item = ctx.menu.items[ctx.menu.selected_index]
+            ctx.commands.push(item.command_factory())
+
+        if intent.quit and ctx.quit_cmd_factory is not None:
+            cmd = ctx.quit_cmd_factory()
+            if cmd is not None:
+                ctx.commands.push(cmd)
+
+
+@dataclass
+class MenuRenderSystem:
+    """Menu rendering system."""
+
+    name: str = "menu_render"
+    order: int = 100
+
+    def step(self, ctx: MenuTickContext):
+        """Set the render packet to draw the menu."""
+        ctx.packet = RenderPacket.from_ops([ctx.menu.draw])
+
+
+class BaseMenuScene(SimScene):
     """
     Base scene class for menu-based scenes.
 
     :ivar model (MenuModel): The data model for the menu scene.
     """
 
-    model: MenuModel
+    menu: Menu
+    systems: SystemPipeline[MenuTickContext]
 
-    def __init__(self, game: Game):
-        super().__init__(game)
+    def __init__(self, ctx: RuntimeContext):
+        super().__init__(ctx)
         self.model = MenuModel()
 
-    # hooks
     @property
     def menu_title(self) -> str | None:
         """
-        Optional title text for the menu.
+        Get the title of the menu.
 
-        :return: Title string or None for no title.
+        :return: The menu title string, or None for no title.
         :rtype: str | None
         """
         return None
 
     def menu_style(self) -> MenuStyle:
         """
-        MenuStyle instance for customizing menu appearance.
+        Get the style configuration for the menu.
 
-        :return: MenuStyle instance.
+        :return: The MenuStyle instance for styling the menu.
         :rtype: MenuStyle
         """
         return MenuStyle()
 
     def menu_items(self) -> list[MenuItem]:
         """
-        Return the list of MenuItem instances for this menu.
+        Get the list of menu items for the menu.
 
-        :return: List of MenuItem instances.
+        :return: List of MenuItem instances for the menu.
         :rtype: list[MenuItem]
-
-        :raises NotImplementedError: If not overridden in subclass.
         """
         raise NotImplementedError
 
-    def quit_command(self) -> BaseCommand[Game] | None:
+    def quit_command(self):
         """
-        Quit command to bind to ESCAPE and window close events.
+        Get the command to execute when quitting the menu.
 
-        :return: BaseCommand instance to execute on quit, or None for no action.
-        :rtype: BaseCommand[Game] | None
+        :return: The command to execute on quit.
+        :rtype: Command
         """
-        return QuitGameCommand()  # core default (optional)
+        # default behavior: quit game
+        return QuitCommand()
 
     def on_enter(self):
-        # install menu system (core)
-        self.services.systems.add(MenuSystem(self))
+        self.menu = Menu(
+            self._build_display_items(),
+            viewport=self.context.services.window.get_virtual_size(),
+            title=self.menu_title,
+            style=self.menu_style(),
+        )
+        self.menu.selected_index = self.model.selected
+        self.systems = SystemPipeline()
+        self.systems.extend(
+            [
+                MenuInputSystem(),
+                MenuNavigationSystem(),
+                MenuActionSystem(),
+                MenuRenderSystem(),
+            ]
+        )
 
-        # bind quit if provided
-        cmd = self.quit_command()
-        if cmd:
-            self.services.input.on_key_down(Key.ESCAPE, cmd, "quit")
-            self.services.input.on_quit(cmd, "quit")
+    def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:
+        items = self.menu_items()
+        if not items:
+            return RenderPacket()
 
-        self._systems_on_enter()
+        self.model.step_timer(dt)
 
-    def handle_event(self, event: Event):
-        if self._systems_handle_event(event):
-            return
-        self.services.input.handle_event(event, self)
+        self.menu.set_items(self._build_display_items())
+        self.menu.set_selected_index(self.model.selected)
 
-    def draw(self, surface: Backend):
-        self._systems_draw(surface)
+        ctx = MenuTickContext(
+            input_frame=input_frame,
+            dt=dt,
+            menu=self.menu,
+            model=self.model,
+            commands=self.context.command_queue,
+            quit_cmd_factory=self.quit_command,
+        )
 
-    def on_exit(self): ...
+        self.systems.step(ctx)
 
-    def update(self, dt: float): ...
+        # always return packet from pipeline
+        return ctx.packet or RenderPacket()
+
+    def _build_display_items(self) -> list[MenuItem]:
+        """
+        Resolve dynamic labels (label_fn(ctx)) into the label field the Menu draws.
+        Keeps command_factory intact.
+        """
+        src = self.menu_items()
+        out: list[MenuItem] = []
+        for it in src:
+            out.append(
+                MenuItem(
+                    id=it.id,
+                    label=it.resolved_label(self.context),
+                    command_factory=it.command_factory,
+                    label_fn=it.label_fn,
+                )
+            )
+        return out

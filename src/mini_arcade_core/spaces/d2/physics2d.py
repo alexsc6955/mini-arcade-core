@@ -19,6 +19,15 @@ class Velocity2D:
     vx: float = 0.0
     vy: float = 0.0
 
+    def to_tuple(self) -> tuple[float, float]:
+        """
+        Convert Velocity2D to a tuple.
+
+        :return: Tuple of (vx, vy).
+        :rtype: tuple[float, float]
+        """
+        return (self.vx, self.vy)
+
     def advance(self, x: float, y: float, dt: float) -> tuple[float, float]:
         """Return new (x, y) after dt seconds."""
         return x + self.vx * dt, y + self.vy * dt

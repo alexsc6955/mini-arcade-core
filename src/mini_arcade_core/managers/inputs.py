@@ -2,6 +2,10 @@
 Input manager for handling input bindings and commands.
 """
 
+# TODO: Implement this manager into the new input system
+# Justification: These module will be used later.
+# pylint: disable=no-name-in-module,import-error,used-before-assignment
+
 from __future__ import annotations
 
 import logging
@@ -9,10 +13,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
 from mini_arcade_core.backend import Event, EventType
-from mini_arcade_core.commands import BaseCommand, BaseSceneCommand
 from mini_arcade_core.keymaps import Key
 
 if TYPE_CHECKING:
+    from mini_arcade_core.engine.commands import BaseCommand, BaseSceneCommand
     from mini_arcade_core.scenes.scene import Scene
 
 logger = logging.getLogger(__name__)
@@ -138,8 +142,6 @@ class InputManager:
                     else scene.game
                 )
                 binding.command.execute(to_inject)
-
-    # --- Convenience API ------------------------------------------------------
 
     def on_quit(self, command: BaseCommand, action: str = "quit"):
         """
