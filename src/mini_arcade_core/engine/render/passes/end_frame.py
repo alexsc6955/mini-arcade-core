@@ -18,6 +18,8 @@ class EndFramePass:
 
     name: str = "EndFrame"
 
+    # Justification: some arguments are unused but required by the protocol
+    # pylint: disable=unused-argument
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
     ):

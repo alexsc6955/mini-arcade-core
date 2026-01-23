@@ -18,6 +18,8 @@ class BeginFramePass:
 
     name: str = "BeginFrame"
 
+    # Justification: some arguments are unused but required by the protocol
+    # pylint: disable=unused-argument
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
     ):

@@ -18,6 +18,8 @@ class PostFXPass:
 
     name: str = "PostFXPass"
 
+    # Justification: No implementation yet
+    # pylint: disable=unused-argument
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
     ):
