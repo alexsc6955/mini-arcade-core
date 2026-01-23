@@ -3,6 +3,16 @@ Render pipeline module.
 Defines the RenderPipeline class for rendering RenderPackets.
 """
 
+# Justification: This code is duplicated in multiple places for clarity and separation
+# of concerns.
+# try:
+#     for op in packet.ops:
+#         op(backend)
+# finally:
+#     backend.clear_clip_rect()
+#     backend.clear_viewport_transform() (duplicate-code)
+# pylint: disable=duplicate-code
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
