@@ -30,3 +30,22 @@ class CapturePort:
         :return: Screenshot data as bytes.
         :rtype: bytes | None
         """
+
+    def screenshot_sim(
+        self, run_id: str, frame_index: int, label: str = "frame"
+    ) -> str:
+        """
+        Capture the current frame in a simulation context.
+
+        :param run_id: Unique identifier for the simulation run.
+        :type run_id: str
+
+        :param frame_index: Index of the frame in the simulation.
+        :type frame_index: int
+
+        :param label: Optional label for the screenshot file.
+        :type label: str
+
+        :return: Screenshot file path.
+        :rtype: str
+        """

@@ -128,6 +128,7 @@ class MenuStyle:
 class Menu:
     """A simple text-based menu system."""
 
+    # TODO: Solve too-many-arguments warning later
     # Justification: Multiple attributes for menu state
     # pylint: disable=too-many-arguments
     def __init__(
@@ -151,6 +152,9 @@ class Menu:
 
         :param style: Optional MenuStyle for customizing appearance.
         :type style: MenuStyle | None
+
+        :param on_select: Optional callback when an item is selected.
+        :type on_select: Optional[Callable[[MenuItem], None]]
         """
         self.items = list(items)
         self.viewport = viewport
@@ -250,6 +254,7 @@ class Menu:
 
         return False
 
+    # TODO: Delegate drawing to a renderer class later
     def draw(self, surface: Backend):
         """
         Draw the menu onto the given backend surface.
@@ -342,6 +347,7 @@ class Menu:
                 font_size=self.style.item_font_size,
             )
 
+    # TODO: Solve too-many-locals warning later
     # Justification: Local variables for layout calculations
     # pylint: disable=too-many-locals
     def _draw_buttons(self, surface: Backend, x_center: int, cursor_y: int):
@@ -454,13 +460,14 @@ class Menu:
                 + self.style.title_margin_bottom
             )
 
-        # ✅ Sticky width (never shrink)
+        # Sticky width (never shrink)
         if self.stable_width:
             self._max_content_w_seen = max(self._max_content_w_seen, max_w)
             max_w = self._max_content_w_seen
 
         return max_w, content_h, title_h
 
+    # TODO: Solve too-many-arguments warning later
     # Justification: Many arguments for text drawing utility
     # pylint: disable=too-many-arguments
     @staticmethod
@@ -674,8 +681,6 @@ class BaseMenuScene(SimScene):
         super().__init__(ctx)
         self.model = MenuModel()
 
-    # ---- hooks (same spirit as before) ----
-
     @property
     def menu_title(self) -> str | None:
         """
@@ -717,7 +722,7 @@ class BaseMenuScene(SimScene):
     def on_enter(self):
         self.menu = Menu(
             self._build_display_items(),
-            viewport=self.context.services.window.size,
+            viewport=self.context.services.window.get_virtual_size(),
             title=self.menu_title,
             style=self.menu_style(),
         )

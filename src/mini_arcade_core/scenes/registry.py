@@ -93,22 +93,23 @@ class SceneRegistry:
         for scene_id, cls in catalog.items():
             self.register_cls(scene_id, cls)
 
-    def discover(self, package: str) -> "SceneRegistry":
+    def discover(self, *packages: str) -> "SceneRegistry":
         """
         Import all modules in a package so @scene decorators run.
 
-        :param package: The package name to scan for scene modules.
-        :type package: str
+        :param packages: The package names to scan for scene modules.
+        :type packages: str
 
         :return: The SceneRegistry instance (for chaining).
         :rtype: SceneRegistry
         """
-        pkg = importlib.import_module(package)
-        if not hasattr(pkg, "__path__"):
-            return self  # not a package
+        for package in packages:
+            pkg = importlib.import_module(package)
+            if not hasattr(pkg, "__path__"):
+                continue
 
-        for mod in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + "."):
-            importlib.import_module(mod.name)
+            for mod in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + "."):
+                importlib.import_module(mod.name)
 
         self.load_catalog(snapshot())
         return self

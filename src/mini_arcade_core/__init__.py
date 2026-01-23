@@ -18,6 +18,8 @@ SceneFactoryLike = Union[Type[SimScene], Callable[[Game], SimScene]]
 
 
 # TODO: Improve exception handling and logging in run_game
+# TODO: Consider reducing parameters by using a single config object
+# TODO: Delegate responsibilities to Game class where appropriate
 def run_game(
     scene: SceneFactoryLike | None = None,
     config: GameConfig | None = None,
@@ -28,9 +30,12 @@ def run_game(
     Convenience helper to bootstrap and run a game with a single scene.
 
     Supports both:
-      - run_game(SceneClass, cfg)            # legacy
-      - run_game(config=cfg, initial_scene="main", registry=...)  # registry-based
-      - run_game(cfg)                       # config-only
+        - run_game(SceneClass, cfg)            # legacy
+        - run_game(config=cfg, initial_scene="main", registry=...)  # registry-based
+        - run_game(cfg)                       # config-only
+
+    :param scene: Optional SimScene factory/class to register
+    :type scene: SceneFactoryLike | None
 
     :param initial_scene: The SimScene ID to start the game with.
     :type initial_scene: str

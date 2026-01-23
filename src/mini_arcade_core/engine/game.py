@@ -8,18 +8,19 @@ from dataclasses import dataclass, field
 from time import perf_counter, sleep
 from typing import Dict, Literal
 
-from mini_arcade_core.backend import Backend
+from mini_arcade_core.backend import Backend, WindowSettings
+from mini_arcade_core.backend.events import EventType
+from mini_arcade_core.backend.keys import Key
 from mini_arcade_core.engine.commands import (
     CommandContext,
     CommandQueue,
     QuitCommand,
+    ToggleDebugOverlayCommand,
 )
-
-# from mini_arcade_core.sim.runner import SimRunner, SimRunnerConfig
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.managers.cheats import CheatManager
-from mini_arcade_core.runtime.audio.audio_adapter import NullAudioAdapter
+from mini_arcade_core.runtime.audio.audio_adapter import SDLAudioAdapter
 from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
 from mini_arcade_core.runtime.file.file_adapter import LocalFilesAdapter
 from mini_arcade_core.runtime.input.input_adapter import InputAdapter
@@ -91,7 +92,7 @@ class FrameTimer:
     :ivar marks (Dict[str, float]): Recorded time marks.
     """
 
-    enabled: bool = True
+    enabled: bool = False
     marks: Dict[str, float] = field(default_factory=dict)
 
     def mark(self, name: str):
@@ -177,9 +178,13 @@ class Game:
         self.services = RuntimeServices(
             window=WindowAdapter(
                 self.backend,
+                WindowSettings(
+                    width=self.config.window.width,
+                    height=self.config.window.height,
+                ),
             ),
             scenes=SceneAdapter(self.registry, self),
-            audio=NullAudioAdapter(),
+            audio=SDLAudioAdapter(self.backend),
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
@@ -222,7 +227,7 @@ class Game:
         packet_cache: dict[int, RenderPacket] = {}
 
         timer = FrameTimer(enabled=True)
-        report_every = 60  # print once per second at 60fps
+        # report_every = 60  # print once per second at 60fps
 
         # TODO: Integrate SimRunner for simulation stepping
         # TODO: Fix assignment-from-no-return warning in self.services.input.build
@@ -239,6 +244,15 @@ class Game:
             last_time = now
 
             events = list(backend.poll_events())
+
+            for e in events:
+                if e.type == EventType.WINDOWRESIZED and e.size:
+                    w, h = e.size
+                    logger.debug(f"Window resized event: {w}x{h}")
+                    self.services.window.on_window_resized(w, h)
+                # if F1 pressed, toggle debug overlay
+                if e.type == EventType.KEYDOWN and e.key == Key.F1:
+                    self.command_queue.push(ToggleDebugOverlayCommand())
             timer.mark("events_polled")
 
             input_frame = self.services.input.build(events, frame_index, dt)
@@ -294,6 +308,7 @@ class Game:
             backend.begin_frame()
             timer.mark("begin_frame_done")
 
+            vp = self.services.window.get_viewport()
             for entry in self.services.scenes.visible_entries():
                 scene = entry.scene
                 packet = packet_cache.get(id(scene))
@@ -302,7 +317,7 @@ class Game:
                     packet = scene.tick(_neutral_input(frame_index, 0.0), 0.0)
                     packet_cache[id(scene)] = packet
 
-                pipeline.draw_packet(backend, packet)
+                pipeline.draw_packet(backend, packet, vp)
 
             timer.mark("draw_done")
             backend.end_frame()
@@ -314,12 +329,14 @@ class Game:
             timer.mark("sleep_end")
 
             # --- report ---
-            if frame_index % report_every == 0 and frame_index > 0:
-                ms = timer.report_ms()
-                total = (perf_counter() - timer.marks["frame_start"]) * 1000.0
-                logger.debug(
-                    f"[Frame {frame_index}] total={total:.2f}ms | {ms}"
-                )
+            # if timer.enabled and (
+            #     frame_index % report_every == 0 and frame_index > 0
+            # ):
+            #     ms = timer.report_ms()
+            #     total = (perf_counter() - timer.marks["frame_start"]) * 1000.0
+            #     logger.debug(
+            #         f"[Frame {frame_index}] total={total:.2f}ms | {ms}"
+            #     )
 
             frame_index += 1
 
@@ -339,6 +356,9 @@ class Game:
 
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
+
+        # the “authoring resolution”
+        self.services.window.set_virtual_resolution(800, 600)
 
     def _resolve_world(self) -> object | None:
         # Prefer gameplay world underneath overlays:

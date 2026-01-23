@@ -94,4 +94,32 @@ class SceneAdapter(ScenePort):
 
     def input_entry(self):
         vis = self.visible_entries()
-        return vis[-1] if vis else None
+        if not vis:
+            return None
+
+        # If some scene blocks input, only scenes at/above it can receive.
+        start_idx = 0
+        for idx in range(len(vis) - 1, -1, -1):
+            if vis[idx].policy.blocks_input:
+                start_idx = idx
+                break
+
+        candidates = vis[start_idx:]
+
+        # Pick the top-most candidate that actually receives input.
+        for entry in reversed(candidates):
+            if entry.policy.receives_input:
+                return entry
+
+        return None
+
+    def has_scene(self, scene_id: str) -> bool:
+        return any(item.entry.scene_id == scene_id for item in self._stack)
+
+    def remove_scene(self, scene_id: str) -> None:
+        # remove first match from top (overlay is usually near top)
+        for i in range(len(self._stack) - 1, -1, -1):
+            if self._stack[i].entry.scene_id == scene_id:
+                item = self._stack.pop(i)
+                item.entry.scene.on_exit()
+                return

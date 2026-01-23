@@ -1,5 +1,6 @@
 """
 Logging utilities for Mini Arcade Core.
+Provides a console logger with colored output and class/function context.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from typing import Optional
 
 
 def _classname_from_locals(locals_: dict) -> Optional[str]:
+    """Retrieve the class name from locals dict, if available."""
     self_obj = locals_.get("self")
     if self_obj is not None:
         return type(self_obj).__name__
@@ -72,10 +74,6 @@ class ConsoleColorFormatter(logging.Formatter):
         msg = super().format(record)
         return f"{color}{msg}{self.COLORS['RESET']}"
 
-
-# --------------------------------------------------------------------------------------
-# Global logging setup (single source of truth)
-# --------------------------------------------------------------------------------------
 
 LOGGER_FORMAT = (
     "%(asctime)s [%(levelname)-8.8s] [%(name)s] "
@@ -165,10 +163,6 @@ def configure_logging(level: int = logging.DEBUG):
 
     root.addHandler(console)
 
-
-# --------------------------------------------------------------------------------------
-# Public logger for DejaBounce
-# --------------------------------------------------------------------------------------
 
 configure_logging()
 logger = logging.getLogger("mini-arcade-core")

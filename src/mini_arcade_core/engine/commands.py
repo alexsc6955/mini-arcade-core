@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Optional, Protocol, TypeVar
 
+from mini_arcade_core.runtime.scene.scene_port import ScenePolicy
+
 if TYPE_CHECKING:
     from mini_arcade_core.runtime.services import RuntimeServices
 
@@ -167,3 +169,27 @@ class ChangeSceneCommand(Command):
         context: CommandContext,
     ):
         context.services.scenes.change(self.scene_id)
+
+
+@dataclass(frozen=True)
+class ToggleDebugOverlayCommand(Command):
+    """Toggle the debug overlay scene."""
+
+    DEBUG_OVERLAY_ID = "debug_overlay"
+
+    def execute(self, context: CommandContext) -> None:
+        scenes = context.services.scenes
+        if scenes.has_scene(self.DEBUG_OVERLAY_ID):
+            scenes.remove_scene(self.DEBUG_OVERLAY_ID)
+            return
+
+        scenes.push(
+            self.DEBUG_OVERLAY_ID,
+            as_overlay=True,
+            policy=ScenePolicy(
+                blocks_update=False,
+                blocks_input=False,
+                is_opaque=False,
+                receives_input=False,
+            ),
+        )
