@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.engine.render.context import RenderContext
 from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.passes.base import RenderPass
 from mini_arcade_core.engine.render.passes.begin_frame import BeginFramePass
 from mini_arcade_core.engine.render.passes.end_frame import EndFramePass
 from mini_arcade_core.engine.render.passes.lighting import LightingPass
@@ -29,9 +30,11 @@ class RenderPipeline:
         - cull
         - sort
         - backend draw pass
+
+    :cvar passes: list[RenderPass]: List of render passes to execute in order.
     """
 
-    passes: list[object] = field(
+    passes: list[RenderPass] = field(
         default_factory=lambda: [
             BeginFramePass(),
             WorldPass(),
@@ -44,7 +47,19 @@ class RenderPipeline:
 
     def render_frame(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
-    ) -> None:
+    ):
+        """
+        Render a frame using the provided Backend, RenderContext, and list of RenderPackets.
+
+        :param backend: Backend to use for rendering.
+        :type backend: Backend
+
+        :param ctx: RenderContext containing rendering state.
+        :type ctx: RenderContext
+
+        :param packets: List of RenderPackets to render.
+        :type packets: list[RenderPacket]
+        """
         for p in self.passes:
             p.run(backend, ctx, packets)
 
@@ -84,5 +99,4 @@ class RenderPipeline:
                 op(backend)
         finally:
             backend.clear_clip_rect()
-            backend.clear_viewport_transform()
             backend.clear_viewport_transform()

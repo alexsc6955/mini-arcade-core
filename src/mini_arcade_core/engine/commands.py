@@ -173,11 +173,15 @@ class ChangeSceneCommand(Command):
 
 @dataclass(frozen=True)
 class ToggleDebugOverlayCommand(Command):
-    """Toggle the debug overlay scene."""
+    """
+    Toggle the debug overlay scene.
+
+    :cvar DEBUG_OVERLAY_ID: str: Identifier for the debug overlay scene.
+    """
 
     DEBUG_OVERLAY_ID = "debug_overlay"
 
-    def execute(self, context: CommandContext) -> None:
+    def execute(self, context: CommandContext):
         scenes = context.services.scenes
         if scenes.has_scene(self.DEBUG_OVERLAY_ID):
             scenes.remove_scene(self.DEBUG_OVERLAY_ID)

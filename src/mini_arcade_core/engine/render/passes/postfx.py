@@ -1,4 +1,7 @@
-# mini_arcade_core/engine/render/passes/postfx.py
+"""
+Post-processing effects render pass implementation.
+"""
+
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
@@ -8,11 +11,16 @@ from mini_arcade_core.engine.render.packet import RenderPacket
 
 @dataclass
 class PostFXPass:
+    """
+    PostFX Render Pass.
+    This pass handles post-processing effects like CRT simulation.
+    """
+
     name: str = "PostFXPass"
 
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
-    ) -> None:
+    ):
+        """Run the post-processing effects render pass."""
         # hook/no-op for now (CRT later)
-        return
         return

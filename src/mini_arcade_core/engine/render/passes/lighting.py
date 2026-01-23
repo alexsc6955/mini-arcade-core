@@ -1,4 +1,7 @@
-# mini_arcade_core/engine/render/passes/lighting.py
+"""
+Lighting render pass implementation.
+"""
+
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
@@ -8,11 +11,16 @@ from mini_arcade_core.engine.render.packet import RenderPacket
 
 @dataclass
 class LightingPass:
+    """
+    Lighting Render Pass.
+    This pass handles scene lighting effects.
+    """
+
     name: str = "LightingPass"
 
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
-    ) -> None:
+    ):
+        """Run the lighting render pass."""
         # hook/no-op for now
-        return
         return

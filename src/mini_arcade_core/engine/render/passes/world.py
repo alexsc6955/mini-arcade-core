@@ -1,4 +1,7 @@
-# mini_arcade_core/engine/render/passes/world.py
+"""
+World render pass implementation.
+"""
+
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
@@ -9,11 +12,17 @@ from mini_arcade_core.engine.render.packet import RenderPacket
 
 @dataclass
 class WorldPass:
+    """
+    World Render Pass.
+    This pass handles rendering of world-space objects.
+    """
+
     name: str = "WorldPass"
 
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[FramePacket]
-    ) -> None:
+    ):
+        """Run the world render pass."""
         for fp in packets:
             if fp.is_overlay:
                 continue
@@ -21,7 +30,7 @@ class WorldPass:
 
     def _draw_packet(
         self, backend: Backend, ctx: RenderContext, packet: RenderPacket
-    ) -> None:
+    ):
         if not packet or not packet.ops:
             return
 

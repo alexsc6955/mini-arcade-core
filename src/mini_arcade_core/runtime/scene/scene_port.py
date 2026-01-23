@@ -161,7 +161,7 @@ class ScenePort:
         :rtype: bool
         """
 
-    def remove_scene(self, scene_id: str) -> None:
+    def remove_scene(self, scene_id: str):
         """
         Remove a scene with the given ID from the stack.
 

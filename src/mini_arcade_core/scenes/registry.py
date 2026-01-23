@@ -15,8 +15,7 @@ from mini_arcade_core.runtime.context import RuntimeContext
 from .autoreg import snapshot
 
 if TYPE_CHECKING:
-    from mini_arcade_core.engine.commands import CommandQueue
-    from mini_arcade_core.sim import SimScene
+    from mini_arcade_core.sim.protocols import SimScene
 
 
 class SceneFactory(Protocol):

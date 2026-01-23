@@ -1,4 +1,7 @@
-# mini_arcade_core/engine/render/passes/begin_frame.py
+"""
+Begin Frame Render Pass
+"""
+
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
@@ -8,10 +11,15 @@ from mini_arcade_core.engine.render.packet import RenderPacket
 
 @dataclass
 class BeginFramePass:
+    """
+    Begin Frame Render Pass.
+    This pass signals the start of a new frame to the backend.
+    """
+
     name: str = "BeginFrame"
 
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
-    ) -> None:
-        backend.begin_frame()
+    ):
+        """Run the begin frame pass."""
         backend.begin_frame()

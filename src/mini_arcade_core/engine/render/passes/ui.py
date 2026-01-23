@@ -1,4 +1,7 @@
-# mini_arcade_core/engine/render/passes/ui.py
+"""
+UI render pass implementation.
+"""
+
 from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
@@ -8,11 +11,17 @@ from mini_arcade_core.engine.render.frame_packet import FramePacket
 
 @dataclass
 class UIPass:
+    """
+    UI Render Pass.
+    This pass handles rendering of UI overlays.
+    """
+
     name: str = "UIPass"
 
     def run(
         self, backend: Backend, ctx: RenderContext, packets: list[FramePacket]
-    ) -> None:
+    ):
+        """Run the UI render pass."""
         # UI overlays should be screen-space (no world transform / no clip unless you want it)
         backend.clear_viewport_transform()
         backend.clear_clip_rect()

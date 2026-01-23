@@ -10,6 +10,7 @@ from mini_arcade_core.runtime.audio.audio_port import AudioPort
 from mini_arcade_core.runtime.capture.capture_port import CapturePort
 from mini_arcade_core.runtime.file.file_port import FilePort
 from mini_arcade_core.runtime.input.input_port import InputPort
+from mini_arcade_core.runtime.render.render_port import RenderServicePort
 from mini_arcade_core.runtime.scene.scene_port import ScenePort
 from mini_arcade_core.runtime.window.window_port import WindowPort
 
@@ -33,4 +34,4 @@ class RuntimeServices:
     files: FilePort
     capture: CapturePort
     input: InputPort
-    render: object
+    render: RenderServicePort

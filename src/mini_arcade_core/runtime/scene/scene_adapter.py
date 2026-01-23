@@ -116,7 +116,7 @@ class SceneAdapter(ScenePort):
     def has_scene(self, scene_id: str) -> bool:
         return any(item.entry.scene_id == scene_id for item in self._stack)
 
-    def remove_scene(self, scene_id: str) -> None:
+    def remove_scene(self, scene_id: str):
         # remove first match from top (overlay is usually near top)
         for i in range(len(self._stack) - 1, -1, -1):
             if self._stack[i].entry.scene_id == scene_id:
