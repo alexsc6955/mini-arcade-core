@@ -11,6 +11,8 @@ class RenderStats:
     packets: int = 0
     ops: int = 0
     draw_groups: int = 0  # approx ok
+    renderables: int = 0
+    draw_groups: int = 0
 
 
 @dataclass

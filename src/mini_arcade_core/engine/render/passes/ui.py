@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.engine.render.context import RenderContext
-from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.frame_packet import FramePacket
 
 
 @dataclass
@@ -11,29 +11,22 @@ class UIPass:
     name: str = "UIPass"
 
     def run(
-        self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
+        self, backend: Backend, ctx: RenderContext, packets: list[FramePacket]
     ) -> None:
-        if not ctx.debug_overlay:
-            return
-
-        # ensure screen-space
-        backend.clear_clip_rect()
+        # UI overlays should be screen-space (no world transform / no clip unless you want it)
         backend.clear_viewport_transform()
+        backend.clear_clip_rect()
 
-        y = 8
-        backend.draw_text(8, y, f"{ctx.frame_ms:.2f}ms", color=(200, 200, 200))
-        y += 18
-        backend.draw_text(
-            8, y, f"packets: {ctx.stats.packets}", color=(200, 200, 200)
-        )
-        y += 18
-        backend.draw_text(
-            8, y, f"renderables: {ctx.stats.ops}", color=(200, 200, 200)
-        )
-        y += 18
-        backend.draw_text(
-            8,
-            y,
-            f"draw_groups~: {ctx.stats.draw_groups}",
-            color=(200, 200, 200),
-        )
+        for fp in packets:
+            if not fp.is_overlay:
+                continue
+            if not fp.packet or not fp.packet.ops:
+                continue
+
+            # count overlays too (optional; I’d count them)
+            ctx.stats.packets += 1
+            ctx.stats.renderables += len(fp.packet.ops)
+            ctx.stats.draw_groups += 1
+
+            for op in fp.packet.ops:
+                op(backend)

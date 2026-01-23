@@ -18,8 +18,10 @@ from mini_arcade_core.engine.commands import (
     ToggleDebugOverlayCommand,
 )
 from mini_arcade_core.engine.render.context import RenderContext
+from mini_arcade_core.engine.render.frame_packet import FramePacket
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
+from mini_arcade_core.engine.render.render_service import RenderService
 from mini_arcade_core.managers.cheats import CheatManager
 from mini_arcade_core.runtime.audio.audio_adapter import SDLAudioAdapter
 from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
@@ -189,6 +191,7 @@ class Game:
             files=LocalFilesAdapter(),
             capture=CaptureAdapter(self.backend),
             input=InputAdapter(),
+            render=RenderService(),
         )
 
         self.command_queue = CommandQueue()
@@ -318,7 +321,13 @@ class Game:
                 if packet is None:
                     packet = scene.tick(_neutral_input(frame_index, 0.0), 0.0)
                     packet_cache[id(scene)] = packet
-                frame_packets.append(packet)
+                frame_packets.append(
+                    FramePacket(
+                        scene_id=entry.scene_id,
+                        is_overlay=entry.is_overlay,
+                        packet=packet,
+                    )
+                )
 
             render_ctx = RenderContext(
                 viewport=vp,
@@ -326,6 +335,8 @@ class Game:
                 frame_ms=dt * 1000.0,
             )
 
+            self.services.render.last_frame_ms = render_ctx.frame_ms
+            self.services.render.last_stats = render_ctx.stats
             pipeline.render_frame(backend, render_ctx, frame_packets)
 
             timer.mark("render_done")

@@ -39,10 +39,13 @@ class DebugOverlayScene(SimScene):
         vp = services.window.get_viewport()
         stack = services.scenes.visible_entries()
         # pylint: enable=assignment-from-no-return
-
+        rs = services.render
         lines = [
             f"FPS: {self._fps:5.1f}",
             f"dt:  {dt*1000.0:5.2f} ms",
+            f"frame: {rs.last_frame_ms:5.2f} ms",
+            f"renderables: {rs.last_stats.renderables}",
+            f"draw_groups~: {rs.last_stats.draw_groups}",
             f"virtual: {vp.virtual_w}x{vp.virtual_h}",
             f"window:   {vp.window_w}x{vp.window_h}",
             f"scale: {vp.scale:.3f}",

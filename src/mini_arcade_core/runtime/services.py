@@ -33,3 +33,4 @@ class RuntimeServices:
     files: FilePort
     capture: CapturePort
     input: InputPort
+    render: object
