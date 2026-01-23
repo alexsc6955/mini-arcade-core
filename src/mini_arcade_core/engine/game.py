@@ -16,8 +16,16 @@ from mini_arcade_core.engine.commands import (
     CommandQueue,
     QuitCommand,
     ToggleDebugOverlayCommand,
+    ToggleEffectCommand,
 )
 from mini_arcade_core.engine.render.context import RenderContext
+from mini_arcade_core.engine.render.effects.base import (
+    EffectParams,
+    EffectStack,
+)
+from mini_arcade_core.engine.render.effects.crt import CRTEffect
+from mini_arcade_core.engine.render.effects.registry import EffectRegistry
+from mini_arcade_core.engine.render.effects.vignette import VignetteNoiseEffect
 from mini_arcade_core.engine.render.frame_packet import FramePacket
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
@@ -53,6 +61,12 @@ class WindowConfig:
 
 
 @dataclass
+class PostFXConfig:
+    enabled: bool = True
+    active: list[str] = field(default_factory=list)
+
+
+@dataclass
 class GameConfig:
     """
     Configuration options for the Game.
@@ -65,6 +79,7 @@ class GameConfig:
     window: WindowConfig | None = None
     fps: int = 60
     backend: Backend | None = None
+    postfx: PostFXConfig = field(default_factory=PostFXConfig)
 
 
 Difficulty = Literal["easy", "normal", "hard", "insane"]
@@ -79,6 +94,7 @@ class GameSettings:
     """
 
     difficulty: Difficulty = "normal"
+    effects_stack: EffectStack | None = None
 
 
 def _neutral_input(frame_index: int, dt: float) -> InputFrame:
@@ -222,6 +238,26 @@ class Game:
 
         pipeline = RenderPipeline()
 
+        effects_registry = EffectRegistry()
+        effects_registry.register(CRTEffect())
+        effects_registry.register(VignetteNoiseEffect())
+
+        effects_stack = EffectStack(
+            enabled=self.config.postfx.enabled,
+            active=list(self.config.postfx.active),
+            params={
+                "crt": EffectParams(intensity=0.35, wobble_speed=1.0),
+                "vignette_noise": EffectParams(
+                    intensity=0.25, wobble_speed=1.0
+                ),
+            },
+        )
+        self.settings.effects_stack = effects_stack
+
+        for p in pipeline.passes:
+            if getattr(p, "name", "") == "PostFXPass":
+                p.registry = effects_registry
+
         self._running = True
         target_dt = 1.0 / self.config.fps if self.config.fps > 0 else 0.0
         last_time = perf_counter()
@@ -238,6 +274,7 @@ class Game:
         # & self.services.scenes.input_entry
         # Justification: These methods are expected to return values.
         # pylint: disable=assignment-from-no-return
+        time_s = 0.0
 
         while self._running:
             timer.clear()
@@ -255,8 +292,17 @@ class Game:
                     logger.debug(f"Window resized event: {w}x{h}")
                     self.services.window.on_window_resized(w, h)
                 # if F1 pressed, toggle debug overlay
-                if e.type == EventType.KEYDOWN and e.key == Key.F1:
-                    self.command_queue.push(ToggleDebugOverlayCommand())
+                if e.type == EventType.KEYDOWN:
+                    if e.key == Key.F1:
+                        self.command_queue.push(ToggleDebugOverlayCommand())
+                    elif e.key == Key.F2:
+                        self.command_queue.push(ToggleEffectCommand("crt"))
+                    elif e.key == Key.F3:
+                        self.command_queue.push(
+                            ToggleEffectCommand("vignette_noise")
+                        )
+                    elif e.key == Key.F4:
+                        effects_stack.enabled = not effects_stack.enabled
             timer.mark("events_polled")
 
             input_frame = self.services.input.build(events, frame_index, dt)
@@ -334,6 +380,10 @@ class Game:
                 debug_overlay=getattr(self.settings, "debug_overlay", False),
                 frame_ms=dt * 1000.0,
             )
+            time_s += dt
+            render_ctx.meta["frame_index"] = frame_index
+            render_ctx.meta["time_s"] = time_s
+            render_ctx.meta["effects_stack"] = effects_stack
 
             self.services.render.last_frame_ms = render_ctx.frame_ms
             self.services.render.last_stats = render_ctx.stats

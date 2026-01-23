@@ -197,3 +197,22 @@ class ToggleDebugOverlayCommand(Command):
                 receives_input=False,
             ),
         )
+
+
+@dataclass(frozen=True)
+class ToggleEffectCommand(Command):
+    """
+    Toggle a post-processing effect on or off.
+
+    :ivar effect_id (str): Identifier of the effect to toggle.
+    """
+
+    effect_id: str
+
+    def execute(self, context: CommandContext) -> None:
+        # effects live in context.meta OR in a dedicated service/settings.
+        # v1 simplest: stash stack into context.settings or context.services.render
+        stack = getattr(context.settings, "effects_stack", None)
+        if stack is None:
+            return
+        stack.toggle(self.effect_id)

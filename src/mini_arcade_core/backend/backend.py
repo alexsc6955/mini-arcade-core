@@ -289,3 +289,31 @@ class Backend(Protocol):
     def clear_clip_rect(self):
         """Clear any clipping rectangle."""
         raise NotImplementedError
+
+    def draw_line(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        color: tuple[int, ...] = (255, 255, 255),
+    ):
+        """
+        Draw a line between two points in some default color.
+
+        :param x1: X position of the start point.
+        :type x1: int
+
+        :param y1: Y position of the start point.
+        :type y1: int
+
+        :param x2: X position of the end point.
+        :type x2: int
+
+        :param y2: Y position of the end point.
+        :type y2: int
+
+        :param color: RGB color tuple.
+        :type color: tuple[int, ...]
+        """
+        raise NotImplementedError
