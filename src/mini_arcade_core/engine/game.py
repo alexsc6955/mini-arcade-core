@@ -17,6 +17,7 @@ from mini_arcade_core.engine.commands import (
     QuitCommand,
     ToggleDebugOverlayCommand,
 )
+from mini_arcade_core.engine.render.context import RenderContext
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.managers.cheats import CheatManager
@@ -304,23 +305,31 @@ class Game:
                 cmd.execute(command_context)
             timer.mark("cmd_exec_end")
 
+            # ---------------- TO REPLACE WITH RENDERING PIPELINE ----------------
             timer.mark("render_start")
-            backend.begin_frame()
-            timer.mark("begin_frame_done")
 
             vp = self.services.window.get_viewport()
+
+            # gather visible packets
+            frame_packets: list[RenderPacket] = []
             for entry in self.services.scenes.visible_entries():
                 scene = entry.scene
                 packet = packet_cache.get(id(scene))
                 if packet is None:
-                    # bootstrap (first frame visible but not updated)
                     packet = scene.tick(_neutral_input(frame_index, 0.0), 0.0)
                     packet_cache[id(scene)] = packet
+                frame_packets.append(packet)
 
-                pipeline.draw_packet(backend, packet, vp)
+            render_ctx = RenderContext(
+                viewport=vp,
+                debug_overlay=getattr(self.settings, "debug_overlay", False),
+                frame_ms=dt * 1000.0,
+            )
 
-            timer.mark("draw_done")
-            backend.end_frame()
+            pipeline.render_frame(backend, render_ctx, frame_packets)
+
+            timer.mark("render_done")
+            # ---------------- END RENDERING PIPELINE ----------------------------
             timer.mark("end_frame_done")
 
             timer.mark("sleep_start")
