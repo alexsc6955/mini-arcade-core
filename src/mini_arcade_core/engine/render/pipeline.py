@@ -5,10 +5,17 @@ Defines the RenderPipeline class for rendering RenderPackets.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from mini_arcade_core.backend import Backend
+from mini_arcade_core.engine.render.context import RenderContext
 from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.passes.begin_frame import BeginFramePass
+from mini_arcade_core.engine.render.passes.end_frame import EndFramePass
+from mini_arcade_core.engine.render.passes.lighting import LightingPass
+from mini_arcade_core.engine.render.passes.postfx import PostFXPass
+from mini_arcade_core.engine.render.passes.ui import UIPass
+from mini_arcade_core.engine.render.passes.world import WorldPass
 from mini_arcade_core.engine.render.viewport import ViewportState
 
 
@@ -18,11 +25,28 @@ class RenderPipeline:
     Minimal pipeline for v1.
 
     Later you can expand this into passes:
-      - build draw list
-      - cull
-      - sort
-      - backend draw pass
+        - build draw list
+        - cull
+        - sort
+        - backend draw pass
     """
+
+    passes: list[object] = field(
+        default_factory=lambda: [
+            BeginFramePass(),
+            WorldPass(),
+            LightingPass(),
+            UIPass(),
+            PostFXPass(),
+            EndFramePass(),
+        ]
+    )
+
+    def render_frame(
+        self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
+    ) -> None:
+        for p in self.passes:
+            p.run(backend, ctx, packets)
 
     def draw_packet(
         self,
@@ -48,16 +72,17 @@ class RenderPipeline:
             viewport_state.scale,
         )
 
-        # backend.set_clip_rect(
-        #     viewport_state.offset_x,
-        #     viewport_state.offset_y,
-        #     viewport_state.viewport_w,
-        #     viewport_state.viewport_h,
-        # )
+        backend.set_clip_rect(
+            viewport_state.offset_x,
+            viewport_state.offset_y,
+            viewport_state.viewport_w,
+            viewport_state.viewport_h,
+        )
 
         try:
             for op in packet.ops:
                 op(backend)
         finally:
             backend.clear_clip_rect()
+            backend.clear_viewport_transform()
             backend.clear_viewport_transform()
