@@ -6,6 +6,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-01-23
+
+### Added
+- Add debug overlay scene to display FPS and window information
+- Implement viewport management and window resizing functionality
+- Introduce WindowSettings and enhance audio adapter functionality
+
+### Changed
+- Improve documentation and type hints in backend and viewport modules
+- Enhance documentation and type hints across multiple modules
+
+### Other
+- Merge branch 'release/1.0' of https://github.com/alexsc6955/mini-arcade-core into release/1.0
+
 ## [1.0.1] - 2026-01-23
 
 ### Added
