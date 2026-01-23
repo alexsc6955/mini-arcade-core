@@ -2,6 +2,9 @@
 Vignette noise screen-space post effect.
 """
 
+# Justification: PoC code for v1.
+# pylint: disable=duplicate-code
+
 from __future__ import annotations
 
 import random
@@ -21,6 +24,8 @@ class VignetteNoiseEffect:
 
     effect_id: str = "vignette_noise"
 
+    # Justification: This is PoC code for v1.
+    # pylint: disable=too-many-locals
     def apply(self, backend: Backend, ctx: RenderContext) -> None:
         """Apply the Vignette + Noise effect to the current render context."""
         vp = ctx.viewport

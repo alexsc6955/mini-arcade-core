@@ -62,6 +62,13 @@ class WindowConfig:
 
 @dataclass
 class PostFXConfig:
+    """
+    Configuration for post-processing effects.
+
+    :ivar enabled (bool): Whether post effects are enabled by default.
+    :ivar active (list[str]): List of active effect IDs by default.
+    """
+
     enabled: bool = True
     active: list[str] = field(default_factory=list)
 
@@ -220,6 +227,9 @@ class Game:
     # TODO: Fix too-many-statements and too-many-locals warnings
     # Justification: Main game loop with multiple responsibilities.
     # pylint: disable=too-many-statements,too-many-locals
+    # TODO: Fix too-many-branches warning
+    # Justification: Complex control flow in main loop.
+    # pylint: disable=too-many-branches
     def run(self, initial_scene_id: str):
         """
         Run the main loop starting with the given scene.

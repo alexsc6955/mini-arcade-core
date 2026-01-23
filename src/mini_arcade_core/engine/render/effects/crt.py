@@ -2,6 +2,9 @@
 CRT screen-space post effect.
 """
 
+# Justification: PoC code for v1.
+# pylint: disable=duplicate-code
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,6 +24,8 @@ class CRTEffect:
 
     effect_id: str = "crt"
 
+    # Justification: This is PoC code for v1.
+    # pylint: disable=too-many-locals
     def apply(self, backend: Backend, ctx: RenderContext) -> None:
         """Apply the CRT effect to the current render context."""
         vp = ctx.viewport

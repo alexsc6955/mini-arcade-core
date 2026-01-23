@@ -290,6 +290,8 @@ class Backend(Protocol):
         """Clear any clipping rectangle."""
         raise NotImplementedError
 
+    # Justification: Simple drawing API for now
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def draw_line(
         self,
         x1: int,
@@ -317,3 +319,6 @@ class Backend(Protocol):
         :type color: tuple[int, ...]
         """
         raise NotImplementedError
+
+
+# pylint: enable=too-many-arguments,too-many-positional-arguments
