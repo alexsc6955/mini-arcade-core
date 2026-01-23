@@ -6,7 +6,7 @@ This is the only part of the code that talks to SDL/pygame directly.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Optional, Protocol
+from typing import Iterable, Protocol
 
 from .events import Event
 from .types import Color
@@ -121,6 +121,7 @@ class Backend(Protocol):
         y: int,
         text: str,
         color: Color = (255, 255, 255),
+        font_size: int | None = None,
     ):
         """
         Draw text at the given position in a default font and color.
@@ -201,3 +202,23 @@ class Backend(Protocol):
 
     def stop_all_sounds(self):
         """Stop all channels."""
+
+    def set_viewport_transform(
+        self, offset_x: int, offset_y: int, scale: float
+    ) -> None:
+        """Apply a transform so draw_* receives VIRTUAL coords and backend maps to screen."""
+        raise NotImplementedError
+
+    def clear_viewport_transform(self) -> None:
+        """Reset any viewport transform back to identity."""
+        raise NotImplementedError
+
+    def resize_window(self, width: int, height: int) -> None:
+        """Resize the actual OS window (SDL_SetWindowSize in native backend)."""
+        raise NotImplementedError
+
+    def set_clip_rect(self, x: int, y: int, w: int, h: int) -> None:
+        raise NotImplementedError
+
+    def clear_clip_rect(self) -> None:
+        raise NotImplementedError

@@ -9,6 +9,7 @@ from time import perf_counter, sleep
 from typing import Dict, Literal
 
 from mini_arcade_core.backend import Backend, WindowSettings
+from mini_arcade_core.backend.events import EventType
 from mini_arcade_core.engine.commands import (
     CommandContext,
     CommandQueue,
@@ -226,7 +227,7 @@ class Game:
         packet_cache: dict[int, RenderPacket] = {}
 
         timer = FrameTimer(enabled=True)
-        report_every = 60  # print once per second at 60fps
+        # report_every = 60  # print once per second at 60fps
 
         # TODO: Integrate SimRunner for simulation stepping
         # TODO: Fix assignment-from-no-return warning in self.services.input.build
@@ -243,6 +244,12 @@ class Game:
             last_time = now
 
             events = list(backend.poll_events())
+
+            for e in events:
+                if e.type == EventType.WINDOWRESIZED and e.size:
+                    w, h = e.size
+                    logger.debug(f"Window resized event: {w}x{h}")
+                    self.services.window.on_window_resized(w, h)
             timer.mark("events_polled")
 
             input_frame = self.services.input.build(events, frame_index, dt)
@@ -298,6 +305,7 @@ class Game:
             backend.begin_frame()
             timer.mark("begin_frame_done")
 
+            vp = self.services.window.get_viewport()
             for entry in self.services.scenes.visible_entries():
                 scene = entry.scene
                 packet = packet_cache.get(id(scene))
@@ -306,7 +314,7 @@ class Game:
                     packet = scene.tick(_neutral_input(frame_index, 0.0), 0.0)
                     packet_cache[id(scene)] = packet
 
-                pipeline.draw_packet(backend, packet)
+                pipeline.draw_packet(backend, packet, vp)
 
             timer.mark("draw_done")
             backend.end_frame()
@@ -345,6 +353,12 @@ class Game:
 
         br, bg, bb = self.config.window.background_color
         self.services.window.set_clear_color(br, bg, bb)
+
+        # ✅ the “authoring resolution”
+        # (360, 640)  # Window Resolution Works Well
+        # (200, 640)  # Smaller Width, The playable area moves to the right (bad)
+        # (500, 640)  # Higher Width, The playable area moves to the left (bad)
+        self.services.window.set_virtual_resolution(800, 600)
 
     def _resolve_world(self) -> object | None:
         # Prefer gameplay world underneath overlays:

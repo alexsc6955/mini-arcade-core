@@ -717,7 +717,7 @@ class BaseMenuScene(SimScene):
     def on_enter(self):
         self.menu = Menu(
             self._build_display_items(),
-            viewport=self.context.services.window.size,
+            viewport=self.context.services.window.get_virtual_size(),
             title=self.menu_title,
             style=self.menu_style(),
         )

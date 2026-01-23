@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.render.viewport import ViewportState
 
 
 @dataclass
@@ -23,7 +24,12 @@ class RenderPipeline:
       - backend draw pass
     """
 
-    def draw_packet(self, backend: Backend, packet: RenderPacket):
+    def draw_packet(
+        self,
+        backend: Backend,
+        packet: RenderPacket,
+        viewport_state: ViewportState,
+    ):
         """
         Draw the given RenderPacket using the provided Backend.
 
@@ -35,5 +41,23 @@ class RenderPipeline:
         """
         if not packet:
             return
-        for op in packet.ops:
-            op(backend)
+
+        backend.set_viewport_transform(
+            viewport_state.offset_x,
+            viewport_state.offset_y,
+            viewport_state.scale,
+        )
+
+        # backend.set_clip_rect(
+        #     viewport_state.offset_x,
+        #     viewport_state.offset_y,
+        #     viewport_state.viewport_w,
+        #     viewport_state.viewport_h,
+        # )
+
+        try:
+            for op in packet.ops:
+                op(backend)
+        finally:
+            backend.clear_clip_rect()
+            backend.clear_viewport_transform()
