@@ -25,6 +25,9 @@ class WindowSettings:
     height: int
 
 
+# TODO: Refactor backend interface into smaller protocols?
+# Justification: Many public methods needed for backend interface
+# pylint: disable=too-many-public-methods
 class Backend(Protocol):
     """
     Interface that any rendering/input backend must implement.
@@ -113,8 +116,6 @@ class Backend(Protocol):
         :type color: Color
         """
 
-    # pylint: enable=too-many-arguments,too-many-positional-arguments
-
     def draw_text(
         self,
         x: int,
@@ -141,6 +142,8 @@ class Backend(Protocol):
         :param color: RGB color tuple.
         :type color: Color
         """
+
+    # pylint: enable=too-many-arguments,too-many-positional-arguments
 
     def measure_text(self, text: str) -> tuple[int, int]:
         """
