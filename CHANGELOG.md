@@ -6,6 +6,23 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-23
+
+### Added
+- enhance rendering system with FramePacket and RenderService integration
+- integrate rendering pipeline into game loop
+- implement render pipeline with multiple processing passes
+
+### Fixed
+- add justification comments for duplicate code in render pipeline
+- disable pylint warnings for unused arguments in render pass classes
+
+### Changed
+- enhance rendering system with detailed docstrings and new render service port
+
+### Other
+- Merge release/1.0 into develop
+
 ## [1.0.2] - 2026-01-23
 
 ### Added
