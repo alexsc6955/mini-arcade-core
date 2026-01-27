@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from typing import Iterable, Protocol
 
-from mini_arcade_core.runtime import capture
-
 from .events import Event
-from .types import Color
+
+# Justification: Many positional and keyword arguments needed for some backend methods.
+# Might be refactored later.
+# pylint: disable=too-many-positional-arguments,too-many-arguments
 
 
 class WindowProtocol(Protocol):

@@ -83,16 +83,22 @@ LOGGER_FORMAT = (
 
 
 class OnlyPerf(logging.Filter):
+    """Performance logger filter to include only perf logs."""
+
     def filter(self, record: logging.LogRecord) -> bool:
         return record.name.startswith("mini-arcade-core.perf")
 
 
 class ExcludePerf(logging.Filter):
+    """Performance logger filter to exclude perf logs."""
+
     def filter(self, record: logging.LogRecord) -> bool:
         return not record.name.startswith("mini-arcade-core.perf")
 
 
 class PerfFormatter(logging.Formatter):
+    """Formatter for performance logs."""
+
     def format(self, record: logging.LogRecord) -> str:
         # No global level color wrap; let the message carry its own ANSI
         ts = self.formatTime(record, "%Y-%m-%d %H:%M:%S")

@@ -141,7 +141,10 @@ class FrameTimingFormatter:
         budget = _c(f"{report.budget_ms:.2f}ms", Ansi.DIM.value)
         dim = Ansi.DIM.value
 
-        return f"{frame} {_c('total', dim)}={total} {_c('budget', dim)}={budget} {_c('status', dim)}={status}"
+        return (
+            f"{frame} {_c('total', dim)}={total} "
+            f"{_c('budget', dim)}={budget} {_c('status', dim)}={status}"
+        )
 
     def _format_table(self, diffs: Mapping[str, float]) -> str:
         # Header line

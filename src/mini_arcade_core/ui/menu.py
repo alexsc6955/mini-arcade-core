@@ -15,8 +15,8 @@ from mini_arcade_core.engine.commands import Command, CommandQueue, QuitCommand
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
+from mini_arcade_core.scenes.sim_scene import SimScene
 from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
-from mini_arcade_core.sim.protocols import SimScene
 from mini_arcade_core.spaces.d2.geometry2d import Size2D
 
 

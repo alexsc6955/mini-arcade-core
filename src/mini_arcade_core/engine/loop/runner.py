@@ -28,6 +28,8 @@ def _neutral_input(frame_index: int, dt: float) -> InputFrame:
     return InputFrame(frame_index=frame_index, dt=dt)
 
 
+# Justification: This class has many attributes for managing the loop.
+# pylint: disable=too-many-instance-attributes
 class EngineRunner:
     """
     Core engine runner responsible for the main loop execution.

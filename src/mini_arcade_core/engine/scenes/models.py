@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mini_arcade_core.sim.protocols import SimScene
+from mini_arcade_core.scenes.sim_scene import SimScene
 
 
 @dataclass(frozen=True)

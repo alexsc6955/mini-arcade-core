@@ -9,7 +9,7 @@ from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
 from mini_arcade_core.scenes.autoreg import register_scene
-from mini_arcade_core.sim.protocols import SimScene
+from mini_arcade_core.scenes.sim_scene import SimScene
 
 
 @register_scene("debug_overlay")
