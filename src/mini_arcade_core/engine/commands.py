@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Optional, Protocol, TypeVar
 
-from mini_arcade_core.runtime.scene.scene_port import ScenePolicy
+from mini_arcade_core.engine.scenes.models import ScenePolicy
 
 if TYPE_CHECKING:
     from mini_arcade_core.runtime.services import RuntimeServices
@@ -30,7 +30,7 @@ class CommandContext:
     """
 
     services: RuntimeServices
-    commands: Optional["CommandQueue"] = None
+    managers: object
     settings: Optional[object] = None
     world: Optional[object] = None
 
@@ -104,7 +104,7 @@ class QuitCommand(Command):
         self,
         context: CommandContext,
     ):
-        context.services.scenes.quit()
+        context.managers.scenes.quit()
 
 
 @dataclass(frozen=True)
@@ -140,7 +140,7 @@ class PushSceneCommand(Command):
         self,
         context: CommandContext,
     ):
-        context.services.scenes.push(self.scene_id, as_overlay=self.as_overlay)
+        context.managers.scenes.push(self.scene_id, as_overlay=self.as_overlay)
 
 
 @dataclass(frozen=True)
@@ -151,7 +151,7 @@ class PopSceneCommand(Command):
         self,
         context: CommandContext,
     ):
-        context.services.scenes.pop()
+        context.managers.scenes.pop()
 
 
 @dataclass(frozen=True)
@@ -168,7 +168,7 @@ class ChangeSceneCommand(Command):
         self,
         context: CommandContext,
     ):
-        context.services.scenes.change(self.scene_id)
+        context.managers.scenes.change(self.scene_id)
 
 
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ class ToggleDebugOverlayCommand(Command):
     DEBUG_OVERLAY_ID = "debug_overlay"
 
     def execute(self, context: CommandContext):
-        scenes = context.services.scenes
+        scenes = context.managers.scenes
         if scenes.has_scene(self.DEBUG_OVERLAY_ID):
             scenes.remove_scene(self.DEBUG_OVERLAY_ID)
             return
@@ -209,7 +209,7 @@ class ToggleEffectCommand(Command):
 
     effect_id: str
 
-    def execute(self, context: CommandContext) -> None:
+    def execute(self, context: CommandContext):
         # effects live in context.meta OR in a dedicated service/settings.
         # v1 simplest: stash stack into context.settings or context.services.render
         stack = getattr(context.settings, "effects_stack", None)

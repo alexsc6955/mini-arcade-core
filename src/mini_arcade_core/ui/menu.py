@@ -271,12 +271,15 @@ class Menu:
 
         # 0) Solid background (for main menus)
         if self.style.background_color is not None:
-            surface.draw_rect(0, 0, vw, vh, color=self.style.background_color)
+            surface.render.draw_rect(
+                0, 0, vw, vh, color=self.style.background_color
+            )
 
         # 1) Overlay (for pause, etc.)
         if self.style.overlay_color is not None:
-            surface.draw_rect(0, 0, vw, vh, color=self.style.overlay_color)
-
+            surface.render.draw_rect(
+                0, 0, vw, vh, color=self.style.overlay_color
+            )
         # 2) Compute menu content bounds (panel area)
         content_w, content_h, title_h = self._measure_content(surface)
 
@@ -292,7 +295,7 @@ class Menu:
 
         # 3) Panel (optional)
         if self.style.panel_color is not None:
-            surface.draw_rect(
+            surface.render.draw_rect(
                 x0, y0, panel_w, panel_h, color=self.style.panel_color
             )
 
@@ -357,7 +360,7 @@ class Menu:
         else:
             max_label_w = 0
             for it in self.items:
-                w, _ = surface.measure_text(
+                w, _ = surface.text.measure(
                     it.label, font_size=self.style.item_font_size
                 )
                 max_label_w = max(max_label_w, w)
@@ -384,18 +387,22 @@ class Menu:
             )
 
             # Border rect
-            surface.draw_rect(x - 4, y - 4, bw + 8, bh + 8, color=border)
+            surface.render.draw_rect(
+                x - 4, y - 4, bw + 8, bh + 8, color=border
+            )
             # Fill rect
-            surface.draw_rect(x, y, bw, bh, color=self.style.button_fill)
+            surface.render.draw_rect(
+                x, y, bw, bh, color=self.style.button_fill
+            )
 
             # Label color
             text_color = self.style.selected if selected else self.style.normal
-            tw, th = surface.measure_text(
+            tw, th = surface.text.measure(
                 item.label, font_size=self.style.item_font_size
             )
             tx = x + (bw - tw) // 2
             ty = y + (bh - th) // 2
-            surface.draw_text(
+            surface.text.draw(
                 tx,
                 ty,
                 item.label,
@@ -412,7 +419,7 @@ class Menu:
 
         # Title
         if self.title:
-            tw, th = surface.measure_text(
+            tw, th = surface.text.measure(
                 self.title, font_size=self.style.title_font_size
             )
             max_w = max(max_w, tw)
@@ -433,7 +440,7 @@ class Menu:
             else:
                 max_label_w = 0
                 for it in self.items:
-                    w, _ = surface.measure_text(
+                    w, _ = surface.text.measure(
                         it.label, font_size=self.style.item_font_size
                     )
                     max_label_w = max(max_label_w, w)
@@ -446,7 +453,7 @@ class Menu:
             items_h = len(self.items) * bh + (len(self.items) - 1) * gap
         else:
             for it in self.items:
-                w, _ = surface.measure_text(
+                w, _ = surface.text.measure(
                     it.label, font_size=self.style.item_font_size
                 )
                 max_w = max(max_w, w)
@@ -480,8 +487,8 @@ class Menu:
         color: Color,
         font_size: int | None = None,
     ):
-        w, _ = surface.measure_text(text, font_size=font_size)
-        surface.draw_text(
+        w, _ = surface.text.measure(text, font_size=font_size)
+        surface.text.draw(
             x_center - (w // 2), y, text, color=color, font_size=font_size
         )
 

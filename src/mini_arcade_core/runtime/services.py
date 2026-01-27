@@ -11,8 +11,8 @@ from mini_arcade_core.runtime.capture.capture_port import CapturePort
 from mini_arcade_core.runtime.file.file_port import FilePort
 from mini_arcade_core.runtime.input.input_port import InputPort
 from mini_arcade_core.runtime.render.render_port import RenderServicePort
-from mini_arcade_core.runtime.scene.scene_port import ScenePort
 from mini_arcade_core.runtime.window.window_port import WindowPort
+from mini_arcade_core.runtime.scene.scene_query_port import SceneQueryPort
 
 
 @dataclass
@@ -26,12 +26,13 @@ class RuntimeServices:
     :ivar files (FilePort): File service port.
     :ivar capture (CapturePort): Capture service port.
     :ivar input (InputPort): Input handling service port.
+    :ivar render (RenderServicePort): Rendering service port.
     """
 
     window: WindowPort
-    scenes: ScenePort
     audio: AudioPort
     files: FilePort
     capture: CapturePort
     input: InputPort
     render: RenderServicePort
+    scenes: SceneQueryPort

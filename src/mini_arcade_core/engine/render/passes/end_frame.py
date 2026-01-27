@@ -25,4 +25,4 @@ class EndFramePass:
     ):
         """Run the end frame pass."""
         # Signal the end of the frame to the backend
-        backend.end_frame()
+        backend.render.end_frame()

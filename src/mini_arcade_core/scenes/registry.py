@@ -34,6 +34,16 @@ class SceneRegistry:
 
     _factories: Dict[str, SceneFactory]
 
+    @property
+    def listed_scene_ids(self) -> list[str]:
+        """
+        Get a list of all registered scene IDs.
+
+        :return: A list of registered scene IDs.
+        :rtype: list[str]
+        """
+        return list(self._factories.keys())
+
     def register(self, scene_id: str, factory: SceneFactory):
         """
         Register a scene factory under a given scene ID.

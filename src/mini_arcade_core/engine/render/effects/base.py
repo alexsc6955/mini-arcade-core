@@ -22,7 +22,7 @@ class Effect(Protocol):
 
     effect_id: str
 
-    def apply(self, backend: Backend, ctx: RenderContext) -> None:
+    def apply(self, backend: Backend, ctx: RenderContext):
         """
         Apply the effect to the current framebuffer.
 
@@ -75,7 +75,7 @@ class EffectStack:
         """
         return self.enabled and bool(self.active)
 
-    def toggle(self, effect_id: str) -> None:
+    def toggle(self, effect_id: str):
         """
         Toggle an effect on/off.
 

@@ -24,4 +24,4 @@ class BeginFramePass:
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
     ):
         """Run the begin frame pass."""
-        backend.begin_frame()
+        backend.render.begin_frame()

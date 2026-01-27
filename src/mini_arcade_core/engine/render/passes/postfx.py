@@ -35,7 +35,7 @@ class PostFXPass:
 
         # Screen space: no transforms
         backend.clear_viewport_transform()
-        backend.clear_clip_rect()
+        backend.render.clear_clip_rect()
 
         reg = self.registry
         if reg is None:

@@ -26,7 +26,7 @@ class VignetteNoiseEffect:
 
     # Justification: This is PoC code for v1.
     # pylint: disable=too-many-locals
-    def apply(self, backend: Backend, ctx: RenderContext) -> None:
+    def apply(self, backend: Backend, ctx: RenderContext):
         """Apply the Vignette + Noise effect to the current render context."""
         vp = ctx.viewport
         x0, y0 = vp.offset_x, vp.offset_y
@@ -43,7 +43,7 @@ class VignetteNoiseEffect:
         if intensity <= 0.0:
             return
 
-        backend.set_clip_rect(x0, y0, w, h)
+        backend.render.set_clip_rect(x0, y0, w, h)
 
         # Vignette approximation: draw edge rectangles with increasing alpha.
         # Not a true radial gradient, but good enough for v1.
@@ -56,13 +56,13 @@ class VignetteNoiseEffect:
             color = (0, 0, 0, alpha)
 
             # top
-            backend.draw_rect(x0, y0, w, t, color=color)
+            backend.render.draw_rect(x0, y0, w, t, color=color)
             # bottom
-            backend.draw_rect(x0, y0 + h - t, w, t, color=color)
+            backend.render.draw_rect(x0, y0 + h - t, w, t, color=color)
             # left
-            backend.draw_rect(x0, y0, t, h, color=color)
+            backend.render.draw_rect(x0, y0, t, h, color=color)
             # right
-            backend.draw_rect(x0 + w - t, y0, t, h, color=color)
+            backend.render.draw_rect(x0 + w - t, y0, t, h, color=color)
 
         # Noise: sprinkle a few pixels (or tiny 1x1 rects).
         # Use deterministic-ish seed per frame so it doesn't “swim” too much.
@@ -74,6 +74,6 @@ class VignetteNoiseEffect:
             px = x0 + random.randint(0, max(0, w - 1))
             py = y0 + random.randint(0, max(0, h - 1))
             a = random.randint(10, int(50 * intensity) + 10)
-            backend.draw_rect(px, py, 1, 1, color=(255, 255, 255, a))
+            backend.render.draw_rect(px, py, 1, 1, color=(255, 255, 255, a))
 
-        backend.clear_clip_rect()
+        backend.render.clear_clip_rect()

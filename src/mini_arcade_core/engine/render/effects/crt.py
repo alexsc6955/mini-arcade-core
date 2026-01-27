@@ -26,7 +26,7 @@ class CRTEffect:
 
     # Justification: This is PoC code for v1.
     # pylint: disable=too-many-locals
-    def apply(self, backend: Backend, ctx: RenderContext) -> None:
+    def apply(self, backend: Backend, ctx: RenderContext):
         """Apply the CRT effect to the current render context."""
         vp = ctx.viewport
         x0, y0 = vp.offset_x, vp.offset_y
@@ -48,7 +48,7 @@ class CRTEffect:
         wobble = float(params.wobble_speed)
 
         # Clip to viewport so it works with all viewport modes/resolutions
-        backend.set_clip_rect(x0, y0, w, h)
+        backend.render.set_clip_rect(x0, y0, w, h)
 
         # Scanlines: draw every N lines with low alpha
         # Note: assumes Backend supports alpha in color tuples.
@@ -61,8 +61,8 @@ class CRTEffect:
         for y in range(y0, y0 + h, spacing):
             # shift in pixels, -2..2-ish
             shift = int(2.0 * intensity * sin((y * 0.05) + (t * wobble)))
-            backend.draw_line(
+            backend.render.draw_line(
                 x0 + shift, y, x0 + w + shift, y, color=line_color
             )
 
-        backend.clear_clip_rect()
+        backend.render.clear_clip_rect()

@@ -4,6 +4,7 @@ Debug overlay scene that displays FPS, window size, and scene stack information.
 
 from __future__ import annotations
 
+from mini_arcade_core.backend.backend import Backend
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
@@ -55,14 +56,14 @@ class DebugOverlayScene(SimScene):
         for e in stack:
             lines.append(f"  - {e.scene_id} overlay={e.is_overlay}")
 
-        def draw(backend):
+        def draw(backend: Backend):
             # translucent background panel
-            backend.draw_rect(
+            backend.render.draw_rect(
                 8, 8, 360, 18 * (len(lines) + 1), color=(0, 0, 0, 0.65)
             )
             y = 14
             for line in lines:
-                backend.draw_text(
+                backend.text.draw(
                     16, y, line, color=(255, 255, 255), font_size=14
                 )
                 y += 18

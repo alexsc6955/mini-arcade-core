@@ -41,7 +41,7 @@ class WorldPass:
         backend.set_viewport_transform(
             ctx.viewport.offset_x, ctx.viewport.offset_y, ctx.viewport.scale
         )
-        backend.set_clip_rect(
+        backend.render.set_clip_rect(
             ctx.viewport.offset_x,
             ctx.viewport.offset_y,
             ctx.viewport.viewport_w,
@@ -51,5 +51,5 @@ class WorldPass:
             for op in packet.ops:
                 op(backend)
         finally:
-            backend.clear_clip_rect()
+            backend.render.clear_clip_rect()
             backend.clear_viewport_transform()

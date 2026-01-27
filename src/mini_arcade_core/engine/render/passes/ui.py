@@ -24,7 +24,7 @@ class UIPass:
         """Run the UI render pass."""
         # UI overlays should be screen-space (no world transform / no clip unless you want it)
         backend.clear_viewport_transform()
-        backend.clear_clip_rect()
+        backend.render.clear_clip_rect()
 
         for fp in packets:
             if not fp.is_overlay:

@@ -19,7 +19,7 @@ class EffectRegistry:
 
     _effects: dict[str, Effect] = field(default_factory=dict)
 
-    def register(self, effect: Effect) -> None:
+    def register(self, effect: Effect):
         """
         Register a new effect in the registry.
 
