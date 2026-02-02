@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.engine.render.context import RenderContext
+from mini_arcade_core.engine.render.frame_packet import FramePacket
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.passes.base import RenderPass
 from mini_arcade_core.engine.render.passes.begin_frame import BeginFramePass
@@ -56,10 +57,10 @@ class RenderPipeline:
     )
 
     def render_frame(
-        self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
+        self, backend: Backend, ctx: RenderContext, packets: list[FramePacket]
     ):
         """
-        Render a frame using the provided Backend, RenderContext, and list of RenderPackets.
+        Render a frame using the provided Backend, RenderContext, and list of FramePackets.
 
         :param backend: Backend to use for rendering.
         :type backend: Backend
@@ -67,8 +68,8 @@ class RenderPipeline:
         :param ctx: RenderContext containing rendering state.
         :type ctx: RenderContext
 
-        :param packets: List of RenderPackets to render.
-        :type packets: list[RenderPacket]
+        :param packets: List of FramePackets to render.
+        :type packets: list[FramePacket]
         """
         for p in self.passes:
             p.run(backend, ctx, packets)
