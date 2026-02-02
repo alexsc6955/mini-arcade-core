@@ -494,6 +494,20 @@ class Menu:
 
     # pylint: enable=too-many-arguments
 
+    def set_viewport(self, viewport: Size2D):
+        if self.viewport is None:
+            self.viewport = viewport
+            return
+
+        old_w, old_h = self.viewport
+        new_w, new_h = viewport
+        self.viewport = viewport
+
+        # If the viewport changed (especially shrinking), allow layout to shrink too.
+        if (new_w < old_w) or (new_h < old_h):
+            self._max_content_w_seen = 0
+            self._max_button_w_seen = 0
+
 
 # pylint: enable=too-many-instance-attributes
 
@@ -729,7 +743,7 @@ class BaseMenuScene(SimScene):
     def on_enter(self):
         self.menu = Menu(
             self._build_display_items(),
-            viewport=self.context.services.window.get_virtual_size(),
+            viewport=self.menu_viewport(),
             title=self.menu_title,
             style=self.menu_style(),
         )
@@ -745,6 +759,7 @@ class BaseMenuScene(SimScene):
         )
 
     def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:
+        self.menu.set_viewport(self.menu_viewport())
         items = self.menu_items()
         if not items:
             return RenderPacket()
@@ -767,6 +782,10 @@ class BaseMenuScene(SimScene):
 
         # always return packet from pipeline
         return ctx.packet or RenderPacket()
+
+    def menu_viewport(self) -> Size2D:
+        # default: virtual space (fits your UI layout)
+        return self.context.services.window.get_virtual_size()
 
     def _build_display_items(self) -> list[MenuItem]:
         """

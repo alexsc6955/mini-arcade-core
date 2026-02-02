@@ -4,6 +4,7 @@ Viewport management for virtual to screen coordinate transformations.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import Enum
 
@@ -130,10 +131,15 @@ class Viewport:
         sy = window_h / self._virtual_h
         scale = min(sx, sy) if self._mode == ViewportMode.FIT else max(sx, sy)
 
-        vw = int(round(self._virtual_w * scale))
-        vh = int(round(self._virtual_h * scale))
-        ox = int(round((window_w - vw) / 2))
-        oy = int(round((window_h - vh) / 2))
+        if self._mode == ViewportMode.FIT:
+            vw = int(math.floor(self._virtual_w * scale))
+            vh = int(math.floor(self._virtual_h * scale))
+        else:  # FILL
+            vw = int(math.ceil(self._virtual_w * scale))
+            vh = int(math.ceil(self._virtual_h * scale))
+
+        ox = (window_w - vw) // 2
+        oy = (window_h - vh) // 2
 
         self._state = ViewportState(
             virtual_w=self._virtual_w,

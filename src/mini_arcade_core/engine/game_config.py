@@ -37,4 +37,4 @@ class GameConfig:
     fps: int = 60
     backend: Backend | None = None
     postfx: PostFXConfig = field(default_factory=PostFXConfig)
-    enable_profiler: bool = True
+    enable_profiler: bool = False

@@ -42,10 +42,10 @@ class WorldPass:
             ctx.viewport.offset_x, ctx.viewport.offset_y, ctx.viewport.scale
         )
         backend.render.set_clip_rect(
-            ctx.viewport.offset_x,
-            ctx.viewport.offset_y,
-            ctx.viewport.viewport_w,
-            ctx.viewport.viewport_h,
+            0,
+            0,
+            ctx.viewport.virtual_w,
+            ctx.viewport.virtual_h,
         )
         try:
             for op in packet.ops:

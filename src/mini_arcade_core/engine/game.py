@@ -102,8 +102,8 @@ class Game:
 
         pipeline = RenderPipeline()
         effects_registry = EffectRegistry()
-        effects_registry.register(CRTEffect())
-        effects_registry.register(VignetteNoiseEffect())
+        # effects_registry.register(CRTEffect())
+        # effects_registry.register(VignetteNoiseEffect())
 
         effects_stack = EffectStack(
             enabled=self.config.postfx.enabled,
@@ -128,6 +128,7 @@ class Game:
         )
         hooks = DefaultGameHooks(self, effects_stack)
 
+        self.services.window.set_virtual_resolution(800, 600)
         runner = EngineRunner(
             self,
             pipeline=pipeline,

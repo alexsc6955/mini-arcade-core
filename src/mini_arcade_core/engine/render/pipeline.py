@@ -98,8 +98,8 @@ class RenderPipeline:
         )
 
         backend.set_clip_rect(
-            viewport_state.offset_x,
-            viewport_state.offset_y,
+            0,
+            0,
             viewport_state.viewport_w,
             viewport_state.viewport_h,
         )
