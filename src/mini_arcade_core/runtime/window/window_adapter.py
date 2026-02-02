@@ -34,7 +34,7 @@ class WindowAdapter(WindowPort):
         self._viewport.resize(w, h)
         self._apply_viewport_transform()
 
-    def _apply_viewport_transform(self) -> None:
+    def _apply_viewport_transform(self):
         s = self._viewport.state
         # This is the missing link in the new backend design:
         self.backend.set_viewport_transform(s.offset_x, s.offset_y, s.scale)
