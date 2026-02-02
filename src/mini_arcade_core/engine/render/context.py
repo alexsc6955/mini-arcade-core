@@ -19,14 +19,12 @@ class RenderStats:
     :ivar ops (int): Number of rendering operations executed.
     :ivar draw_groups (int): Number of draw groups processed.
     :ivar renderables (int): Number of renderable objects processed.
-    :ivar draw_groups (int): Number of draw groups processed.
     """
 
     packets: int = 0
     ops: int = 0
     draw_groups: int = 0  # approx ok
     renderables: int = 0
-    draw_groups: int = 0
 
 
 @dataclass
