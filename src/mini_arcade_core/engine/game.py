@@ -102,8 +102,8 @@ class Game:
 
         pipeline = RenderPipeline()
         effects_registry = EffectRegistry()
-        # effects_registry.register(CRTEffect())
-        # effects_registry.register(VignetteNoiseEffect())
+        effects_registry.register(CRTEffect())
+        effects_registry.register(VignetteNoiseEffect())
 
         effects_stack = EffectStack(
             enabled=self.config.postfx.enabled,

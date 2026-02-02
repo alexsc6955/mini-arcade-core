@@ -19,13 +19,14 @@ class WindowAdapter(WindowPort):
     Manages multiple game windows (not implemented).
     """
 
+    _drawable_size: tuple[int, int]
+
     def __init__(self, backend: Backend):
         self.backend = backend
 
         self.backend.init()
 
         w, h = self.backend.window.size()
-        print(123, w, h)
         self.size = (w, h)
         self._initialized = True
 
@@ -48,7 +49,7 @@ class WindowAdapter(WindowPort):
     def set_viewport_mode(self, mode: ViewportMode):
         self._viewport.set_mode(mode)
         # mode change affects scale/offset
-        if self._viewport._state is not None:
+        if self._viewport.state is not None:
             self._apply_viewport_transform()
 
     def get_viewport(self) -> ViewportState:

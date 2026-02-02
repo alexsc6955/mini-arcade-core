@@ -495,6 +495,12 @@ class Menu:
     # pylint: enable=too-many-arguments
 
     def set_viewport(self, viewport: Size2D):
+        """
+        Set the viewport size for the menu.
+
+        :param viewport: New viewport size.
+        :type viewport: Size2D
+        """
         if self.viewport is None:
             self.viewport = viewport
             return
@@ -784,6 +790,12 @@ class BaseMenuScene(SimScene):
         return ctx.packet or RenderPacket()
 
     def menu_viewport(self) -> Size2D:
+        """
+        Get the viewport size for the menu.
+
+        :return: The Size2D representing the menu viewport.
+        :rtype: Size2D
+        """
         # default: virtual space (fits your UI layout)
         return self.context.services.window.get_virtual_size()
 
