@@ -74,7 +74,14 @@ class CapturePathBuilder:
 
 
 class CaptureAdapter(CapturePort):
-    """Adapter for capturing frames."""
+    """
+    Adapter for capturing frames.
+
+    :param backend: Backend instance to use for capturing frames.
+    :type backend: Backend
+    :param path_builder: Optional CapturePathBuilder for building file paths.
+    :type path_builder: CapturePathBuilder | None
+    """
 
     def __init__(
         self,
@@ -96,9 +103,9 @@ class CaptureAdapter(CapturePort):
         # If backend only saves BMP, capture to a temp bmp next to output
         bmp_path = out_path.with_suffix(".bmp")
 
-        self.backend.capture_frame(str(bmp_path))
+        self.backend.capture.bmp(str(bmp_path))
         if not bmp_path.exists():
-            raise RuntimeError("Backend capture_frame did not create BMP file")
+            raise RuntimeError("Backend capture.bmp did not create BMP file")
 
         self._bmp_to_image(str(bmp_path), str(out_path))
         try:
@@ -112,7 +119,7 @@ class CaptureAdapter(CapturePort):
         return str(out_path)
 
     def screenshot_bytes(self) -> bytes:
-        data = self.backend.capture_frame(path=None)
+        data = self.backend.capture.bmp(path=None)
         if data is None:
             raise RuntimeError("Backend returned None for screenshot_bytes()")
         return data
@@ -125,10 +132,10 @@ class CaptureAdapter(CapturePort):
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         bmp_path = out_path.with_suffix(".bmp")
-        self.backend.capture_frame(str(bmp_path))
+        self.backend.capture.bmp(str(bmp_path))
 
         if not bmp_path.exists():
-            raise RuntimeError("Backend capture_frame did not create BMP file")
+            raise RuntimeError("Backend capture.bmp did not create BMP file")
 
         self._bmp_to_image(str(bmp_path), str(out_path))
 

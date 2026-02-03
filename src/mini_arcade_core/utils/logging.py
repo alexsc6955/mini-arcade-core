@@ -82,6 +82,29 @@ LOGGER_FORMAT = (
 )
 
 
+class OnlyPerf(logging.Filter):
+    """Performance logger filter to include only perf logs."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.name.startswith("mini-arcade-core.perf")
+
+
+class ExcludePerf(logging.Filter):
+    """Performance logger filter to exclude perf logs."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return not record.name.startswith("mini-arcade-core.perf")
+
+
+class PerfFormatter(logging.Formatter):
+    """Formatter for performance logs."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        # No global level color wrap; let the message carry its own ANSI
+        ts = self.formatTime(record, "%Y-%m-%d %H:%M:%S")
+        return f"{ts} [{record.levelname:<8}] [mini-arcade-core]\nprofiler:\n{record.getMessage()}"
+
+
 def _enable_windows_ansi():
     """
     Best-effort enable ANSI escape sequences on Windows terminals.
@@ -141,27 +164,33 @@ def configure_logging(level: int = logging.DEBUG):
     # Avoid duplicate handlers if reloaded/imported multiple times
     # We tag our handler so we can find it reliably.
     handler_tag = "_mini_arcade_core_console_handler"
+    perf_tag = "_mini_arcade_core_perf_handler"
 
+    # --- main console handler (your current one) ---
+    main_console = None
     for h in list(root.handlers):
         if getattr(h, handler_tag, False):
-            # Already configured
-            return
+            main_console = h
+            break
 
-    console = logging.StreamHandler(stream=sys.stdout)
-    setattr(console, handler_tag, True)
+    if main_console is None:
+        main_console = logging.StreamHandler(stream=sys.stdout)
+        setattr(main_console, handler_tag, True)
+        main_console.setFormatter(ConsoleColorFormatter(LOGGER_FORMAT))
+        main_console.addFilter(EnsureClassName())
+        root.addHandler(main_console)
 
-    console.setFormatter(ConsoleColorFormatter(LOGGER_FORMAT))
-    console.addFilter(EnsureClassName())
+    # EXCLUDE perf logs from main handler (prevents duplicates)
+    main_console.addFilter(ExcludePerf())
 
-    # Important: don’t leave any basicConfig handlers around if someone called it earlier
-    # We remove only the plain StreamHandlers that don't have our tag.
-    for h in list(root.handlers):
-        if isinstance(h, logging.StreamHandler) and not getattr(
-            h, handler_tag, False
-        ):
-            root.removeHandler(h)
-
-    root.addHandler(console)
+    # --- perf handler (new) ---
+    already = any(getattr(h, perf_tag, False) for h in root.handlers)
+    if not already:
+        perf_console = logging.StreamHandler(stream=sys.stdout)
+        setattr(perf_console, perf_tag, True)
+        perf_console.setFormatter(PerfFormatter())
+        perf_console.addFilter(OnlyPerf())
+        root.addHandler(perf_console)
 
 
 configure_logging()

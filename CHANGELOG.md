@@ -6,6 +6,44 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-02-03
+
+### Changed
+- Remove duplicate draw_groups variable from RenderStats class
+- Update render_frame method to use FramePacket instead of RenderPacket
+- Enable post-processing effects and improve viewport handling in menu
+- Update viewport handling and rendering logic across multiple modules
+- Update imports for SimScene and improve logging and profiler formatting
+- Improve code structure and apply separation of concerns.
+
+### Other
+- Merge branch 'release/1.1' of https://github.com/alexsc6955/mini-arcade-core into release/1.1
+
+## [1.1.1] - 2026-01-23
+
+### Added
+- implement post-processing effects system with CRT and vignette effects
+
+### Other
+- Merge branch 'release/1.1' of https://github.com/alexsc6955/mini-arcade-core into release/1.1
+
+## [1.1.0] - 2026-01-23
+
+### Added
+- enhance rendering system with FramePacket and RenderService integration
+- integrate rendering pipeline into game loop
+- implement render pipeline with multiple processing passes
+
+### Fixed
+- add justification comments for duplicate code in render pipeline
+- disable pylint warnings for unused arguments in render pass classes
+
+### Changed
+- enhance rendering system with detailed docstrings and new render service port
+
+### Other
+- Merge release/1.0 into develop
+
 ## [1.0.2] - 2026-01-23
 
 ### Added

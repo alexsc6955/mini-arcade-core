@@ -6,4 +6,8 @@ from __future__ import annotations
 
 from typing import Tuple, Union
 
-Color = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
+ColorRGB = Tuple[int, int, int]
+ColorRGBA = Tuple[int, int, int, int]
+
+Color = Union[ColorRGB, ColorRGBA]
+Alpha = Union[float, int]
