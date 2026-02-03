@@ -5,24 +5,272 @@ This is the only part of the code that talks to SDL/pygame directly.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Iterable, Protocol
 
 from .events import Event
-from .types import Color
+
+# Justification: Many positional and keyword arguments needed for some backend methods.
+# Might be refactored later.
+# pylint: disable=too-many-positional-arguments,too-many-arguments
 
 
-@dataclass
-class WindowSettings:
+class WindowProtocol(Protocol):
     """
-    Settings for the backend window.
-
-    :ivar width (int): Width of the window in pixels.
-    :ivar height (int): Height of the window in pixels.
+    Represents a game window.
     """
 
     width: int
     height: int
+
+    def set_title(self, title: str):
+        """
+        Set the window title.
+
+        :param title: New window title.
+        :type title: str
+        """
+
+    def resize(self, width: int, height: int):
+        """
+        Resize the window.
+
+        :param width: New width in pixels.
+        :type width: int
+        :param height: New height in pixels.
+        :type height: int
+        """
+
+    def size(self) -> tuple[int, int]:
+        """
+        Get the window size.
+
+        :return: Tuple of (width, height) in pixels.
+        :rtype: tuple[int, int]
+        """
+
+    def drawable_size(self) -> tuple[int, int]:
+        """
+        Get the drawable size of the window.
+
+        :return: Tuple of (width, height) in pixels.
+        :rtype: tuple[int, int]
+        """
+
+
+class InputProtocol(Protocol):
+    """
+    Interface for input operations.
+    """
+
+    def poll(self) -> Iterable[Event]:
+        """
+        Get the list of input events since the last call.
+
+        :return: Iterable of Event instances.
+        :rtype: Iterable[Event]
+        """
+
+
+class RenderProtocol(Protocol):
+    """
+    Interface for rendering operations.
+    """
+
+    def set_clear_color(self, r: int, g: int, b: int):
+        """
+        Set the clear color for the renderer.
+
+        :param r: Red component (0-255).
+        :type r: int
+        :param g: Green component (0-255).
+        :type g: int
+        :param b: Blue component (0-255).
+        :type b: int
+        """
+
+    def begin_frame(self):
+        """Begin a new rendering frame."""
+
+    def end_frame(self):
+        """End the current rendering frame."""
+
+    def draw_rect(self, x: int, y: int, w: int, h: int, color=(255, 255, 255)):
+        """
+        Draw a filled rectangle.
+
+        :param x: The x-coordinate of the rectangle.
+        :type x: int
+        :param y: The y-coordinate of the rectangle.
+        :type y: int
+        :param w: The width of the rectangle.
+        :type w: int
+        :param h: The height of the rectangle.
+        :type h: int
+        :param color: The color of the rectangle as an (R, G, B) or (R, G, B, A) tuple.
+        :type color: tuple[int, int, int] | tuple[int, int, int, int]
+        """
+
+    def draw_line(
+        self, x1: int, y1: int, x2: int, y2: int, color=(255, 255, 255)
+    ):
+        """
+        Draw a line between two points.
+
+        :param x1: The x-coordinate of the start point.
+        :type x1: int
+        :param y1: The y-coordinate of the start point.
+        :type y1: int
+        :param x2: The x-coordinate of the end point.
+        :type x2: int
+        :param y2: The y-coordinate of the end point.
+        :type y2: int
+        :param color: The color of the line as an (R, G, B) or (R, G, B, A) tuple.
+        :type color: tuple[int, int, int] | tuple[int, int, int, int]
+        """
+
+    def set_clip_rect(self, x: int, y: int, w: int, h: int):
+        """
+        Set the clipping rectangle.
+
+        :param x: The x-coordinate of the clipping rectangle.
+        :type x: int
+        :param y: The y-coordinate of the clipping rectangle.
+        :type y: int
+        :param w: The width of the clipping rectangle.
+        :type w: int
+        :param h: The height of the clipping rectangle.
+        :type h: int
+        """
+
+    def clear_clip_rect(self):
+        """Clear the clipping rectangle."""
+
+
+class TextProtocol(Protocol):
+    """
+    Interface for text rendering operations.
+    """
+
+    def measure(
+        self, text: str, font_size: int | None = None
+    ) -> tuple[int, int]:
+        """
+        Measure the width and height of the given text.
+
+        :param text: The text to measure.
+        :type text: str
+        :param font_size: The font size to use for measurement.
+        :type font_size: int | None
+        :return: A tuple containing the width and height of the text.
+        :rtype: tuple[int, int]
+        """
+
+    def draw(
+        self,
+        x: int,
+        y: int,
+        text: str,
+        color=(255, 255, 255),
+        font_size: int | None = None,
+    ):
+        """
+        Draw the given text at the specified position.
+
+        :param x: The x-coordinate to draw the text.
+        :type x: int
+        :param y: The y-coordinate to draw the text.
+        :type y: int
+        :param text: The text to draw.
+        :type text: str
+        :param color: The color of the text as an (R, G, B) or (R, G, B, A) tuple.
+        :type color: tuple[int, int, int] | tuple[int, int, int, int]
+        :param font_size: The font size to use for drawing.
+        :type font_size: int | None
+        """
+
+
+class AudioProtocol(Protocol):
+    """
+    Interface for audio operations.
+    """
+
+    def init(
+        self, frequency: int = 44100, channels: int = 2, chunk_size: int = 2048
+    ):
+        """
+        Initialize audio subsystem.
+
+        :param frequency: Audio frequency in Hz.
+        :type frequency: int
+        :param channels: Number of audio channels (1=mono, 2=stereo).
+        :type channels: int
+        :param chunk_size: Size of audio chunks.
+        :type chunk_size: int
+        """
+
+    def shutdown(self):
+        """
+        Shutdown the audio subsystem.
+        """
+
+    def load_sound(self, sound_id: str, path: str):
+        """
+        Load a sound file.
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+        :param path: File path to the sound.
+        :type path: str
+        """
+
+    def play_sound(self, sound_id: str, loops: int = 0):
+        """
+        Play a loaded sound.
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+        :param loops: Number of times to loop the sound.
+        :type loops: int
+        """
+
+    def set_master_volume(self, volume: int):
+        """
+        Set the master volume.
+
+        :param volume: Volume level (0-128).
+        :type volume: int
+        """
+
+    def set_sound_volume(self, sound_id: str, volume: int):
+        """
+        Set volume for a specific sound.
+
+        :param sound_id: Unique identifier for the sound.
+        :type sound_id: str
+        :param volume: Volume level (0-128).
+        :type volume: int
+        """
+
+    def stop_all(self):
+        """
+        Stop all currently playing sounds.
+        """
+
+
+class CaptureProtocol(Protocol):
+    """
+    Interface for frame capture operations.
+    """
+
+    def bmp(self, path: str | None = None) -> bool:
+        """
+        Capture the current frame as a BMP file.
+
+        :param path: Optional file path to save the BMP. If None, returns bytes.
+        :type path: str | None
+        :return: Whether the capture was successful.
+        :rtype: bool
+        """
 
 
 # TODO: Refactor backend interface into smaller protocols?
@@ -31,261 +279,44 @@ class WindowSettings:
 class Backend(Protocol):
     """
     Interface that any rendering/input backend must implement.
-
     mini-arcade-core only talks to this protocol, never to SDL/pygame directly.
+
+    :ivar window (WindowProtocol): Window management interface.
+    :ivar audio (AudioProtocol): Audio management interface.
+    :ivar input (InputProtocol): Input management interface.
+    :ivar render (RenderProtocol): Rendering interface.
+    :ivar text (TextProtocol): Text rendering interface.
+    :ivar capture (CaptureProtocol): Frame capture interface.
     """
 
-    def init(self, window_settings: WindowSettings):
+    window: WindowProtocol
+    audio: AudioProtocol
+    input: InputProtocol
+    render: RenderProtocol
+    text: TextProtocol
+    capture: CaptureProtocol
+
+    def init(self):
         """
         Initialize the backend and open a window.
         Should be called once before the main loop.
-
-        :param window_settings: Settings for the backend window.
-        :type window_settings: WindowSettings
         """
-
-    def set_window_title(self, title: str):
-        """
-        Set the window title.
-
-        :param title: The new title for the window.
-        :type title: str
-        """
-        raise NotImplementedError
-
-    def poll_events(self) -> Iterable[Event]:
-        """
-        Return all pending events since last call.
-        Concrete backends will translate their native events into core Event objects.
-
-        :return: An iterable of Event objects.
-        :rtype: Iterable[Event]
-        """
-
-    def set_clear_color(self, r: int, g: int, b: int):
-        """
-        Set the background/clear color used by begin_frame.
-
-        :param r: Red component (0-255).
-        :type r: int
-
-        :param g: Green component (0-255).
-        :type g: int
-
-        :param b: Blue component (0-255).
-        :type b: int
-        """
-
-    def begin_frame(self):
-        """
-        Prepare for drawing a new frame (e.g. clear screen).
-        """
-
-    def end_frame(self):
-        """
-        Present the frame to the user (swap buffers).
-        """
-
-    # Justification: Simple drawing API for now
-    # pylint: disable=too-many-arguments,too-many-positional-arguments
-    def draw_rect(
-        self,
-        x: int,
-        y: int,
-        w: int,
-        h: int,
-        color: Color = (255, 255, 255),
-    ):
-        """
-        Draw a filled rectangle in some default color.
-        We'll keep this minimal for now; later we can extend with colors/sprites.
-
-        :param x: X position of the rectangle's top-left corner.
-        :type x: int
-
-        :param y: Y position of the rectangle's top-left corner.
-        :type y: int
-
-        :param w: Width of the rectangle.
-        :type w: int
-
-        :param h: Height of the rectangle.
-        :type h: int
-
-        :param color: RGB color tuple.
-        :type color: Color
-        """
-
-    def draw_text(
-        self,
-        x: int,
-        y: int,
-        text: str,
-        color: Color = (255, 255, 255),
-        font_size: int | None = None,
-    ):
-        """
-        Draw text at the given position in a default font and color.
-
-        Backends may ignore advanced styling for now; this is just to render
-        simple labels like menu items, scores, etc.
-
-        :param x: X position of the text's top-left corner.
-        :type x: int
-
-        :param y: Y position of the text's top-left corner.
-        :type y: int
-
-        :param text: The text string to draw.
-        :type text: str
-
-        :param color: RGB color tuple.
-        :type color: Color
-        """
-
-    # pylint: enable=too-many-arguments,too-many-positional-arguments
-
-    def measure_text(self, text: str) -> tuple[int, int]:
-        """
-        Measure the width and height of the given text string in pixels.
-
-        :param text: The text string to measure.
-        :type text: str
-
-        :return: A tuple (width, height) in pixels.
-        :rtype: tuple[int, int]
-        """
-        raise NotImplementedError
-
-    def capture_frame(self, path: str | None = None) -> bytes | None:
-        """
-        Capture the current frame.
-        If `path` is provided, save to that file (e.g. PNG).
-        Returns raw bytes (PNG) or None if unsupported.
-
-        :param path: Optional file path to save the screenshot.
-        :type path: str | None
-
-        :return: Raw image bytes if no path given, else None.
-        :rtype: bytes | None
-        """
-        raise NotImplementedError
-
-    def init_audio(
-        self, frequency: int = 44100, channels: int = 2, chunk_size: int = 2048
-    ):
-        """
-        Initialize SDL_mixer audio.
-
-        :param frequency: Audio frequency in Hz.
-        :type frequency: int
-
-        :param channels: Number of audio channels (1=mono, 2=stereo).
-        :type channels: int
-
-        :param chunk_size: Size of audio chunks.
-        :type chunk_size: int
-        """
-
-    def shutdown_audio(self):
-        """Shutdown SDL_mixer audio and free loaded sounds."""
-
-    def load_sound(self, sound_id: str, path: str):
-        """
-        Load a WAV sound and store it by ID.
-        Example: backend.load_sound("hit", "assets/sfx/hit.wav")
-
-        :param sound_id: Unique identifier for the sound.
-        :type sound_id: str
-
-        :param path: File path to the WAV sound.
-        :type path: str
-        """
-
-    def play_sound(self, sound_id: str, loops: int = 0):
-        """
-        Play a loaded sound.
-        loops=0 => play once
-        loops=-1 => infinite loop
-        loops=1 => play twice (SDL convention)
-
-        :param sound_id: Unique identifier for the sound.
-        :type sound_id: str
-
-        :param loops: Number of times to loop the sound.
-        :type loops: int
-        """
-
-    def set_master_volume(self, volume: int):
-        """
-        Master volume: 0..128
-        """
-
-    def set_sound_volume(self, sound_id: str, volume: int):
-        """
-        Per-sound volume: 0..128
-
-        :param sound_id: Unique identifier for the sound.
-        :type sound_id: str
-
-        :param volume: Volume level (0-128).
-        :type volume: int
-        """
-
-    def stop_all_sounds(self):
-        """Stop all channels."""
 
     def set_viewport_transform(
         self, offset_x: int, offset_y: int, scale: float
     ):
         """
-        Apply a transform so draw_* receives VIRTUAL coords and backend maps to screen.
+        Set the viewport transformation.
 
-        :param offset_x: X offset in pixels.
+        :param offset_x: Horizontal offset.
         :type offset_x: int
-
-        :param offset_y: Y offset in pixels.
+        :param offset_y: Vertical offset.
         :type offset_y: int
-
-        :param scale: Scale factor.
+        :param scale: Scaling factor.
         :type scale: float
         """
-        raise NotImplementedError
 
     def clear_viewport_transform(self):
-        """Reset any viewport transform back to identity."""
-        raise NotImplementedError
-
-    def resize_window(self, width: int, height: int):
         """
-        Resize the actual OS window (SDL_SetWindowSize in native backend).
-
-        :param width: New width in pixels.
-        :type width: int
-
-        :param height: New height in pixels.
-        :type height: int
+        Clear the viewport transformation (reset to defaults).
         """
-        raise NotImplementedError
-
-    def set_clip_rect(self, x: int, y: int, w: int, h: int):
-        """
-        Set a clipping rectangle for rendering.
-
-        :param x: X position of the rectangle's top-left corner.
-        :type x: int
-
-        :param y: Y position of the rectangle's top-left corner.
-        :type y: int
-
-        :param w: Width of the rectangle.
-        :type w: int
-
-        :param h: Height of the rectangle.
-        :type h: int
-        """
-        raise NotImplementedError
-
-    def clear_clip_rect(self):
-        """Clear any clipping rectangle."""
-        raise NotImplementedError

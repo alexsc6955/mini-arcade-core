@@ -4,27 +4,13 @@ Service interfaces for runtime components.
 
 from __future__ import annotations
 
-from mini_arcade_core.backend import Backend, WindowSettings
+from typing import Protocol
+
 from mini_arcade_core.engine.render.viewport import ViewportMode, ViewportState
 
 
-class WindowPort:
+class WindowPort(Protocol):
     """Interface for window-related operations."""
-
-    backend: Backend
-    size: tuple[int, int]
-    window_settings_cls: WindowSettings
-
-    def set_window_size(self, width: int, height: int):
-        """
-        Set the size of the window.
-
-        :param width: Width in pixels.
-        :type width: int
-
-        :param height: Height in pixels.
-        :type height: int
-        """
 
     def set_viewport_mode(self, mode: ViewportMode):
         """

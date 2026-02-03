@@ -4,13 +4,9 @@ Service interfaces for runtime components.
 
 from __future__ import annotations
 
-from mini_arcade_core.backend.backend import Backend
-
 
 class AudioPort:
     """Interface for audio playback operations."""
-
-    backend: Backend
 
     def load_sound(self, sound_id: str, file_path: str):
         """

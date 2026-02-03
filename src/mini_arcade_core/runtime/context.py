@@ -9,12 +9,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from mini_arcade_core.engine.cheats import CheatManager
     from mini_arcade_core.engine.commands import CommandQueue
-    from mini_arcade_core.engine.game import Game, GameConfig, GameSettings
-    from mini_arcade_core.managers.cheats import CheatManager
+    from mini_arcade_core.engine.game import Game, GameConfig
+    from mini_arcade_core.engine.gameplay_settings import GamePlaySettings
     from mini_arcade_core.runtime.services import RuntimeServices
 
 
+# TODO: Remove cheats and command_queue from here later if unused.
 @dataclass(frozen=True)
 class RuntimeContext:
     """
@@ -22,14 +24,14 @@ class RuntimeContext:
 
     :ivar services (RuntimeServices): Runtime services.
     :ivar config (GameConfig): Game configuration.
-    :ivar settings (GameSettings): Game settings.
+    :ivar settings (GamePlaySettings): Game settings.
     :ivar command_queue (CommandQueue | None): Optional command queue.
     :ivar cheats (CheatManager | None): Optional cheat manager.
     """
 
     services: RuntimeServices
     config: GameConfig
-    settings: GameSettings
+    settings: GamePlaySettings
     command_queue: CommandQueue | None = None
     cheats: CheatManager | None = None
 
@@ -48,6 +50,6 @@ class RuntimeContext:
             services=game_entity.services,
             config=game_entity.config,
             settings=game_entity.settings,
-            command_queue=game_entity.command_queue,
-            cheats=game_entity.cheat_manager,
+            command_queue=game_entity.managers.command_queue,
+            cheats=game_entity.managers.cheats,
         )

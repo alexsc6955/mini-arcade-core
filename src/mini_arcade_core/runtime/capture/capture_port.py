@@ -4,13 +4,9 @@ Service interfaces for runtime components.
 
 from __future__ import annotations
 
-from mini_arcade_core.backend import Backend
-
 
 class CapturePort:
     """Interface for frame capture operations."""
-
-    backend: Backend
 
     def screenshot(self, label: str | None = None) -> str:
         """
