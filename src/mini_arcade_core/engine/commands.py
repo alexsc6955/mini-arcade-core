@@ -5,9 +5,11 @@ Command protocol for executing commands with a given context.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Protocol, TypeVar
 
 from mini_arcade_core.engine.scenes.models import ScenePolicy
+from mini_arcade_core.runtime.capture.replay_format import ReplayHeader
 
 if TYPE_CHECKING:
     from mini_arcade_core.runtime.services import RuntimeServices
@@ -121,7 +123,7 @@ class ScreenshotCommand(Command):
         self,
         context: CommandContext,
     ):
-        context.services.capture.screenshot(label=self.label, mode="manual")
+        context.services.capture.screenshot(label=self.label)
 
 
 @dataclass(frozen=True)
@@ -216,3 +218,69 @@ class ToggleEffectCommand(Command):
         if stack is None:
             return
         stack.toggle(self.effect_id)
+
+
+@dataclass(frozen=True)
+class StartReplayRecordCommand(Command):
+    """
+    Start recording a replay to the specified file.
+
+    :ivar filename (str): The filename to save the replay to.
+    :ivar game_id (str): Identifier of the game.
+    :ivar initial_scene (str): The initial scene of the replay.
+    :ivar seed (int): The random seed used in the replay.
+    :ivar fps (int): Frames per second for the replay.
+    """
+
+    filename: str
+    game_id: str = "mini-arcade"
+    initial_scene: str = "unknown"
+    seed: int = 0
+    fps: int = 60
+
+    def execute(self, context: CommandContext):
+        header = ReplayHeader(
+            game_id=self.game_id,
+            initial_scene=self.initial_scene,
+            seed=self.seed,
+            fps=self.fps,
+        )
+        context.services.capture.start_replay_record(
+            filename=self.filename,
+            header=header,
+        )
+
+
+@dataclass(frozen=True)
+class StopReplayRecordCommand(Command):
+    """Stop recording the current replay."""
+
+    def execute(self, context: CommandContext):
+        context.services.capture.stop_replay_record()
+
+
+@dataclass(frozen=True)
+class StartReplayPlayCommand(Command):
+    """
+    Start playing back a replay from the specified file.
+
+    :ivar path (str): The path to the replay file.
+    :ivar change_scene (bool): Whether to change to the replay's initial scene.
+    """
+
+    path: str
+    change_scene: bool = True
+
+    def execute(self, context: CommandContext):
+        header = context.services.capture.start_replay_play(Path(self.path))
+        if self.change_scene:
+            # NOTE: **IMPORTANT** align game state with the replay header
+            context.managers.scenes.change(header.initial_scene)
+
+
+@dataclass(frozen=True)
+class StopReplayPlayCommand(Command):
+    """Stop playing back the current replay."""
+
+    def execute(self, context: CommandContext):
+        context.services.capture.stop_replay_play()

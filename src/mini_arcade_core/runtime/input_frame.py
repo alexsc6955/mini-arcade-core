@@ -4,7 +4,7 @@ Input frame data structure for capturing input state per frame.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Dict, FrozenSet, Tuple
 
 from mini_arcade_core.backend.keys import Key
@@ -23,6 +23,32 @@ class ButtonState:
     down: bool
     pressed: bool
     released: bool
+
+    def to_dict(self) -> Dict[str, bool]:
+        """
+        Convert the ButtonState to a dictionary.
+
+        :return: Dictionary representation of the ButtonState.
+        :rtype: Dict[str, bool]
+        """
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, bool]) -> ButtonState:
+        """
+        Create a ButtonState from a dictionary.
+
+        :param data: Dictionary containing button state data.
+        :type data: Dict[str, bool]
+
+        :return: ButtonState instance.
+        :rtype: ButtonState
+        """
+        return cls(
+            down=data.get("down", False),
+            pressed=data.get("pressed", False),
+            released=data.get("released", False),
+        )
 
 
 # TODO: Solve too-many-instance-attributes warning later
@@ -66,6 +92,58 @@ class InputFrame:
 
     # Window/OS quit request
     quit: bool = False
+
+    def to_dict(self) -> Dict[str, object]:
+        """
+        Convert the InputFrame to a dictionary.
+
+        :return: Dictionary representation of the InputFrame.
+        :rtype: Dict[str, object]
+        """
+        data = asdict(self)
+
+        # Convert ButtonState objects to dicts
+        data["buttons"] = {
+            name: state.to_dict() for name, state in self.buttons.items()
+        }
+
+        # Convert FrozenSet to list for serialization
+        data["keys_down"] = [k.value for k in self.keys_down]
+        data["keys_pressed"] = [k.value for k in self.keys_pressed]
+        data["keys_released"] = [k.value for k in self.keys_released]
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, object]) -> InputFrame:
+        """
+        Create an InputFrame from a dictionary.
+
+        :param data: Dictionary containing input frame data.
+        :type data: Dict[str, object]
+
+        :return: InputFrame instance.
+        :rtype: InputFrame
+        """
+        return cls(
+            frame_index=data.get("frame_index", 0),
+            dt=data.get("dt", 0.0),
+            keys_down=frozenset(Key(v) for v in data.get("keys_down", [])),
+            keys_pressed=frozenset(
+                Key(v) for v in data.get("keys_pressed", [])
+            ),
+            keys_released=frozenset(
+                Key(v) for v in data.get("keys_released", [])
+            ),
+            buttons={
+                name: ButtonState.from_dict(state)
+                for name, state in data.get("buttons", {}).items()
+            },
+            axes=data.get("axes", {}),
+            mouse_pos=tuple(data.get("mouse_pos", (0, 0))),
+            mouse_delta=tuple(data.get("mouse_delta", (0, 0))),
+            text_input=data.get("text_input", ""),
+            quit=data.get("quit", False),
+        )
 
 
 # pylint: enable=too-many-instance-attributes

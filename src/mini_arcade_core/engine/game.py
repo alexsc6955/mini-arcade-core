@@ -24,7 +24,7 @@ from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.engine.render.render_service import RenderService
 from mini_arcade_core.engine.scenes.scene_manager import SceneAdapter
 from mini_arcade_core.runtime.audio.audio_adapter import SDLAudioAdapter
-from mini_arcade_core.runtime.capture.capture_adapter import CaptureAdapter
+from mini_arcade_core.runtime.capture.capture_service import CaptureService
 from mini_arcade_core.runtime.file.file_adapter import LocalFilesAdapter
 from mini_arcade_core.runtime.input.input_adapter import InputAdapter
 from mini_arcade_core.runtime.scene.scene_query_adapter import (
@@ -70,10 +70,12 @@ class Game:
             ),
         )
         self.services = RuntimeServices(
-            window=WindowAdapter(self.backend),  # Turn into a manager?
+            window=WindowAdapter(self.backend),
             audio=SDLAudioAdapter(self.backend),
             files=LocalFilesAdapter(),
-            capture=CaptureAdapter(self.backend),
+            capture=CaptureService(
+                self.backend
+            ),  # NOTE: Should actually be a manager?
             input=InputAdapter(),
             render=RenderService(),
             scenes=SceneQueryAdapter(self.managers.scenes),

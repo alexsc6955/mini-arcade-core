@@ -139,14 +139,37 @@ class EngineRunner:
     def _build_input(
         self, events, *, frame: FrameState, timer: FrameTimer | None
     ):
-        # Build InputFrame from events.
-        input_frame = self.services.input.build(
-            events, frame.frame_index, frame.dt
-        )
+        cap = self.services.capture
+
+        if cap.replay_playing:
+            input_frame = cap.next_replay_input()
+
+            # optional but recommended: keep runner's frame_index/dt authoritative
+            input_frame = InputFrame(
+                frame_index=frame.frame_index,
+                dt=frame.dt,
+                keys_down=input_frame.keys_down,
+                keys_pressed=input_frame.keys_pressed,
+                keys_released=input_frame.keys_released,
+                buttons=input_frame.buttons,
+                axes=input_frame.axes,
+                mouse_pos=input_frame.mouse_pos,
+                mouse_delta=input_frame.mouse_delta,
+                text_input=input_frame.text_input,
+                quit=input_frame.quit,
+            )
+        else:
+            input_frame = self.services.input.build(
+                events, frame.frame_index, frame.dt
+            )
+
         if timer:
             timer.mark("input_built")
+
         if input_frame.quit:
             self.managers.command_queue.push(QuitCommand())
+
+        cap.record_input(input_frame)
         return input_frame
 
     def _should_quit(self, input_frame: InputFrame) -> bool:

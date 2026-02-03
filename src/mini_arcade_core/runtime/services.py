@@ -7,7 +7,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from mini_arcade_core.runtime.audio.audio_port import AudioPort
-from mini_arcade_core.runtime.capture.capture_port import CapturePort
+from mini_arcade_core.runtime.capture.capture_service_protocol import (
+    CaptureServicePort,
+)
 from mini_arcade_core.runtime.file.file_port import FilePort
 from mini_arcade_core.runtime.input.input_port import InputPort
 from mini_arcade_core.runtime.render.render_port import RenderServicePort
@@ -24,7 +26,7 @@ class RuntimeServices:
     :ivar scenes (ScenePort): Scene management service port.
     :ivar audio (AudioPort): Audio service port.
     :ivar files (FilePort): File service port.
-    :ivar capture (CapturePort): Capture service port.
+    :ivar capture (CaptureServicePort): Capture service port.
     :ivar input (InputPort): Input handling service port.
     :ivar render (RenderServicePort): Rendering service port.
     """
@@ -32,7 +34,7 @@ class RuntimeServices:
     window: WindowPort
     audio: AudioPort
     files: FilePort
-    capture: CapturePort
+    capture: CaptureServicePort
     input: InputPort
     render: RenderServicePort
     scenes: SceneQueryPort

@@ -78,7 +78,7 @@ class CapturePathBuilder:
         return Path(self.directory) / run_id / name
 
 
-class CaptureAdapter(CapturePort):
+class ScreenshotCapturer(CapturePort):
     """
     Adapter for capturing frames.
 
@@ -106,29 +106,7 @@ class CaptureAdapter(CapturePort):
     def screenshot(self, label: str | None = None) -> str:
         label = label or "shot"
         out_path = self.path_builder.build(label)
-        logger.critical(f"Capturing screenshot to: {out_path}")
-
-        # temp BMP next to output (unique)
-        bmp_path = out_path.with_suffix(f".{uuid4().hex}.bmp")
-        bmp_path.parent.mkdir(parents=True, exist_ok=True)
-
-        ok_native = self.backend.capture.bmp(str(bmp_path))  # returns bool
-        if not ok_native or not bmp_path.exists():
-            raise RuntimeError("Backend capture.bmp failed to create BMP file")
-
-        job_id = uuid4().hex
-        ok = self.worker.enqueue(
-            CaptureJob(job_id=job_id, out_path=out_path, bmp_path=bmp_path)
-        )
-        if not ok:
-            logger.warning("Screenshot dropped: capture queue full")
-            # optional: cleanup temp bmp since we won't process it
-            try:
-                bmp_path.unlink(missing_ok=True)
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
-
-        return str(out_path)
+        return self._capture_to(out_path, job_id=uuid4().hex)
 
     def screenshot_bytes(self) -> bytes:
         data = self.backend.capture.bmp(path=None)
@@ -140,6 +118,10 @@ class CaptureAdapter(CapturePort):
         self, run_id: str, frame_index: int, label: str = "frame"
     ) -> str:
         out_path = self.path_builder.build_sim(run_id, frame_index, label)
+        return self._capture_to(out_path, job_id=f"{run_id}:{frame_index}")
+
+    def _capture_to(self, out_path: Path, job_id: str) -> str:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
 
         bmp_path = out_path.with_suffix(f".{uuid4().hex}.bmp")
         bmp_path.parent.mkdir(parents=True, exist_ok=True)
@@ -148,18 +130,15 @@ class CaptureAdapter(CapturePort):
         if not ok_native or not bmp_path.exists():
             raise RuntimeError("Backend capture.bmp failed to create BMP file")
 
-        job_id = f"{run_id}:{frame_index}"
         ok = self.worker.enqueue(
             CaptureJob(job_id=job_id, out_path=out_path, bmp_path=bmp_path)
         )
         if not ok:
-            logger.warning("Sim screenshot dropped: capture queue full")
+            logger.warning("Screenshot dropped: capture queue full")
             try:
                 bmp_path.unlink(missing_ok=True)
-            # Justification: Broad exception catch for cleanup
-            # pylint: disable=broad-exception-caught
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 pass
-            # pylint: enable=broad-exception-caught
 
+        # IMPORTANT: async, so it's "queued"
         return str(out_path)
