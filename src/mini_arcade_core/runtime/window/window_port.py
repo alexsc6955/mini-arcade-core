@@ -5,6 +5,7 @@ Service interfaces for runtime components.
 from __future__ import annotations
 
 from typing import Protocol
+
 from mini_arcade_core.engine.render.viewport import ViewportMode, ViewportState
 
 

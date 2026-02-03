@@ -11,8 +11,8 @@ from mini_arcade_core.runtime.capture.capture_port import CapturePort
 from mini_arcade_core.runtime.file.file_port import FilePort
 from mini_arcade_core.runtime.input.input_port import InputPort
 from mini_arcade_core.runtime.render.render_port import RenderServicePort
-from mini_arcade_core.runtime.window.window_port import WindowPort
 from mini_arcade_core.runtime.scene.scene_query_port import SceneQueryPort
+from mini_arcade_core.runtime.window.window_port import WindowPort
 
 
 @dataclass
