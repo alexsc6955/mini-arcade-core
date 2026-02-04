@@ -272,6 +272,14 @@ class CaptureProtocol(Protocol):
         :rtype: bool
         """
 
+    def argb8888_bytes(self) -> tuple[int, int, bytes]:
+        """
+        Capture the current frame as raw ARGB8888 bytes.
+
+        :return: A tuple of (width, height, bytes).
+        :rtype: tuple[int, int, bytes]
+        """
+
 
 # TODO: Refactor backend interface into smaller protocols?
 # Justification: Many public methods needed for backend interface
