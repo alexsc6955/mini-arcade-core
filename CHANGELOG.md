@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-04
+
+### Added
+- add video recording and encoding functionality with capture service
+
+### Other
+- Merge release/1.2 into develop
+
 ## [1.2.2] - 2026-02-03
 
 ### Added
