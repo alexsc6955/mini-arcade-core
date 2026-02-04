@@ -280,6 +280,7 @@ class EngineRunner:
         self.services.render.last_stats = render_ctx.stats
 
         self.pipeline.render_frame(self.backend, render_ctx, frame_packets)
+        self.services.capture.record_video_frame(frame_index=frame.frame_index)
 
         if timer:
             timer.mark("render_done")

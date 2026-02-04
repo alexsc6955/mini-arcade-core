@@ -3,6 +3,7 @@ Capture service protocol
 """
 
 from __future__ import annotations
+from zipfile import Path
 
 from mini_arcade_core.backend import Backend
 from mini_arcade_core.runtime.capture.capture_settings import CaptureSettings
@@ -82,7 +83,7 @@ class CaptureServicePort:
         *,
         filename: str,
         header: ReplayHeader,
-    ) -> None:
+    ):
         """
         Start recording a replay.
 
@@ -92,10 +93,10 @@ class CaptureServicePort:
         :type header: ReplayHeader
         """
 
-    def stop_replay_record(self) -> None:
+    def stop_replay_record(self):
         """Stop recording the current replay."""
 
-    def record_input(self, frame: InputFrame) -> None:
+    def record_input(self, frame: InputFrame):
         """
         Record an input frame to the replay.
 
@@ -113,7 +114,7 @@ class CaptureServicePort:
         :rtype: ReplayHeader
         """
 
-    def stop_replay_play(self) -> None:
+    def stop_replay_play(self):
         """Stop playing back the current replay."""
 
     def next_replay_input(self) -> InputFrame:
@@ -122,4 +123,38 @@ class CaptureServicePort:
 
         :return: The next input frame.
         :rtype: InputFrame
+        """
+
+    @property
+    def video_recording(self) -> bool:
+        """
+        Check if video recording is currently active.
+
+        :return: True if video recording is active, False otherwise.
+        :rtype: bool
+        """
+
+    def start_video_record(
+        self, *, fps: int = 60, capture_fps: int = 15
+    ) -> Path:
+        """
+        Start recording video.
+
+        :param fps: Frames per second for the output video.
+        :type fps: int
+        :param capture_fps: Frames per second to capture from the engine.
+        :type capture_fps: int
+        :return: Path to the directory where video frames are saved.
+        :rtype: Path
+        """
+
+    def stop_video_record(self):
+        """Stop recording video."""
+
+    def record_video_frame(self, *, frame_index: int):
+        """
+        Call this once per engine frame (from EngineRunner) AFTER render.
+
+        :param frame_index: The index of the current frame.
+        :type frame_index: int
         """

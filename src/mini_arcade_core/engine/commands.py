@@ -284,3 +284,49 @@ class StopReplayPlayCommand(Command):
 
     def execute(self, context: CommandContext):
         context.services.capture.stop_replay_play()
+
+
+@dataclass(frozen=True)
+class StartVideoRecordCommand(Command):
+    """
+    Start recording a video.
+
+    :ivar fps (int): Frames per second for the video.
+    :ivar capture_fps (int): Frames per second for capturing frames.
+    """
+
+    fps: int = 60
+    capture_fps: int = 30
+
+    def execute(self, context: CommandContext):
+        context.services.capture.start_video_record(
+            fps=self.fps, capture_fps=self.capture_fps
+        )
+
+
+@dataclass(frozen=True)
+class StopVideoRecordCommand(Command):
+    """Stop recording the current video."""
+
+    def execute(self, context: CommandContext):
+        context.services.capture.stop_video_record()
+
+
+@dataclass(frozen=True)
+class ToggleVideoRecordCommand(Command):
+    """
+    Toggle video recording on or off.
+
+    :ivar fps (int): Frames per second for the video.
+    :ivar capture_fps (int): Frames per second for capturing frames.
+    """
+
+    fps: int = 60
+    capture_fps: int = 30
+
+    def execute(self, context: CommandContext):
+        cap = context.services.capture
+        if cap.video_recording:
+            cap.stop_video_record()
+        else:
+            cap.start_video_record(fps=self.fps, capture_fps=self.capture_fps)

@@ -6,17 +6,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from queue import Empty, Queue
+from queue import Queue
 from threading import Event, Thread
 from typing import Callable, Optional
 
 from PIL import Image
 
+from mini_arcade_core.runtime.capture.base_worker import BaseJob, BaseWorker
 from mini_arcade_core.utils import logger
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass(frozen=True)
-class CaptureJob:
+class CaptureJob(BaseJob):
     """
     Job representing a screenshot to be saved.
 
@@ -25,9 +27,13 @@ class CaptureJob:
     :ivar bmp_path (Path): Temporary path of the bitmap image to be saved.
     """
 
-    job_id: str
     out_path: Path
-    bmp_path: Path  # <-- file-based now
+    bmp_path: Path | None = None
+    w: int = 0
+    h: int = 0
+    pixels: bytes | None = None  # raw pixels
+    fmt: str = "BGRA"  # or "ARGB" / "RGBA" depending on what you return
+    pitch: int | None = None
 
 
 @dataclass(frozen=True)
@@ -67,7 +73,7 @@ class WorkerConfig:
     delete_temp: bool = True
 
 
-class CaptureWorker:
+class CaptureWorker(BaseWorker):
     """Capture worker thread for saving screenshots asynchronously."""
 
     def __init__(
@@ -98,77 +104,50 @@ class CaptureWorker:
         self._on_done = worker_config.on_done
         self._delete_temp = worker_config.delete_temp
 
-    def start(self):
-        """Start the capture worker thread."""
-        if self._thread.is_alive():
-            return
-        self._stop.clear()
-        self._thread.start()
-
-    def stop(self):
-        """Stop the capture worker thread."""
-        self._stop.set()
-        if self._thread.is_alive():
-            self._thread.join(timeout=2.0)
-
-    def enqueue(self, job: CaptureJob) -> bool:
-        """
-        Enqueue a capture job.
-
-        :param job: CaptureJob to enqueue.
-        :type job: CaptureJob
-        :return: True if the job was enqueued successfully, False otherwise.
-        :rtype: bool
-        """
-        if self._stop.is_set():
-            return False
+    def _process_job(self, job: CaptureJob) -> None:
         try:
-            self._q.put_nowait(job)
-            return True
-        # Justification: Queue.put_nowait can raise a broad exception
-        # pylint: disable=broad-exception-caught
-        except Exception:
-            return False
-        # pylint: enable=broad-exception-caught
+            job.out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def _run(self):
-        while not self._stop.is_set():
-            try:
-                job = self._q.get(timeout=0.1)
-            except Empty:
-                continue
-
-            try:
-                job.out_path.parent.mkdir(parents=True, exist_ok=True)
-
+            if job.bmp_path and job.bmp_path.exists():
+                # Load BMP from disk
                 img = Image.open(str(job.bmp_path))
-                img.save(str(job.out_path))
-
-                if self._delete_temp:
-                    try:
-                        job.bmp_path.unlink(missing_ok=True)
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        logger.warning(
-                            f"Failed to delete temp bmp: {job.bmp_path}"
-                        )
-
-                res = CaptureResult(
-                    job_id=job.job_id, out_path=job.out_path, ok=True
+            else:
+                img = Image.frombuffer(
+                    "RGBA",
+                    (job.w, job.h),
+                    job.pixels,
+                    "raw",
+                    job.fmt,  # "BGRA" is common on Windows
+                    job.pitch or 0,
+                    1,
                 )
+            img.save(str(job.out_path))
 
-            except Exception as exc:  # pylint: disable=broad-exception-caught
-                logger.exception("CaptureWorker failed to save screenshot")
-                res = CaptureResult(
-                    job_id=job.job_id,
-                    out_path=job.out_path,
-                    ok=False,
-                    error=str(exc),
-                )
-
-            if self._on_done:
+            if self._delete_temp:
                 try:
-                    self._on_done(res)
+                    job.bmp_path.unlink(missing_ok=True)
                 except Exception:  # pylint: disable=broad-exception-caught
-                    logger.warning("CaptureWorker on_done callback failed")
+                    logger.warning(
+                        f"Failed to delete temp bmp: {job.bmp_path}"
+                    )
 
-            self._q.task_done()
+            res = CaptureResult(
+                job_id=job.job_id, out_path=job.out_path, ok=True
+            )
+
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.exception("CaptureWorker failed to save screenshot")
+            res = CaptureResult(
+                job_id=job.job_id,
+                out_path=job.out_path,
+                ok=False,
+                error=str(exc),
+            )
+
+        if self._on_done:
+            try:
+                self._on_done(res)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.warning("CaptureWorker on_done callback failed")
+
+        self._q.task_done()
