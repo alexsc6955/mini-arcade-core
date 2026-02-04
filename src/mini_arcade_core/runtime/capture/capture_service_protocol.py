@@ -3,6 +3,7 @@ Capture service protocol
 """
 
 from __future__ import annotations
+
 from zipfile import Path
 
 from mini_arcade_core.backend import Backend
