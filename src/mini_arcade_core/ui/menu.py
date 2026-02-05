@@ -11,11 +11,21 @@ from mini_arcade_core.backend import Backend
 from mini_arcade_core.backend.events import Event, EventType
 from mini_arcade_core.backend.keys import Key
 from mini_arcade_core.backend.types import Color
-from mini_arcade_core.engine.commands import Command, CommandQueue, QuitCommand
-from mini_arcade_core.engine.render.packet import RenderPacket
+from mini_arcade_core.engine.commands import Command, QuitCommand
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.scenes.sim_scene import SimScene
+from mini_arcade_core.scenes.sim_scene import (
+    BaseIntent,
+    BaseTickContext,
+    BaseWorld,
+    Drawable,
+    DrawCall,
+    SimScene,
+)
+from mini_arcade_core.scenes.systems.builtins import (
+    BaseInputSystem,
+    BaseRenderSystem,
+)
 from mini_arcade_core.scenes.systems.system_pipeline import SystemPipeline
 from mini_arcade_core.spaces.d2.geometry2d import Size2D
 
@@ -519,7 +529,7 @@ class Menu:
 
 
 @dataclass
-class MenuModel:
+class MenuWorld(BaseWorld):
     """
     Data model for menu scenes.
 
@@ -556,46 +566,8 @@ class MenuModel:
         self._cooldown_timer = self.move_cooldown
 
 
-# TODO: Solve too-many-instance-attributes warning later
-# Justification: Context for menu tick needs multiple attributes.
-# pylint: disable=too-many-instance-attributes
-@dataclass
-class MenuTickContext:
-    """
-    Context for a single tick of the menu scene.
-
-    :ivar input_frame (InputFrame): The current input frame.
-    :ivar dt (float): Delta time since last tick.
-    :ivar menu (Menu): The Menu instance.
-    :ivar model (MenuModel): The MenuModel instance.
-    :ivar commands (CommandQueue): The command queue for pushing commands.
-    :ivar intent (MenuIntent | None): The current menu intent.
-    :ivar quit_cmd_factory (callable | None): Factory for quit command.
-    :ivar packet (RenderPacket | None): The resulting render packet.
-    """
-
-    input_frame: InputFrame
-    dt: float
-
-    menu: "Menu"
-    model: "MenuModel"
-    commands: CommandQueue
-
-    # computed data that systems can write into
-    intent: "MenuIntent | None" = None
-
-    # scene hook: a callable to produce quit cmd (per scene override)
-    quit_cmd_factory: callable | None = None
-
-    # final output
-    packet: RenderPacket | None = None
-
-
-# pylint: enable=too-many-instance-attributes
-
-
 @dataclass(frozen=True)
-class MenuIntent:
+class MenuIntent(BaseIntent):
     """
     Represents the user's intent in the menu for the current tick.
 
@@ -611,12 +583,36 @@ class MenuIntent:
     quit: bool = False
 
 
+# TODO: Solve too-many-instance-attributes warning later
+# Justification: Context for menu tick needs multiple attributes.
+# pylint: disable=too-many-instance-attributes
 @dataclass
-class MenuInputSystem:
+class MenuTickContext(BaseTickContext[MenuWorld, MenuIntent]):
+    """
+    Context for a single tick of the menu scene.
+
+    :ivar input_frame (InputFrame): The current input frame.
+    :ivar dt (float): Delta time since last tick.
+    :ivar menu (Menu): The Menu instance.
+    :ivar model (MenuWorld): The MenuWorld instance.
+    :ivar commands (CommandQueue): The command queue for pushing commands.
+    :ivar intent (MenuIntent | None): The current menu intent.
+    :ivar quit_cmd_factory (callable | None): Factory for quit command.
+    :ivar packet (RenderPacket | None): The resulting render packet.
+    """
+
+    menu: "Menu" | None = None
+    quit_cmd_factory: callable | None = None
+
+
+# pylint: enable=too-many-instance-attributes
+
+
+@dataclass
+class MenuInputSystem(BaseInputSystem):
     """Converts InputFrame -> MenuIntent."""
 
     name: str = "menu_input"
-    order: int = 10
 
     def step(self, ctx: MenuTickContext):
         """Step the input system to extract menu intent."""
@@ -642,21 +638,21 @@ class MenuNavigationSystem:
         if intent is None:
             return
 
-        ctx.model.step_timer(ctx.dt)
+        ctx.world.step_timer(ctx.dt)
 
-        if not ctx.model.can_move():
+        if not ctx.world.can_move():
             return
 
         if intent.move_up:
             ctx.menu.move_up()
-            ctx.model.selected = ctx.menu.selected_index
-            ctx.model.consume_move()
+            ctx.world.selected = ctx.menu.selected_index
+            ctx.world.consume_move()
             return
 
         if intent.move_down:
             ctx.menu.move_down()
-            ctx.model.selected = ctx.menu.selected_index
-            ctx.model.consume_move()
+            ctx.world.selected = ctx.menu.selected_index
+            ctx.world.consume_move()
 
 
 @dataclass
@@ -682,31 +678,95 @@ class MenuActionSystem:
                 ctx.commands.push(cmd)
 
 
+class DrawMenu(Drawable[MenuTickContext]):
+    """Draw the menu."""
+
+    def draw(self, backend: Backend, ctx: MenuTickContext):
+        ctx.menu.draw(backend)
+
+
 @dataclass
-class MenuRenderSystem:
+class MenuRenderSystem(BaseRenderSystem):
     """Menu rendering system."""
 
     name: str = "menu_render"
-    order: int = 100
 
     def step(self, ctx: MenuTickContext):
         """Set the render packet to draw the menu."""
-        ctx.packet = RenderPacket.from_ops([ctx.menu.draw])
+        ctx.draw_ops = [DrawCall(drawable=DrawMenu(), ctx=ctx)]
+        super().step(ctx)
 
 
-class BaseMenuScene(SimScene):
+class BaseMenuScene(SimScene[MenuTickContext]):
     """
     Base scene class for menu-based scenes.
 
-    :ivar model (MenuModel): The data model for the menu scene.
+    :ivar world (MenuWorld): The data model for the menu scene.
     """
 
     menu: Menu
-    systems: SystemPipeline[MenuTickContext]
 
     def __init__(self, ctx: RuntimeContext):
         super().__init__(ctx)
-        self.model = MenuModel()
+        self.systems = SystemPipeline[MenuTickContext]()
+        self.world = MenuWorld()
+
+    def on_enter(self):
+        self.menu = Menu(
+            self._build_display_items(),
+            viewport=self.menu_viewport(),
+            title=self.menu_title,
+            style=self.menu_style(),
+        )
+        self.menu.selected_index = self.world.selected
+        self.systems.extend(
+            [
+                MenuInputSystem(),
+                MenuNavigationSystem(),
+                MenuActionSystem(),
+                MenuRenderSystem(),
+            ]
+        )
+
+    def _get_tick_context(
+        self, input_frame: InputFrame, dt: float
+    ) -> MenuTickContext:
+        self.menu.set_viewport(self.menu_viewport())
+        self.menu.set_items(self._build_display_items())
+        self.menu.set_selected_index(self.world.selected)
+
+        return MenuTickContext(
+            input_frame=input_frame,
+            dt=dt,
+            world=self.world,
+            commands=self.context.command_queue,
+            menu=self.menu,
+            quit_cmd_factory=self.quit_command,
+        )
+
+    # def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:
+    #     self.menu.set_viewport(self.menu_viewport())
+    #     items = self.menu_items()
+    #     if not items:
+    #         return RenderPacket()
+
+    #     self.world.step_timer(dt)
+
+    #     self.menu.set_items(self._build_display_items())
+    #     self.menu.set_selected_index(self.world.selected)
+
+    #     ctx = MenuTickContext(
+    #         input_frame=input_frame,
+    #         dt=dt,
+    #         menu=self.menu,
+    #         commands=self.context.command_queue,
+    #         quit_cmd_factory=self.quit_command,
+    #     )
+
+    #     self.systems.step(ctx)
+
+    #     # always return packet from pipeline
+    #     return ctx.packet or RenderPacket()
 
     @property
     def menu_title(self) -> str | None:
@@ -745,49 +805,6 @@ class BaseMenuScene(SimScene):
         """
         # default behavior: quit game
         return QuitCommand()
-
-    def on_enter(self):
-        self.menu = Menu(
-            self._build_display_items(),
-            viewport=self.menu_viewport(),
-            title=self.menu_title,
-            style=self.menu_style(),
-        )
-        self.menu.selected_index = self.model.selected
-        self.systems = SystemPipeline()
-        self.systems.extend(
-            [
-                MenuInputSystem(),
-                MenuNavigationSystem(),
-                MenuActionSystem(),
-                MenuRenderSystem(),
-            ]
-        )
-
-    def tick(self, input_frame: InputFrame, dt: float) -> RenderPacket:
-        self.menu.set_viewport(self.menu_viewport())
-        items = self.menu_items()
-        if not items:
-            return RenderPacket()
-
-        self.model.step_timer(dt)
-
-        self.menu.set_items(self._build_display_items())
-        self.menu.set_selected_index(self.model.selected)
-
-        ctx = MenuTickContext(
-            input_frame=input_frame,
-            dt=dt,
-            menu=self.menu,
-            model=self.model,
-            commands=self.context.command_queue,
-            quit_cmd_factory=self.quit_command,
-        )
-
-        self.systems.step(ctx)
-
-        # always return packet from pipeline
-        return ctx.packet or RenderPacket()
 
     def menu_viewport(self) -> Size2D:
         """
