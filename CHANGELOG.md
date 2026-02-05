@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-02-05
+
+### Added
+- add configuration utilities for backend components
+
 ## [1.3.0] - 2026-02-04
 
 ### Added
