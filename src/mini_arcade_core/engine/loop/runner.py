@@ -17,7 +17,7 @@ from mini_arcade_core.engine.render.frame_packet import FramePacket
 from mini_arcade_core.engine.render.packet import RenderPacket
 from mini_arcade_core.engine.render.pipeline import RenderPipeline
 from mini_arcade_core.runtime.input_frame import InputFrame
-from mini_arcade_core.utils import FrameTimer
+from mini_arcade_core.utils import FrameTimer, logger
 
 if TYPE_CHECKING:
     from mini_arcade_core.engine.game import Game
@@ -77,6 +77,7 @@ class EngineRunner:
         :param timer: Optional FrameTimer for profiling.
         :type timer: FrameTimer | None
         """
+        logger.info("EngineRunner starting main loop.")
         self._running = True
         frame = FrameState()
 
@@ -87,6 +88,7 @@ class EngineRunner:
                 cfg.max_frames is not None
                 and frame.frame_index >= cfg.max_frames
             ):
+                logger.info("EngineRunner reached max_frames limit, stopping.")
                 break
 
             if timer:
@@ -100,10 +102,14 @@ class EngineRunner:
 
             input_frame = self._build_input(events, frame=frame, timer=timer)
             if self._should_quit(input_frame):
+                logger.info("Quit signal received, stopping EngineRunner.")
                 break
 
             input_entry = self._input_entry()
             if input_entry is None:
+                logger.warning(
+                    "No input scene entry found; skipping frame processing."
+                )
                 break
 
             self._tick_scenes(
@@ -126,6 +132,9 @@ class EngineRunner:
 
     def _poll_events(self, timer: FrameTimer | None):
         # Poll input events from the backend.
+        if not hasattr(self.backend, "input") or self.backend.input is None:
+            logger.warning("Backend has no input system; no events polled.")
+            return []
         events = list(self.backend.input.poll())
         if timer:
             timer.mark("events_polled")

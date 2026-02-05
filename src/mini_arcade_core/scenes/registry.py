@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Protocol
 
 from mini_arcade_core.runtime.context import RuntimeContext
+from mini_arcade_core.utils import logger
 
 from .autoreg import snapshot
 
@@ -72,7 +73,9 @@ class SceneRegistry:
 
         self.register(scene_id, return_factory)
 
-    def create(self, scene_id: str, context: RuntimeContext) -> "SimScene":
+    def create(
+        self, scene_id: str, context: RuntimeContext
+    ) -> "SimScene" | None:
         """
         Create a scene instance using the registered factory for the given scene ID.
 
@@ -88,6 +91,10 @@ class SceneRegistry:
         :raises KeyError: If no factory is registered for the given scene ID.
         """
         try:
+            scene_factory = self._factories.get(scene_id, None)
+            if scene_factory is None:
+                logger.warning(f"No factory found for scene_id={scene_id!r}")
+                return None
             return self._factories[scene_id](context)
         except KeyError as e:
             raise KeyError(f"Unknown scene_id={scene_id!r}") from e

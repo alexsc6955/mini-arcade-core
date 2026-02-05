@@ -24,4 +24,11 @@ class BeginFramePass:
         self, backend: Backend, ctx: RenderContext, packets: list[RenderPacket]
     ):
         """Run the begin frame pass."""
+        if (
+            not hasattr(backend.render, "begin_frame")
+            or backend.render is None
+        ):
+            raise NotImplementedError(
+                "Backend does not support begin_frame method"
+            )
         backend.render.begin_frame()
