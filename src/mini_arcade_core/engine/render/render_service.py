@@ -41,6 +41,10 @@ class RenderService:
         # IMPORTANT: call the render port, not native backend directly
         return self.backend.render.create_texture_rgba(w, h, data, pitch)
 
+    # Justification: Disabling too-many-arguments for this method since it's a simple
+    # wrapper around a backend call, and the arguments are all necessary for the tiling
+    # functionality.
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def draw_texture_tiled_y(
         self, tex_id: int, x: int, y: int, w: int, h: int
     ):

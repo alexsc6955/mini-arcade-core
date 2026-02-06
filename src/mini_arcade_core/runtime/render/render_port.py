@@ -33,6 +33,10 @@ class RenderServicePort(Protocol):
         :rtype: int
         """
 
+    # Justification: Disabling too-many-arguments for this method since it's a simple
+    # wrapper around a backend call, and the arguments are all necessary for the tiling
+    # functionality.
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def draw_texture_tiled_y(
         self, tex_id: int, x: int, y: int, w: int, h: int
     ):
