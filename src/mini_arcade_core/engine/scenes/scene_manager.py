@@ -13,6 +13,7 @@ from mini_arcade_core.engine.scenes.models import (
 )
 from mini_arcade_core.runtime.context import RuntimeContext
 from mini_arcade_core.scenes.registry import SceneRegistry
+from mini_arcade_core.utils import logger
 
 if TYPE_CHECKING:
     from mini_arcade_core.engine.game import Game
@@ -94,6 +95,9 @@ class SceneAdapter:
         scene = self._registry.create(
             scene_id, runtime_context
         )  # or whatever your factory call is
+        if not scene:
+            logger.warning(f"Failed to create scene with id={scene_id!r}")
+            return
         scene.on_enter()
 
         entry = SceneEntry(

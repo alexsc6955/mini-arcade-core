@@ -145,6 +145,65 @@ class RenderProtocol(Protocol):
     def clear_clip_rect(self):
         """Clear the clipping rectangle."""
 
+    def create_texture_rgba(
+        self, w: int, h: int, pixels: bytes, pitch: int | None = None
+    ) -> int:
+        """
+        Create a texture from RGBA pixel data.
+
+        :param w: The width of the texture.
+        :type w: int
+        :param h: The height of the texture.
+        :type h: int
+        :param pixels: The pixel data in RGBA format.
+        :type pixels: bytes
+        :param pitch: The number of bytes in a row of pixel data. If None, defaults to w * 4.
+        :type pitch: int | None
+        """
+
+    def destroy_texture(self, tex: int) -> None:
+        """
+        Destroy a texture.
+
+        :param tex: The texture ID to destroy.
+        :type tex: int
+        """
+
+    def draw_texture(self, tex: int, x: int, y: int, w: int, h: int):
+        """
+        Draw a texture at the specified position and size.
+
+        :param tex: The texture ID.
+        :type tex: int
+        :param x: The x-coordinate to draw the texture.
+        :type x: int
+        :param y: The y-coordinate to draw the texture.
+        :type y: int
+        :param w: The width to draw the texture.
+        :type w: int
+        :param h: The height to draw the texture.
+        :type h: int
+        """
+
+    def draw_texture_tiled_y(
+        self, tex_id: int, x: int, y: int, w: int, h: int
+    ):
+        """
+        Draw a texture repeated vertically to fill (w,h).
+        Assumes you can resolve tex_id -> pygame.Surface, and supports scaling width.
+
+        :param tex_id: The texture ID.
+        :type tex_id: int
+        :param x: The x-coordinate to draw the texture.
+        :type x: int
+        :param y: The y-coordinate to draw the texture.
+        :type y: int
+        :param w: The width to draw the texture.
+        :type w: int
+        :param h: The height to draw the texture.
+        :type h: int
+        """
+
 
 class TextProtocol(Protocol):
     """

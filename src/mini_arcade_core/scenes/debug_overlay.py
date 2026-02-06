@@ -12,6 +12,9 @@ from mini_arcade_core.scenes.autoreg import register_scene
 from mini_arcade_core.scenes.sim_scene import SimScene
 
 
+# Justification: SimScene._get_tick_context is abstract and call by SimScene.tick
+# in this scene we override tick directly so it's ok
+# pylint: disable=abstract-method
 @register_scene("debug_overlay")
 class DebugOverlayScene(SimScene):
     """
