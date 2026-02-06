@@ -7,7 +7,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Generic, Sequence, TypeVar
 
+# pylint: disable=invalid-name
 TFrame = TypeVar("TFrame")
+# pylint: enable=invalid-name
 
 
 @dataclass
