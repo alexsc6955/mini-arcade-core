@@ -106,6 +106,9 @@ class SimScene(Generic[TContext]):
     def on_exit(self):
         """Called when the scene is exited."""
 
+    def _load_texture(self, path: str) -> int:
+        return self.context.services.render.load_texture(path)
+
     def _get_tick_context(
         self, input_frame: InputFrame, dt: float
     ) -> BaseTickContext:
