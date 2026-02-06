@@ -6,6 +6,37 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.4] - 2026-02-06
+
+### Added
+- add Animation class for frame-based animations
+
+## [1.3.3] - 2026-02-06
+
+### Added
+- enhance rendering capabilities with texture management methods
+
+### Other
+- Merge branch 'release/1.3' of https://github.com/alexsc6955/mini-arcade-core into release/1.3
+
+## [1.3.2] - 2026-02-05
+
+### Changed
+- refactor menu and simulation scene systems to use base classes for improved structure
+
+## [1.3.1] - 2026-02-05
+
+### Added
+- add configuration utilities for backend components
+
+## [1.3.0] - 2026-02-04
+
+### Added
+- add video recording and encoding functionality with capture service
+
+### Other
+- Merge release/1.2 into develop
+
 ## [1.2.2] - 2026-02-03
 
 ### Added

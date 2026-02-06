@@ -37,6 +37,12 @@ class WindowAdapter(WindowPort):
     def _apply_viewport_transform(self):
         s = self._viewport.state
         # This is the missing link in the new backend design:
+        if not hasattr(self.backend, "set_viewport_transform"):
+            logger.warning(
+                "Backend does not support viewport transforms. "
+                "Viewport scaling and offset will not be applied."
+            )
+            return
         self.backend.set_viewport_transform(s.offset_x, s.offset_y, s.scale)
 
     def set_virtual_resolution(self, width: int, height: int):

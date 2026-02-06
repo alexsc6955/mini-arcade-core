@@ -77,7 +77,7 @@ class Game:
                 self.backend
             ),  # NOTE: Should actually be a manager?
             input=InputAdapter(),
-            render=RenderService(),
+            render=RenderService(self.backend),
             scenes=SceneQueryAdapter(self.managers.scenes),
         )
 
