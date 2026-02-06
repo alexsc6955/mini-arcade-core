@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-02-05
+
+### Changed
+- refactor menu and simulation scene systems to use base classes for improved structure
+
 ## [1.3.1] - 2026-02-05
 
 ### Added
