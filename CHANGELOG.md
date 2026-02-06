@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.3] - 2026-02-06
+
+### Added
+- enhance rendering capabilities with texture management methods
+
+### Other
+- Merge branch 'release/1.3' of https://github.com/alexsc6955/mini-arcade-core into release/1.3
+
 ## [1.3.2] - 2026-02-05
 
 ### Changed
