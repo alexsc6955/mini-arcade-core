@@ -2,6 +2,10 @@
 2D geometry data structures.
 """
 
+# Justification: This module is deprecated and will be removed in favor of the new geometry module.
+# pylint: disable=deprecated-module
+# pylint: disable=duplicate-code
+
 from __future__ import annotations
 
 from dataclasses import dataclass

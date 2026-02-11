@@ -1,3 +1,7 @@
+"""
+Module for Rect class.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

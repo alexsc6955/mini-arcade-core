@@ -1,3 +1,7 @@
+"""
+Module for Kinematic2D class.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,6 +15,10 @@ from mini_arcade_core.spaces.math.vec2 import Vec2
 
 @dataclass
 class Kinematic2D:
+    """
+    Simple 2D kinematic body.
+    """
+
     transform: Transform2D
     velocity: Vec2 = field(default_factory=lambda: Vec2(0.0, 0.0))
     collider: RectCollider = field(init=False)
@@ -22,24 +30,30 @@ class Kinematic2D:
         )
 
     def step(self, dt: float) -> None:
+        """Move the body according to its velocity and speed."""
         self.transform.move_center_scaled(self.velocity, dt)
 
     @property
     def rect(self) -> Rect:
+        """Get the bounding rectangle of the body."""
         return self.transform.rect
 
     @property
     def center(self) -> Vec2:
+        """Get the center position of the body."""
         return self.transform.center
 
     @property
     def size(self) -> Size2D:
+        """Get the size of the body."""
         return self.transform.size
 
     @property
     def position(self) -> Vec2:
+        """Get the top-left position of the body."""
         return self.transform.position
 
     @position.setter
     def position(self, pos: Vec2) -> None:
+        """Set the top-left position of the body."""
         self.transform.position = pos

@@ -1,3 +1,7 @@
+"""
+Module for Vec2 class.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

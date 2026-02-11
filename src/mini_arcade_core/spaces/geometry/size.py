@@ -1,4 +1,9 @@
+"""
+Module for Size2D class.
+"""
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 

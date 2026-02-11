@@ -1,4 +1,9 @@
+"""
+Cull system to remove entities outside the viewport.
+"""
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Callable, Protocol
 
@@ -6,6 +11,8 @@ from mini_arcade_core.spaces.physics.kinematics2d import Kinematic2D
 
 
 class HasBodyAlive(Protocol):
+    """Protocol for entities that have a body and an alive status."""
+
     body: Kinematic2D
     alive: bool
 
@@ -33,6 +40,7 @@ class CullOutOfViewportSystem:
     )
 
     def step(self, ctx):
+        """Step the system, culling entities outside the viewport."""
         vw, vh = self.viewport_getter(ctx.world)
         items = self.list_getter(ctx.world)
 
@@ -47,4 +55,5 @@ class CullOutOfViewportSystem:
                 continue
             kept.append(e)
 
+        self.list_setter(ctx.world, kept)
         self.list_setter(ctx.world, kept)
